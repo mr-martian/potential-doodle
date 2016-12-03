@@ -4,9 +4,40 @@
     "translations": []
   },
   "grammar": {
-    "pos": ["noun", "transverb", "intransverb"]
+    "pos": ["noun", "transverb", "intransverb"],
+    "conjugation": [
+      {
+        "appliesto": "noun",
+        "mode": "suffix",
+        "suffix": "s",
+        "stemchanges": [],
+        "conjugates": [
+          {
+            "category": "plural",
+            "value": "plural"
+          }
+        ]
+      }
+    ]
   },
   "lexicon": [
+    {
+      "root": "mouse",
+      "pos": "noun",
+      "gloss": [],
+      "irregularforms": [
+        {
+          "conjugations": [
+            {
+              "category": "plural",
+              "value": "plural"
+            }
+          ],
+          "form": "mice"
+        }
+      ],
+      "irregularsyntax": []
+    },
     {
       "root": "rock",
       "pos": "noun",

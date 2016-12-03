@@ -9,7 +9,21 @@
     ]
   },
   "grammar": {
-    "pos": ["noun", "transverb", "intransverb", "etransverb", "eintransverb"]
+    "pos": ["noun", "transverb", "intransverb", "etransverb", "eintransverb"],
+    "conjugation": [
+      {
+        "appliesto": "noun",
+        "mode": "suffix",
+        "suffix": "ah",
+        "stemchanges": [],
+        "conjugates": [
+          {
+            "category": "plural",
+            "value": "plural"
+          }
+        ]
+      }
+    ]
   },
   "lexicon": [
     {
