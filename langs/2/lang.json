@@ -1,0 +1,28 @@
+{
+  "name": {
+    "local": "Sajem Tan",
+    "translations": [
+      {
+        "lang": 1,
+        "translation": "Common Honey"
+      }
+    ]
+  },
+  "grammar": {
+    "pos": ["noun", "transverb", "intransverb", "etransverb", "eintransverb"]
+  },
+  "lexicon": [
+    {
+      "root": "thefam",
+      "pos": "noun",
+      "gloss": [
+        {
+          "lang": 1,
+          "gloss": ["stone", "rock", "orthography"]
+        }
+      ],
+      "irregularforms": [],
+      "irregularsyntax": []
+    }
+  ]
+}

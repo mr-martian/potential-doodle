@@ -1,0 +1,23 @@
+{
+  "name": {
+    "local": "English",
+    "translations": []
+  },
+  "grammar": {
+    "pos": ["noun", "transverb", "intransverb"]
+  },
+  "lexicon": [
+    {
+      "root": "rock",
+      "pos": "noun",
+      "gloss": [
+        {
+          "lang": 2,
+          "gloss": ["thefam"]
+        }
+      ],
+      "irregularforms": [],
+      "irregularsyntax": []
+    }
+  ]
+}
