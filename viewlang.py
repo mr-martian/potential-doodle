@@ -1,4 +1,12 @@
 import json, sys
+loaded_meta = {}
+def loadmeta(langid):
+    if langid in loaded_meta:
+        return loaded_meta[langid]
+    else:
+        l = json.load(open("langs/%s/metadata.json" % langid))
+        loaded_meta[langid] = l
+        return l
 loaded_langs = {}
 def loadlang(langid):
     if langid in loaded_langs:
@@ -9,7 +17,8 @@ def loadlang(langid):
         return l
 def displaylang(langid):
     langdict = loadlang(langid)
-    print "<h1>%s</h1>" % langdict["name"]["local"]
+    langmeta = loadmeta(langid)
+    print "<h1>%s</h1>" % langmeta["name"]["local"]
     print "<h2>Morphology</h2>"
     print "<h2>Syntax</h2>"
     print "<h2>Lexicon</h2>"
@@ -25,7 +34,7 @@ def displaylang(langid):
         print "<h4>%s</h4>" % word["pos"]
         for gl in word["gloss"]:
             print "<div class=\"gloss\">"
-            glname = loadlang(gl["lang"])["name"]
+            glname = loadmeta(gl["lang"])["name"]
             if langid in glname:
                 disp = glname[langid]
             else:

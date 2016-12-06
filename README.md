@@ -3,12 +3,30 @@ for making and sharing conlangs
 
 TODO
 - [ ] store langs
+  - [ ] clearly organize
+  - [ ] split into multiple files
   - [ ] syntax
   - [ ] morphology
+    - [ ] prefix/suffix
+      - [x] concatenative
+      - [ ] stem changes
+      - [ ] vary form by root phonology
+    - [ ] infix
+      - [ ] replace
+        - [x] nth matching string (/regex?)
+        - [ ] anything more complex
+        - [ ] vary form by root phonology
+      - [ ] insert
+    - [ ] grammatical categories
+      - [x] default values
+      - [ ] possible values
+      - [ ] translations
   - [ ] lexicon
     - [x] glosses in various languages
-    - [ ] semantics/usage notes
-    - [ ] irregular forms
+    - [x] semantics/usage notes
+    - [x] irregular forms
+    - [ ] syntactical oddities
+    - [x] language-specific lexical properties
 - [ ] create langs
   - [ ] syntax
   - [ ] morphology

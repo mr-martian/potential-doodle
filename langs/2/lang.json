@@ -1,18 +1,60 @@
 {
-  "name": {
-    "local": "Sajem Tan",
-    "translations": [
-      {
-        "lang": 1,
-        "translation": "Common Honey"
-      }
-    ]
-  },
   "grammar": {
-    "pos": ["noun", "transverb", "intransverb", "etransverb", "eintransverb"],
+    "pos": [
+      {
+        "name": "aux",
+        "display": "auxilliary verb",
+        "properties": [
+          {
+            "name": "vowel",
+            "values": ["i", "ol"],
+            "default": "i"
+          }
+        ],
+        "defaultconjugation": [
+          {
+            "category": "tense",
+            "value": "nonpast"
+          }
+        ]
+      },
+      {
+        "name": "noun",
+        "display": "noun",
+        "properties": [],
+        "defaultconjugation": [
+          {
+            "category": "plural",
+            "value": "singular"
+          },
+          {
+            "category": "case",
+            "value": "nominative"
+          }
+        ]
+      },
+      {
+        "name": "verb",
+        "display": "verb",
+        "properties": [
+          {
+            "name": "transtivity",
+            "values": ["transitive", "intransitive"],
+            "default": "transitive"
+          },
+          {
+            "name": "experiencer",
+            "values": [true, false],
+            "default": false
+          }
+        ],
+        "defaultconjugation": []
+      }
+    ],
     "conjugation": [
       {
         "appliesto": "noun",
+        "appliestoproperties": {},
         "mode": "suffix",
         "suffix": "ah",
         "stemchanges": [],
@@ -20,6 +62,25 @@
           {
             "category": "plural",
             "value": "plural"
+          }
+        ]
+      },
+      {
+        "appliesto": "auxilliary",
+        "appliestoproperties": {
+          "vowel": "i"
+        },
+        "mode": "infix",
+        "infix": "e",
+        "infixmode": "replace",
+        "target": {
+          "value": "i",
+          "index": -1
+        },
+        "conjugates": [
+          {
+            "category": "tense",
+            "value": "nearpast"
           }
         ]
       }
@@ -35,8 +96,27 @@
           "gloss": ["stone", "rock", "orthography"]
         }
       ],
+      "usagenotes": [],
       "irregularforms": [],
-      "irregularsyntax": []
+      "irregularsyntax": [],
+      "properties": {}
+    },
+    {
+      "root": "danec",
+      "pos": "verb",
+      "gloss": [
+        {
+          "lang": 1,
+          "gloss": ["borrow", "copy", "imitate"]
+        }
+      ],
+      "usagenotes": [],
+      "irregularforms": [],
+      "irregularsyntax": [],
+      "properties": {
+        "transitivity": "transitive",
+        "experiencer": true
+      }
     }
   ]
 }
