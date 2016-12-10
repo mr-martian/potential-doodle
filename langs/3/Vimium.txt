@@ -1,0 +1,596 @@
+﻿Phonology/Morphology
+
+
+Word structure: PVPVP (pattern extended or shortened for grammatical constructions)
+P= voiceless plosive or approximant or nasal or fricative (t,k,p,l,m,n,ng,f,v,sh,zh)
+V= vowel (e [eh], i [ee], u [oo]) or diphthong (ei, eu, ie, iu, ue, ui)
+Stress on first syllable.
+
+
+all vowel tables in this document: horizontal is initial, vertical is final.
+
+
+Vowel meanings
+
+
+First vowel:
+
+
+	e
+	i
+	u
+	_
+	verb (have/use/ make/give [noun])[a]
+	noun (singular)
+	[noun]-like/of or pertaining to [noun]
+	e
+	-----
+	noun (dual)
+	can be [verb]ed
+	i
+	verbed
+	-----
+	having the ability to [verb]
+	u
+	will verb
+	noun (plural)
+	-----
+	
+
+Second Vowel:
+
+
+	verb
+	noun
+	describer
+	e
+	neutral/ infinitive/indicative
+	a __
+	__
+	i
+	subjunctive
+	the __
+	very __, really __
+	u
+	imperative
+	my __
+	un-__, not-__
+	ei
+	conditional
+	your __
+	
+
+	eu
+	questioning
+	his/her __
+	
+
+	ie
+	negative imperative
+	their __
+	
+
+	iu
+	negative
+	our (incl.) __
+	very un-__
+	ue
+	negative subjunctive
+	y’all’s __
+	
+
+	ui
+	negative conditional
+	our (excl.) __
+	sort of __ (not very)
+	________________
+
+
+Grammar
+Sentence: [global locative] [Object] Verb Subject
+Noun Phrase: (pro)noun [modifiers (adjectives, numbers, prepositional phrases etc.)]* [subclause-indicator subclause]
+Verb Phrase: verb [infinitive] [subclause-indicator subclause/locative] [adverbs]*
+prepositional phrase: prep [noun phrase]
+conjunctions like english
+conditional: object verb-conditional subject then object2 verb (any) subject2
+Special words (mostly conjunctions):
+ngizh = subordinate clause indicator
+fuv = and
+vif = or
+teng = xor
+shuzh = nand
+feng = but
+engi = then (conjunction for conditionals)
+tef ... engu ... = more ... than ...
+ngung = so
+pronouns:
+zh [vowel] f [vowel]
+
+
+
+
+	e
+	i
+	u
+	ei
+	eu
+	ie
+	iu
+	ue
+	e
+	who
+	someone
+	him/her
+	this person
+	that person
+	everyone
+	no one
+	anyone
+	i
+	why
+	some reason
+	you
+	this reason
+	that reason
+	every reason
+	no reason
+	any reason
+	u
+	where
+	somewhere
+	it
+	here
+	there
+	everywhere
+	nowhere
+	any place
+	ei
+	how
+	somehow
+	I, me
+	this way
+	thus
+	every way
+	no way
+	anyhow
+	eu
+	which
+	some
+	us (ex)
+	this
+	that
+	every
+	no
+	whichever
+	ie
+	when
+	sometime
+	y’all
+	now
+	then
+	always
+	never
+	whenever
+	iu
+	how many
+	
+
+	us (in)
+	
+
+	
+
+	
+
+	
+
+	
+
+	ue
+	??
+	
+
+	them/they
+	
+
+	
+
+	
+
+	
+
+	
+
+	ui
+	what
+	something
+	it (plural)
+	this thing
+	that thing
+	everything
+	nothing
+	anything
+	
+
+________________
+
+
+Prepositions
+f _ t _
+
+
+
+
+	e
+	i
+	u
+	ei
+	eu
+	ie
+	iu
+	ue
+	ui
+	e
+	
+
+	to
+	
+
+	before
+	after
+	west of
+	
+
+	
+
+	
+
+	i
+	
+
+	
+
+	
+
+	long before
+	long after
+	
+
+	using
+	
+
+	sticking out of
+	u
+	to the left of
+	
+
+	of 
+(abr.‘u’)
+	shortly before
+	shortly after
+	
+
+	in
+	partially contained in
+	
+
+	ei
+	
+
+	
+
+	
+
+	east of
+	
+
+	
+
+	surrounded by
+	
+
+	
+
+	eu
+	
+
+	overarched by
+	under
+	near
+	north of
+	beyond
+	submerged in
+	
+
+	
+
+	ie
+	in order to
+	
+
+	then
+	
+
+	
+
+	arm’s length away
+	
+
+	with the intent that
+	
+
+	iu
+	
+
+	
+
+	
+
+	away
+	south of
+	
+
+	
+
+	
+
+	
+
+	ue
+	to the right of
+	
+
+	with [person]
+	
+
+	
+
+	
+
+	
+
+	across
+	
+
+	ui
+	
+
+	
+
+	
+
+	
+
+	
+
+	by
+	
+
+	
+
+	
+
+	
+
+Numbers
+mu = 0, me = 1, mue, miu, meu, mui, mi, mie, mei = 8
+nge = 9, ngeme = 10, ...
+ngeimei = 80
+ne = 81, nue = 162
+neingeimei = 728
+neingeimei fuv mue = 730 (728 and 2)
+ne fuetue ne = 6561 (81 across (times) 81)
+ne fuetue ne fuv nguemue = 6581
+
+
+-ti = ordinal
+numbers are both adjectives and nouns.
+________________
+Lexicon
+CCC - verb, noun, [adjective]
+allowed consonants: (t,k,p,l,m,n,ng,f,v,sh,zh)
+
+
+ffn- to sing, song
+fft- to scream/yell, a scream, harsh
+fkm- to guide, map
+flsh- separate, sky
+fpk- to judge, (a) judge, judicial
+fshm- to freeze, cold/ice/frost/snow 
+fzhn- to disgust, disgust (emotion)
+ftzh- to think, thoughts, intelligent
+fshsh- to pilot, boat
+fzht- to hold/grasp, handle
+llng- to hear, hearing, audible/loud
+lkng- to listen, ears, open-minded or attentive
+lkn- to select from a finite number of options, chosen one
+lksh- to go/travel [to], journey, wandering
+lkzh- to arrive/come [to], guest, timely
+kkf- to birth/begin, generation [derive male, female from this]
+kkk- to happen, occurence
+kkt- to strike/break, a strike/fragment/crack, smashed/cracked/fragile
+kln- to choose/plan [cf lkn], plan
+kmk- to love, loved one, beloved
+kmt- to solidify, rocks, steadfast/hard
+kmsh- to wake up, day
+knk- to joke, jokes, funny
+knsh- to enrage/taunt, anger, angry
+kpk- to sacrifice, the act of sacrifice, sacrificial
+kzhk- to flee, coward, cowardly
+kzht- to take/steal/thieve, stolen goods, thief-like  
+mmk- to dance, a certain dance, (good at) dancing
+mnt- to enjoy, happiness, happy  
+mshl- to swim, water, swimming
+mzhsh- to play, game, playful
+nmk- to mold/shape/create, sculpture/clay/creator, malleable
+nmt- to grow, growth, large (full-grown)
+nngf - to do, do-er (ningef [verb] = one who [verb]s), possible
+nngt - to count, number, countable (used for few, many, etc.)
+nnt- to shrink, shrinkage, small
+nzhk- to stick, magnet(use word for “stone” as a suffix/prefix), magnetic/sticky
+nzht- to avenge, revenge, vengeful
+plf- to fly, flight/air/wings (the word for “airship” is a derivative), flying
+plm- to lose an object “lost my spear”/ to search/investigate, search/investigation, lost  
+pln- to lose oneself or one’s direction(“i’m lost”), castaway, lost
+plv- to float, clouds, floating/synonym for “gentle” or “calm”
+pmk- to be beautiful, beauty, beautiful
+pft-to like/enjoy, happiness
+ptf- to ponder, musings, thoughtful (synonym of “ftzh”)
+pzht- to pull, tides, pullable/tidal
+pzhzh- to laugh, laughter, funny
+shfv- to walk, feet/legs/stride, walking
+shlf- to live [in], life/current residence, living
+shksh- to squish/squeeze, (name for a jellyfish-like animal), soft/squishy 
+shnk- to sadden, sadness, sad 
+shshsh- to rain, rain, stormy 
+shshzh- to whisper, whispers, quiet  
+shvv- to run, race, running
+shzhk - to dive, depths, deep
+tkp - to punch, a punch, punchable
+tshl - to be, existence, real
+tshzh - to be located [in], place, (what in the world do we put here?)
+vmm- to say, speech/voice, talkative(i.e. talkative person)
+vrk- to see, sight/vision(literal and supernatural)/dream, visible
+vrm- to fill an area, people group
+vvk- to feel/sense, senses/feelings/emotions etc., sympathetic/empathetic/emotional
+vvzh- to shine light, lightning/light, bright 
+vzhk- to worsen, sickness, worst/sickened
+wlt- to vote, vote/election/ballot, democratic 
+wkl- to learn/discover, education, educational
+wkt- to write, letters, poetic 
+wshk- to back up/walk backwards/reverse, the reverse, anti-
+wvk- to glow, (name for a glowing type of mineral common on the world), glowing 
+wvt- to burn, heat/sun/fire, flaming
+wzht- to overcome/win, victory, victorious
+wzhzh- to fear, fear/horror, fearful/feared 
+zhnl- to die, death/mortality, dead
+zhnn- to learn/teach [I learn things, I teach things to people], piece of information
+zhkk- to eat, food (piece of), eatable 
+zhshk- to have (i.e. “i have three apples”), money/riches/price, wealthy 
+zhsht- to trade, trader/merchant, tradeable
+zhzhng- to shine, precious metals, shiny 
+zhzht- to darken, darkness, dark 
+zhzhzh- to sleep, sleep, asleep
+________________
+Sample Texts:
+
+
+zhinul           fuv     wizhiezh  u    shiuvev  weizhet     zhiekik.
+(my death) (and) (their fear) (of) (races) (overcame) (the piece of food [dual])
+The 2 pieces of food overcame my death and their fear of racing.
+
+
+fishish       feizhet     shikish                 numet  fuv   zhufu  peizhet zhufe futeu    mishil   numit.
+(the ship) (grasped) (the sea creature) (large) (and)  (it)    (pulled) (he)  (under) (water) (giant)
+The giant sea creature grasped the ship and pulled it under the ocean.
+
+
+
+
+Story (insert title later)
+
+
+kimit          numet   nuzhek       keiket          ningif u kizhit           ngizh zhefe feifen
+(the rock) (large)   (magnetic) (shattered) (the doer of thieving) (s.c.) (who) (sang)
+The singing thief shattered the large magnetic rock.
+
+
+
+
+Creation Myth
+
+
+Feiti              zheifie tishizh       luekiush       teishezh               niengef u teshel    mue.
+(long before) (now) (the place) (un-go-able) (were located in) (doers of existing) (two)
+Long before now, in the place beyond reaching, there were two beings.
+
+
+zhufe u    kimit          numit       fuv     zhufe u    mishil         numit       teishel zhufue.
+(he)   (of) (the rock) (gigantic) (and)  (he)   (of) (the water) (gigantic) (were)  (they)
+They were the man of the mountain and the man of the sea.
+
+
+“tishezh  u     teshel      neumuk                        fetie             wekel       zhefui keukek     zhufiu!”
+(a place) (of) (existing) (will make, imperative) (in order to) (discover) (what) (will happen) (us)
+veumem fite  zhufe  u     mishil         numit      zhufe u    kimit         numit      .
+(said)      (to) (he)    (of) (the water) (gigantic) (he)   (of) (the rock) (gigantic)
+One day the man of the mountain said to the man of the sea “Let’s make a world and see what happens!”
+
+
+kilin         peifet zhufe u    mishil         numit,      ngung tishizh       u     teshel      keukef
+(the plan) (liked)  (he)  (of) (the water) (gigantic) (so)    (the place) (of) (existing) (began)
+nemek      zhufue.
+(to make) (them)
+The man of the sea liked this plan, so they began to make the world.
+
+
+feute   tishizh        u     teshel     neimek zhufue, vierem          neimek  ngizh zhufu
+(after) (the place) (of) (existing) (made) (they)   (two peoples) (made)   (s.c.) (it)
+sheulif               zhufue zhufue, fuv     zhufue feilesh        zhufue fiuti      mishel   ngung numet
+(might dwell in) (they)  (they)  (and) (them) (separated) (they)  (using) (a water) (so)   (large)
+ngizh          lukiush         fietui zhuefe     teshel  zhufu.
+(s.c.) (very untravleable) (by) (anyone)    (is)      (it)
+After they had made the world, they made two peoples to dwell in it, and separated them with a water too great for any man living to cross.
+
+
+futie    vireum          leikezh    zhufe u     kimit        numit    fuv vimim  zheinen fite zhufue zhufe
+(then) (his people) (came to) (he)  (of) (the rock) (huge) (and) (the lang) (taught) (to them) (he)
+ngizh zhefeu  neimek zhufe.
+(s.c.) (which) (made) (he)
+Then the man of the mountain came to his people and taught them the language that he had devised.
+
+
+zhiunen           nuengut      zheinen fite zhufue zhufe, futie   “zeifu  leukezh      kikek
+(knowleges) (uncountable) (taught) (to)  (them) (he) (then) (here) (will come) (a time)
+mueti feute   kekek nengie    kiukef    zhufei fuv     wivet sheushesh felish” veimem
+(2nd)  (after) (pass) (144)  (generations) (I) (and) (fire)  (will rain)    (the sky) (said)
+zhufue fuv     leikesh feitiu zhufue.
+(he)     (and) (went)  (away) (he)
+He taught them many things, and then he left, saying that he would return in 144 generations when the sky would rain fire.
+
+
+In the beginning God created the heavens and the earth. (Genesis 1:1, NetBible)
+1 Tishizh u teshel fuv fiulish neimek fiutu kikik u kekef NINGIF NEMEK U ZHIEFUI.
+
+
+The Legend of the Young Man
+
+
+There was a young, foolish man who thought he could pass by them.  
+
+
+Legend foretold that anyone who could outsmart the guards would be allowed to pass onto the Bridge and obtain magical powers.
+
+
+He came upon the first guard, who told him a riddle: 
+
+
+“What is created as soon as you say it?”
+
+
+“Noise,” the man said, confident.
+
+
+Having outsmarted the first guard, the man passed onto the second. 
+
+
+The second guard said,
+
+
+“What pulls with no hands and glows without fire?”  
+ 
+“The moon,” said the man.
+
+
+The man climbed the Bridge and made it to the mountain man’s palace. 
+
+
+The mountain man told him, “Now, you have two choices: you can either be granted wisdom or the power of flight.”
+
+
+The man, thinking this was another test, told the mountain man, “Wisdom.”
+And so the mountain man gave the man wisdom.
+
+
+The man exclaimed in realization with his newfound wisdom, “Wisdom can be gained through experience, but flight cannot be!”
+[a]unless otherwise specified in the lexicon

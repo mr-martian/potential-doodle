@@ -1,0 +1,26 @@
+[
+  {
+    "root": "f_f_n",
+    "pos": "root",
+    "gloss": [
+      {
+        "lang": 1,
+        "gloss": ["sing"],
+        "appliesto": {
+          "pos": "verb"
+        }
+      },
+      {
+        "lang": 1,
+        "gloss": ["song"],
+        "appliesto": {
+          "pos": "noun"
+        }
+      }
+    ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "root": "thefam",
+    "pos": "noun",
+    "gloss": [
+      {
+        "lang": 1,
+        "gloss": ["stone", "rock", "orthography"]
+      }
+    ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "danec",
+    "pos": "verb",
+    "gloss": [
+      {
+        "lang": 1,
+        "gloss": ["borrow", "copy", "imitate"]
+      }
+    ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {
+      "transitivity": "transitive",
+      "experiencer": true
+    }
+  }
+]

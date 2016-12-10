@@ -12,11 +12,10 @@ TODO
       - [ ] stem changes
       - [ ] vary form by root phonology
     - [ ] infix
-      - [ ] replace
-        - [x] nth matching string (/regex?)
-        - [ ] anything more complex
-        - [ ] vary form by root phonology
-      - [ ] insert
+      - [x] replace nth matching string (/regex?)
+      - [x] insert before/after nth matching string (/regex?)
+      - [ ] anything more complex
+      - [ ] vary form by root phonology
     - [ ] grammatical categories
       - [x] default values
       - [ ] possible values

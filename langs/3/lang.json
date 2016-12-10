@@ -1,0 +1,40 @@
+{
+  "pos": [
+    {
+      "name": "conj",
+      "display": "conjunction",
+      "properties": [],
+      "defaultconjugation": []
+    },
+    {
+      "name": "root",
+      "display": "root",
+      "properties": [],
+      "defaultconjugation": []
+    }
+  ],
+  "syntax": {
+    "sentence": [
+      {
+        "item": "prepphrase",
+        "repeat": "*",
+        "role": "oblique"
+      },
+      {
+        "item": "nounphrase",
+        "repeat": "?",
+        "role": "object"
+      },
+      {
+        "item": "verbphrase",
+        "repeat": "1",
+        "role": "verb"
+      },
+      {
+        "item": "nounphrase",
+        "repeat": "1",
+        "role": "subject"
+      }
+    ]
+  }
+}

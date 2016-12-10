@@ -15,14 +15,21 @@ def loadlang(langid):
         l = json.load(open("langs/%s/lang.json" % langid))
         loaded_langs[langid] = l
         return l
+loaded_dicts = {}
+def loaddict(langid):
+    if langid in loaded_dicts:
+        return loaded_dicts[langid]
+    else:
+        l = json.load(open("langs/%s/lexicon.json" % langid))
+        loaded_dicts[langid] = l
+        return l
 def displaylang(langid):
-    langdict = loadlang(langid)
+    lex = loaddict(langid)
     langmeta = loadmeta(langid)
     print "<h1>%s</h1>" % langmeta["name"]["local"]
     print "<h2>Morphology</h2>"
     print "<h2>Syntax</h2>"
     print "<h2>Lexicon</h2>"
-    lex = langdict["lexicon"]
     lex.sort(key=lambda x: x["root"])
     cur = ""
     for word in lex:

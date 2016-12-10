@@ -1,0 +1,40 @@
+[
+  {
+    "root": "mouse",
+    "pos": "noun",
+    "gloss": [],
+    "usagenotes": [
+      {
+        "lang": 1,
+        "note": "rodent, often used as example of a small creature"
+      }
+    ],
+    "irregularforms": [
+      {
+        "conjugations": [
+          {
+            "category": "plural",
+            "value": "plural"
+          }
+        ],
+        "form": "mice"
+      }
+    ],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "rock",
+    "pos": "noun",
+    "gloss": [
+      {
+        "lang": 2,
+        "gloss": ["thefam"]
+      }
+    ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  }
+]

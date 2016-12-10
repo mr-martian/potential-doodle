@@ -1,0 +1,14 @@
+[
+  {
+    "appliesto": "noun",
+    "mode": "suffix",
+    "suffix": "s",
+    "stemchanges": [],
+    "conjugates": [
+      {
+        "category": "plural",
+        "value": "plural"
+      }
+    ]
+  }
+]

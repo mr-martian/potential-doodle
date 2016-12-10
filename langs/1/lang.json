@@ -1,93 +1,50 @@
 {
-  "grammar": {
-    "pos": ["noun", "transverb", "intransverb"],
-    "pos": [
-      {
-        "name": "noun",
-        "display": "noun",
-        "properties": [],
-        "defaultconjugation": [
-          {
-            "category": "plural",
-            "value": "singular"
-          },
-          {
-            "category": "case",
-            "value": "nominative"
-          }
-        ]
-      },
-      {
-        "name": "verb",
-        "display": "verb",
-        "properties": [
-          {
-            "name": "transitivity",
-            "values": ["transitive", "intransitive"],
-            "default": "transitive"
-          }
-        ],
-        "defaultconjugation": [
-          {
-            "category": "tense",
-            "value": "present"
-          }
-        ]
-      }
-    ],
-    "conjugation": [
-      {
-        "appliesto": "noun",
-        "mode": "suffix",
-        "suffix": "s",
-        "stemchanges": [],
-        "conjugates": [
-          {
-            "category": "plural",
-            "value": "plural"
-          }
-        ]
-      }
-    ]
-  },
-  "lexicon": [
+  "pos": [
     {
-      "root": "mouse",
-      "pos": "noun",
-      "gloss": [],
-      "usagenotes": [
+      "name": "noun",
+      "display": "noun",
+      "properties": [],
+      "defaultconjugation": [
         {
-          "lang": 1,
-          "note": "rodent, often used as example of a small creature"
-        }
-      ],
-      "irregularforms": [
+          "category": "plural",
+          "value": "singular"
+        },
         {
-          "conjugations": [
-            {
-              "category": "plural",
-              "value": "plural"
-            }
-          ],
-          "form": "mice"
+          "category": "case",
+          "value": "nominative"
         }
-      ],
-      "irregularsyntax": [],
-      "properties": {}
+      ]
     },
     {
-      "root": "rock",
-      "pos": "noun",
-      "gloss": [
+      "name": "verb",
+      "display": "verb",
+      "properties": [
         {
-          "lang": 2,
-          "gloss": ["thefam"]
+          "name": "transitivity",
+          "values": ["transitive", "intransitive"],
+          "default": "transitive"
         }
       ],
-      "usagenotes": [],
-      "irregularforms": [],
-      "irregularsyntax": [],
-      "properties": {}
+      "defaultconjugation": [
+        {
+          "category": "tense",
+          "value": "present"
+        }
+      ]
     }
-  ]
+  ],
+  "syntax": {
+    "sentence": [
+      {
+        "item": "nounphrase",
+        "repeat": "1",
+        "role": "subject"
+      },
+      {
+        "item": "verbphrase",
+        "repeat": "1",
+        "role": "verb"
+      }
+    ]
+  }
 }
