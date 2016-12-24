@@ -1,28 +1,4 @@
-import json, sys
-loaded_meta = {}
-def loadmeta(langid):
-    if langid in loaded_meta:
-        return loaded_meta[langid]
-    else:
-        l = json.load(open("langs/%s/metadata.json" % langid))
-        loaded_meta[langid] = l
-        return l
-loaded_langs = {}
-def loadlang(langid):
-    if langid in loaded_langs:
-        return loaded_langs[langid]
-    else:
-        l = json.load(open("langs/%s/lang.json" % langid))
-        loaded_langs[langid] = l
-        return l
-loaded_dicts = {}
-def loaddict(langid):
-    if langid in loaded_dicts:
-        return loaded_dicts[langid]
-    else:
-        l = json.load(open("langs/%s/lexicon.json" % langid))
-        loaded_dicts[langid] = l
-        return l
+from general import loaddict, loadmeta, getname
 def displaylang(langid):
     lex = loaddict(langid)
     langmeta = loadmeta(langid)
@@ -41,12 +17,7 @@ def displaylang(langid):
         print "<h4>%s</h4>" % word["pos"]
         for gl in word["gloss"]:
             print "<div class=\"gloss\">"
-            glname = loadmeta(gl["lang"])["name"]
-            if langid in glname:
-                disp = glname[langid]
-            else:
-                disp = glname["local"]
-            print "<b><a href=\"viewlang.php?lang=%s\">%s</a></b>" % (gl["lang"], disp)
+            print "<b><a href=\"viewlang.php?lang=%s\">%s</a></b>" % (gl["lang"], getname(gl["lang"], langid))
             print "<ul>"
             for glw in gl["gloss"]:
                 print "<li>%s</li>" % glw
@@ -54,6 +25,7 @@ def displaylang(langid):
         print "</div>"
     print "</div>"
 if __name__ == "__main__":
+    import sys
     langid = sys.argv[1]
     try:
         displaylang(langid)

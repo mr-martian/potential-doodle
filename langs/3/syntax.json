@@ -1,0 +1,27 @@
+{
+  "sentence": {
+    "collectiontype": "or",
+    "items": ["intranssen", "transsen"]
+  },
+  "intranssen": {
+    "collectiontype": "sequence",
+    "items": [
+      {
+        "collectiontype": "optionalplural",
+        "items": ["prepphrase"]
+      },
+      {
+        "collectiontype": "item",
+        "items": ["verbphrase"],
+        "properties": {
+          "category": "transitivity",
+          "value": "transitive"
+        }
+      },
+      {
+        "collectiontype": "item",
+        "items": ["nounphrase"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "sentence": {
+    "mode": "oneof",
+    "things": ["verb", "oblique"]
+  },
+  "oblique": {
+    "mode": "collectionof",
+    "things": [
+      "sentence",
+      {
+        "mode": "oneof",
+        "things": ["casemarkednoun", "adpositionalphrase"]
+      }
+    ]
+  }
+}

@@ -1,5 +1,34 @@
 [
   {
+    "root": "copy",
+    "pos": "verb",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {
+      "transitivity": "transitive"
+    }
+  },
+  {
+    "root": "cosmic",
+    "pos": "adjective",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "forcefully",
+    "pos": "adverb",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
     "root": "mouse",
     "pos": "noun",
     "gloss": [],
@@ -32,6 +61,26 @@
         "gloss": ["thefam"]
       }
     ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "the",
+    "pos": "article",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {
+      "definite": true
+    }
+  },
+  {
+    "root": "towards",
+    "pos": "preposition",
+    "gloss": [],
     "usagenotes": [],
     "irregularforms": [],
     "irregularsyntax": [],

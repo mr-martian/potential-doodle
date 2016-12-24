@@ -39,4 +39,6 @@ TODO
     - [ ] put on screen nicely
 - [ ] learn langs
   - [ ] store progress
-  - [ ] generate sentences
+  - [x] generate sentences
+  - [ ] generate translations
+  - [ ] check input against translations

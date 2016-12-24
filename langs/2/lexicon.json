@@ -1,19 +1,5 @@
 [
   {
-    "root": "thefam",
-    "pos": "noun",
-    "gloss": [
-      {
-        "lang": 1,
-        "gloss": ["stone", "rock", "orthography"]
-      }
-    ],
-    "usagenotes": [],
-    "irregularforms": [],
-    "irregularsyntax": [],
-    "properties": {}
-  },
-  {
     "root": "danec",
     "pos": "verb",
     "gloss": [
@@ -29,5 +15,61 @@
       "transitivity": "transitive",
       "experiencer": true
     }
+  },
+  {
+    "root": "dasnan",
+    "pos": "adjective",
+    "gloss": [
+      {
+        "lang": 1,
+        "gloss": ["cosmic", "natural"]
+      }
+    ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "janem",
+    "pos": "adverb",
+    "gloss": [
+      {
+        "lang": 1,
+        "gloss": ["forcefully"]
+      }
+    ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "seln",
+    "pos": "postposition",
+    "gloss": [
+      {
+        "lang": 1,
+        "gloss": ["to", "towards"]
+      }
+    ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "thefam",
+    "pos": "noun",
+    "gloss": [
+      {
+        "lang": 1,
+        "gloss": ["stone", "rock", "orthography"]
+      }
+    ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
   }
 ]
