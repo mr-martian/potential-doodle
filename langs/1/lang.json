@@ -1,50 +1,84 @@
 {
-  "pos": [
-    {
-      "name": "noun",
-      "display": "noun",
-      "properties": [],
-      "defaultconjugation": [
-        {
-          "category": "plural",
-          "value": "singular"
-        },
-        {
-          "category": "case",
-          "value": "nominative"
-        }
-      ]
-    },
-    {
-      "name": "verb",
-      "display": "verb",
-      "properties": [
-        {
-          "name": "transitivity",
-          "values": ["transitive", "intransitive"],
-          "default": "transitive"
-        }
-      ],
-      "defaultconjugation": [
-        {
-          "category": "tense",
-          "value": "present"
-        }
-      ]
-    }
-  ],
-  "syntax": {
-    "sentence": [
+  "name": {
+    "local": "English",
+    "translations": []
+  },
+  "creator": "Natlang",
+  "grammar": {
+    "clause": [
       {
-        "item": "nounphrase",
-        "repeat": "1",
-        "role": "subject"
+        "conditions": [],
+        "order": [
+          "subject",
+          "verb",
+          "object"
+        ]
+      }
+    ],
+    "nounphrase": [
+      {
+        "conditions": [
+          {
+            "node": "plural",
+            "property": 0,
+            "value": "plural"
+          }
+        ],
+        "order": [
+          "noun",
+          "-s"
+        ]
       },
       {
-        "item": "verbphrase",
-        "repeat": "1",
-        "role": "verb"
+        "conditions": [
+          {
+            "node": "plural",
+            "property": 0,
+            "value": "singular"
+          }
+        ],
+        "order": [
+          "noun"
+        ]
+      }
+    ],
+    "verbphrase": [
+      {
+        "conditions": [
+          {
+            "node": "aspect",
+            "property": 0,
+            "value": "durative"
+          }
+        ],
+        "order": [
+          "adverb",
+          "verb",
+          "-s"
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "node": "aspect",
+            "property": 0,
+            "value": "continuous"
+          }
+        ],
+        "order": [
+          "adverb",
+          "is",
+          "verb",
+          "-ing"
+        ]
       }
     ]
-  }
+  },
+  "sandhi": [
+    {
+      "find": " -",
+      "replace": "",
+      "regex": false
+    }
+  ]
 }

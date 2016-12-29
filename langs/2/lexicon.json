@@ -13,7 +13,7 @@
     "irregularsyntax": [],
     "properties": {
       "transitivity": "transitive",
-      "experiencer": true
+      "experiencer": false
     }
   },
   {

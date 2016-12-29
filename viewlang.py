@@ -1,7 +1,7 @@
-from general import loaddict, loadmeta, getname
+from general import loaddict, loadlang, getname
 def displaylang(langid):
     lex = loaddict(langid)
-    langmeta = loadmeta(langid)
+    langmeta = loadlang(langid)
     print "<h1>%s</h1>" % langmeta["name"]["local"]
     print "<h2>Morphology</h2>"
     print "<h2>Syntax</h2>"

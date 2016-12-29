@@ -4,22 +4,13 @@ for making and sharing conlangs
 TODO
 - [ ] store langs
   - [ ] clearly organize
-  - [ ] split into multiple files
-  - [ ] syntax
-  - [ ] morphology
+  - [ ] syntax/morphology
     - [ ] prefix/suffix
       - [x] concatenative
       - [ ] stem changes
       - [ ] vary form by root phonology
     - [ ] infix
-      - [x] replace nth matching string (/regex?)
-      - [x] insert before/after nth matching string (/regex?)
-      - [ ] anything more complex
-      - [ ] vary form by root phonology
-    - [ ] grammatical categories
-      - [x] default values
-      - [ ] possible values
-      - [ ] translations
+    - [ ] agreement
   - [ ] lexicon
     - [x] glosses in various languages
     - [x] semantics/usage notes
@@ -40,5 +31,6 @@ TODO
 - [ ] learn langs
   - [ ] store progress
   - [x] generate sentences
-  - [ ] generate translations
+  - [x] generate translations
   - [ ] check input against translations
+    - [ ] sentences sometimes specify grammatical information not marked by language

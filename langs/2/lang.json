@@ -1,77 +1,89 @@
 {
-  "pos": [
-    {
-      "name": "aux",
-      "display": "auxilliary verb",
-      "properties": [
-        {
-          "name": "vowel",
-          "values": ["i", "ol"],
-          "default": "i"
-        }
-      ],
-      "defaultconjugation": [
-        {
-          "category": "tense",
-          "value": "nonpast"
-        }
-      ]
-    },
-    {
-      "name": "noun",
-      "display": "noun",
-      "properties": [],
-      "defaultconjugation": [
-        {
-          "category": "plural",
-          "value": "singular"
-        },
-        {
-          "category": "case",
-          "value": "nominative"
-        }
-      ]
-    },
-    {
-      "name": "verb",
-      "display": "verb",
-      "properties": [
-        {
-          "name": "transtivity",
-          "values": ["transitive", "intransitive"],
-          "default": "transitive"
-        },
-        {
-          "name": "experiencer",
-          "values": [true, false],
-          "default": false
-        }
-      ],
-      "defaultconjugation": []
-    }
-  ],
-  "syntax": {
-    "sentence": [
+  "name": {
+    "local": "Sajem Tan",
+    "translations": [
       {
-        "item": "prepphrase",
-        "repeat": "*",
-        "role": "oblique"
-      },
-      {
-        "item": "nounphrase",
-        "repeat": "?",
-        "role": "object"
-      },
-      {
-        "item": "verbphrase",
-        "repeat": "1",
-        "role": "verb"
-      },
-      {
-        "item": "nounphrase",
-        "repeat": "1",
-        "role": "subject"
+        "lang": 1,
+        "translation": "Common Honey"
       }
     ]
-  }
+  },
+  "creator": "Sajem Tan",
+  "grammar": {
+    "clause": [
+      {
+        "conditions": [
+          {
+            "node": "verb.verb.properties",
+            "property": "experiencer",
+            "value": false
+          }
+        ],
+        "order": [
+          "object",
+          "verb",
+          "subject"
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "node": "verb.verb.properties",
+            "property": "experiencer",
+            "value": true
+          }
+        ],
+        "order": [
+          "object",
+          "subject",
+          "verb"
+        ]
+      }
+    ],
+    "nounphrase": [
+      {
+        "conditions": [],
+        "order": [
+          "noun"
+        ]
+      }
+    ],
+    "verbphrase": [
+      {
+        "conditions": [
+          {
+            "node": "aspect",
+            "property": 0,
+            "value": "durative"
+          }
+        ],
+        "order": [
+          "adverb",
+          "verb",
+          "-feh"
+        ]
+      },
+      {
+        "conditions": [
+          {
+            "node": "aspect",
+            "property": 0,
+            "value": "continuous"
+          }
+        ],
+        "order": [
+          "adverb",
+          "verb",
+          "-sho"
+        ]
+      }
+    ]
+  },
+  "sandhi": [
+    {
+      "find": " -",
+      "replace": "",
+      "regex": false
+    }
+  ]
 }
