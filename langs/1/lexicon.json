@@ -1,5 +1,35 @@
 [
   {
+    "root": "and",
+    "pos": "conjunction",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "at",
+    "pos": "preposition",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "be",
+    "pos": "verb",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {
+      "transitivity": "transitive",
+      "object": "AP"
+    }
+  },
+  {
     "root": "copy",
     "pos": "verb",
     "gloss": [],
@@ -7,11 +37,33 @@
     "irregularforms": [],
     "irregularsyntax": [],
     "properties": {
-      "transitivity": "transitive"
+      "transitivity": "transitive",
+      "object": "NP"
     }
   },
   {
     "root": "cosmic",
+    "pos": "adjective",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "excell",
+    "pos": "verb",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {
+      "transitivity": "transitive",
+      "object": "PP"
+    }
+  },
+  {
+    "root": "excellent",
     "pos": "adjective",
     "gloss": [],
     "usagenotes": [],
@@ -53,6 +105,15 @@
     "properties": {}
   },
   {
+    "root": "must",
+    "pos": "auxilliary",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
     "root": "rock",
     "pos": "noun",
     "gloss": [
@@ -61,6 +122,15 @@
         "gloss": ["thefam"]
       }
     ],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "that",
+    "pos": "complementizer",
+    "gloss": [],
     "usagenotes": [],
     "irregularforms": [],
     "irregularsyntax": [],
@@ -80,6 +150,15 @@
   {
     "root": "towards",
     "pos": "preposition",
+    "gloss": [],
+    "usagenotes": [],
+    "irregularforms": [],
+    "irregularsyntax": [],
+    "properties": {}
+  },
+  {
+    "root": "unproductive",
+    "pos": "adjective",
     "gloss": [],
     "usagenotes": [],
     "irregularforms": [],

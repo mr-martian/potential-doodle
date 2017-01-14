@@ -5,80 +5,25 @@
   },
   "creator": "Natlang",
   "grammar": {
-    "clause": [
-      {
-        "conditions": [],
-        "order": [
-          "subject",
-          "verb",
-          "object"
-        ]
-      }
-    ],
-    "nounphrase": [
-      {
-        "conditions": [
-          {
-            "node": "plural",
-            "property": 0,
-            "value": "plural"
-          }
-        ],
-        "order": [
-          "noun",
-          "-s"
-        ]
+    "pos": {
+      "N": "noun",
+      "V": "verb",
+      "A": "adjective",
+      "P": "preposition",
+      "Adv": "adverb",
+      "Aux": "auxilliary",
+      "Det": "article",
+      "Con": "conjunction",
+      "C": "complementizer",
+      "Deg": "adverb"
+    },
+    "complements": {
+      "V": {
+        "head-prop": "object"
       },
-      {
-        "conditions": [
-          {
-            "node": "plural",
-            "property": 0,
-            "value": "singular"
-          }
-        ],
-        "order": [
-          "noun"
-        ]
+      "N": {
+        "types": ["PP"]
       }
-    ],
-    "verbphrase": [
-      {
-        "conditions": [
-          {
-            "node": "aspect",
-            "property": 0,
-            "value": "durative"
-          }
-        ],
-        "order": [
-          "adverb",
-          "verb",
-          "-s"
-        ]
-      },
-      {
-        "conditions": [
-          {
-            "node": "aspect",
-            "property": 0,
-            "value": "continuous"
-          }
-        ],
-        "order": [
-          "adverb",
-          "is",
-          "verb",
-          "-ing"
-        ]
-      }
-    ]
-  },
-  "sandhi": [
-    {
-      "find": " -",
-      "replace": "",
-      "regex": false
     }
-  ]
+  }
 }

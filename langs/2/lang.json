@@ -10,80 +10,25 @@
   },
   "creator": "Sajem Tan",
   "grammar": {
-    "clause": [
-      {
-        "conditions": [
-          {
-            "node": "verb.verb.properties",
-            "property": "experiencer",
-            "value": false
-          }
-        ],
-        "order": [
-          "object",
-          "verb",
-          "subject"
-        ]
+    "pos": {
+      "N": "noun",
+      "V": "verb",
+      "A": "adjective",
+      "P": "postposition",
+      "Adv": "adverb",
+      "Aux": "auxilliary",
+      "Det": "article",
+      "Con": "conjunction",
+      "C": "complementizer",
+      "Deg": "adverb"
+    },
+    "complements": {
+      "V": {
+        "head-prop": "object"
       },
-      {
-        "conditions": [
-          {
-            "node": "verb.verb.properties",
-            "property": "experiencer",
-            "value": true
-          }
-        ],
-        "order": [
-          "object",
-          "subject",
-          "verb"
-        ]
+      "N": {
+        "types": ["PP"]
       }
-    ],
-    "nounphrase": [
-      {
-        "conditions": [],
-        "order": [
-          "noun"
-        ]
-      }
-    ],
-    "verbphrase": [
-      {
-        "conditions": [
-          {
-            "node": "aspect",
-            "property": 0,
-            "value": "durative"
-          }
-        ],
-        "order": [
-          "adverb",
-          "verb",
-          "-feh"
-        ]
-      },
-      {
-        "conditions": [
-          {
-            "node": "aspect",
-            "property": 0,
-            "value": "continuous"
-          }
-        ],
-        "order": [
-          "adverb",
-          "verb",
-          "-sho"
-        ]
-      }
-    ]
-  },
-  "sandhi": [
-    {
-      "find": " -",
-      "replace": "",
-      "regex": false
     }
-  ]
+  }
 }
