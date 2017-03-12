@@ -1,0 +1,36 @@
+metadata
+  name
+    local: English
+  creator: Natlang
+syntax
+  start-with: CPstart
+  node-types
+    CPstart: [CP ~ [C' ~ IP]]
+    AP: [AP #degree? [A' #adjective PP?]]
+    CP: [CP ~ [C' #complementizer IP]]
+    IP: [IP NP [I' #auxilliary VP]]
+    NP: [NP (#determiner NP)? [Nmod AP* [N' #noun PP?]]]
+    VP: [VP #adverb [Vmod V' PP*]]
+    V'
+      variable: $head:#verb
+      option (structure)
+        case ($head(objects=0))
+          structure: [V' $head]
+        case ($head(objects=1), $head(object1=NP))
+          structure: [V' $head NP]
+        case ($head(objects=1), $head(object1=PP))
+          structure: [V' $head PP]
+        case ($head(objects=1), $head(object1=CP))
+          structure: [V' $head CP]
+        case ($head(objects=1), $head(object1=AP))
+          structure: [V' $head AP]
+        case ($head(objects=2), $head(object1=NP), $head(object2=NP))
+          structure: [V' $head NP NP]
+        case ($head(objects=2), $head(object1=NP), $head(object2=PP))
+          structure: [V' $head NP PP]
+        case ($head(objects=2), $head(object1=PP), $head(object2=PP))
+          structure: [V' $head PP PP]
+  coordination
+    nodes: AP, A' #adjective, CP, C', IP, I', NP, Nmod, N', #noun, VP, Vmod, V'
+    count: 2
+    order: 1 #conjunction 2

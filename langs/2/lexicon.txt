@@ -1,0 +1,29 @@
+ah (noun>noun)
+  gloss (1): noun-inflection=s
+danec (verb)
+  transitive: true
+  gloss (1): verb=borrow; verb=copy; verb=imitate
+dasnan (describer)
+  gloss (1): adjective=cosmic
+decek (noun)
+  gloss (1): noun=chicken
+dic (auxilliary)
+dyfnyn (verb)
+  gloss (1): verb=measure
+  transitive: true
+jezlan (verb)
+  transitive: true
+  translate
+    lang: 1
+    from: [VP' $comp jezlan]
+    to: [VP' verb=excell [PP ~ [PP' preposition=at $comp]]]
+keh (conjunction)
+  gloss (1): conjunction=and
+  clause-only: false
+seln (postposition)
+  gloss (1): preposition=to; preposition=towards
+tyk (conjugate)
+  gloss (1): conjunction=so
+  clause-only: true
+znolk (noun)
+  gloss (1): noun=day

@@ -1,0 +1,44 @@
+metadata
+  name
+    local: Sajem Tan
+    display
+      lang: 1
+      option: Sajem Tan
+      option: Common Honey
+  creator: Common Honey Tribe
+syntax
+  start-with: IP
+  node-types
+    AP
+      structure: [AP $head:#describer]
+      translation (1): [AP ~ [A' $head ~]]
+    IP
+      structure: [IP [I' $verb:VP $aux:#auxilliary] $subj:NP]
+      translation (1): [CP ~ [C' ~ [IP $subj [I' $aux $verb]]]]
+    NP
+      structure: [NP $spec:NP? [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
+      translation (1): [NP $spec [Nmod $adj [N' $head $post $rel]]]
+    PP
+      structure: [PP $comp:NP $head:#postposition]
+      translation (1): [PP ~ [P' $head $comp]]
+    VP
+      structure: [VP $post:PP* $adjunct:NP* $adv:#describer* $bar:V']
+      translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
+    V'
+      variable: $head:#verb
+      option (structure, translation)
+        case ($head(transitive=true))
+          structure: [V' $comp:NP $head:#verb]
+          translation (1): [V' $head $comp]
+        case ($head(transitive=false))
+          structure: [V' ~ $head:#verb]
+          translation (1): [V' $head ~]
+    -IP
+      structure: [-IP $a:IP $head:#conjunction $b:IP]
+      translation (1): [-IP $a $head $b]
+    -NP
+      structure: [-NP $a:NP $head:#conjunction(clause-only=false) $b:NP]
+      translation (1): [-NP $a $head $b]
+    -VP
+      structure: [-VP $a:VP $head:#conjunction $b:VP]
+      translation (1): [-VP $a $head $b]

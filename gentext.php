@@ -14,7 +14,7 @@
         $sf = strval($f);
         $st = strval($t);
         $output = array();
-        exec('python gentext.py '.$sf.' '.$st, $output);
+        exec('python3 gentext.py '.$sf.' '.$st, $output);
         foreach($output as $line) {
           echo $line;
         }
