@@ -2,7 +2,7 @@ import re
 class Morpheme:
     morphemelist = {}
     def __init__(self, lang, root, pos, translations, irregularforms, props):
-        self.lang = lang
+        self.lang = int(lang)
         self.root = root
         self.pos = pos
         self.translations = translations
@@ -13,16 +13,15 @@ class Morpheme:
         if pos not in Morpheme.morphemelist[lang]:
             Morpheme.morphemelist[lang][pos] = {}
         Morpheme.morphemelist[lang][pos][root] = self
-    def gettranslation(self, langid):
-        if langid in self.translations:
-            return self.translations[langid]
-        else:
-            return None
+    def gettranslations(self, langid):
+        return [x for x in self.translations if x.lang == langid]
     def conjugate(self):
         return self.root
         #TODO: Irregular forms
     def find(lang, rootstr):
-        return morphemelist[lang][rootstr.split('=')[0]][rootstr.split('=')[1]]
+        if lang not in Morpheme.morphemelist:
+            parselexiconfile(lang)
+        return Morpheme.morphemelist[lang][rootstr.split('=')[0]][rootstr.split('=')[1]]
     def __str__(self):
         #return "Morpheme(%s=%s, properties:%s, translations:%s)" % (self.pos, self.root, self.props, self.translations)
         return "Morpheme(%s=%s)" % (self.pos, self.root)
@@ -32,21 +31,16 @@ class Morpheme:
         return self.root
 class Translation:
     def __init__(self, lang, form, result):
-        self.lang = lang
+        self.lang = int(lang)
         self.form = form
         self.result = result
-    def translate(self, node):
-        raise Exception("Translation.translate() has not been implemented.")
-    def fromstring(lang, form, result):
-        return Translation(lang, form, result)
-        #NEEDS WORK
     def __str__(self):
         return "Translation(%s  =>  %s)" % (self.form, self.result)
     def __repr__(self):
         return str(self)
 class SyntaxNode:
-    def __init__(self, lang, nodetype, children, translations={}):
-        self.lang = lang
+    def __init__(self, lang, nodetype, children, translations=[]):
+        self.lang = int(lang)
         self.nodetype = nodetype
         self.children = children
         self.translations = translations
@@ -55,12 +49,18 @@ class SyntaxNode:
             return None
         else:
             return self.children[key]
+    def gettranslations(self, langid):
+        return [x for x in self.translations if x.lang == langid]
     def __str__(self):
         return "[%s %s]" % (self.nodetype, ' '.join([str(x) for x in self.children]))
+        #return "[%s %s %s]" % (self.nodetype, ' '.join([str(x) for x in self.children]), self.translations)
+        #translations printed for debugging purposes
     def __repr__(self):
         return str(self)
     def display(self):
         return ' '.join([x.display() for x in self.children if x])
+    def swapchildren(self, newch):
+        return SyntaxNode(self.lang, self.nodetype, newch, self.translations)
     def fromstring(lang, fstr):
         nodetype = fstr[1:].split(' ', 1)[0]
         children = []
@@ -90,9 +90,11 @@ class SyntaxNode:
                 nodes.append(None)
             elif ch[0] == '[':
                 nodes.append(SyntaxNode.fromstring(lang, ch))
+            elif ch[0] != '$' and '=' in ch:
+                nodes.append(Morpheme.find(lang, ch))
             else:
                 nodes.append(ch) #Not a SyntaxNode
-        return SyntaxNode(lang, nodetype, nodes)
+        return SyntaxNode(lang, nodetype, nodes, [])
 class MorphologyNode:
     def __init__(self, pos, stem, affix, mode):
         self.pos = pos
@@ -112,25 +114,26 @@ class MorphologyNode:
         return str(self)
 class IrregularForm:
     def __init__(self, lang, form, result):
-        self.lang = lang
+        self.lang = int(lang)
         self.form = form
         self.result = result
     def conjugate(self, node):
         raise Exception("IrregularForm.conjugate() has not been implemented.")
 class SyntaxOutline:
     def __init__(self, lang, start, nodes):
-        self.lang = lang
+        self.lang = int(lang)
         self.start = start
         self.nodes = nodes
     def __getitem__(self, key):
         return self.nodes[key] if key in self.nodes else None, self.nodes['-'+key] if '-'+key in self.nodes else None
+    def __repr__(self):
+        return "SyntaxOutline(%s, %s, %s)" % (self.lang, self.start, self.nodes)
 class SyntaxNodeSwap:
-    def __init__(self, cond, ops, variables):
-        self.cond = cond
+    def __init__(self, lang, conds, ops, variables):
+        self.lang = int(lang)
+        self.conds = conds
         self.ops = ops
         self.variables = variables
-    def __getitem__(self, val):
-        return self.ops[val]
 
 class parselines:
     withargsval = re.compile('^([A-Za-z0-9\\-]+) \\((.*?)\\): (.*)$')
@@ -205,9 +208,10 @@ def parselexiconfile(langid):
                 data[prop.label] = prop.value
         for gloss in word['gloss']:
             for g in gloss.value.split('; '):
-                trans.append(Translation(int(gloss.args[0]), '@', g))
+                trans.append(Translation(int(gloss.args[0]), '@', Morpheme.find(int(gloss.args[0]), g)))
         for tr in word['translate']:
-            trans.append(Translation(int(tr['lang'][0].value), tr['from'][0].value, tr['to'][0].value))
+            l = int(tr['lang'][0].value)
+            trans.append(Translation(l, SyntaxNode.fromstring(l, tr['from'][0].value), SyntaxNode.fromstring(l, tr['to'][0].value)))
         #irregularforms
         ret.append(Morpheme(langid, word.label, word.args[0], trans, irreg, data))
     return ret
@@ -220,22 +224,20 @@ def parselangfile(langid):
         if not nt['option']:
             node = SyntaxNode.fromstring(langid, nt['structure'][0].value)
             for tr in nt['translation']:
-                if tr.args[0] not in node.translations:
-                    node.translations[tr.args[0]] = [SyntaxNode.fromstring(tr.args[0], tr.value)]
-                else:
-                    node.translations[tr.args[0]].append(SyntaxNode.fromstring(tr.args[0], tr.value))
+                node.translations.append(Translation(tr.args[0], node, SyntaxNode.fromstring(tr.args[0], tr.value)))
         else:
-            #TODO: actually write this part
-            #(this is a stopgap method for just loading the first option)
-            nt.children += nt['option'][0]['case'][0].children
-            node = SyntaxNode.fromstring(langid, nt['structure'][0].value)
-            for tr in nt['translation']:
-                if tr.args[0] not in node.translations:
-                    node.translations[tr.args[0]] = [SyntaxNode.fromstring(tr.args[0], tr.value)]
-                else:
-                    node.translations[tr.args[0]].append(SyntaxNode.fromstring(tr.args[0], tr.value))
+            vrs = [x.value for x in nt['variable']]
+            conds = []
+            ops = []
+            for case in nt['option'][0]['case']:
+                nd = SyntaxNode.fromstring(langid, case['structure'][0].value)
+                for tr in case['translation']:
+                    nd.translations.append(Translation(tr.args[0], nd, SyntaxNode.fromstring(tr.args[0], tr.value)))
+                conds.append(case.args)
+                ops.append(nd)
+            node = SyntaxNodeSwap(langid, conds, ops, vrs)
         nodetypes[nt.label] = node
     return SyntaxOutline(langid, syntax['start-with'][0].value, nodetypes)
 if __name__ == "__main__":
-    print(parselexiconfile(2))
-    parselangfile(2)
+    #print(parselexiconfile(2))
+    print(parselangfile(2))

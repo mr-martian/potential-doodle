@@ -7,15 +7,16 @@ dasnan (describer)
   gloss (1): adjective=cosmic
 decek (noun)
   gloss (1): noun=chicken
-dic (auxilliary)
 dyfnyn (verb)
   gloss (1): verb=measure
   transitive: true
+golm (auxilliary)
+  gloss (1): auxilliary=must
 jezlan (verb)
   transitive: true
   translate
     lang: 1
-    from: [VP' $comp jezlan]
+    from: [VP' @ $comp]
     to: [VP' verb=excell [PP ~ [PP' preposition=at $comp]]]
 keh (conjunction)
   gloss (1): conjunction=and

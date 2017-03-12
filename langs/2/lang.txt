@@ -26,7 +26,7 @@ syntax
       translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
     V'
       variable: $head:#verb
-      option (structure, translation)
+      option
         case ($head(transitive=true))
           structure: [V' $comp:NP $head:#verb]
           translation (1): [V' $head $comp]

@@ -1,0 +1,43 @@
+and (conjunction)
+at (preposition)
+be (verb)
+  objects: 1
+  object1: AP
+borrow (verb)
+  objects: 1
+  object1: NP
+chicken (noun)
+copy (verb)
+  objects: 1
+  object1: NP
+cosmic (adjective)
+day (noun)
+excell (verb)
+  objects: 1
+  object1: PP
+excellent (adjective)
+forcefully (adverb)
+history (noun)
+imitate (verb)
+  objects: 1
+  object1: NP
+measure (verb)
+  objects: 1
+  object1: NP
+mouse (noun)
+  usagenotes (1): rodent, often used as example of a small creature
+  irregularforms
+    plural: true
+    form: mice
+    comment: this needs work
+must (auxilliary)
+  past: false
+rock (noun)
+s (noun-inflection)
+so (conjunction)
+that (complementizer)
+the (article)
+  definite: true
+to (preposition)
+towards (preposition)
+unproductive (adjective)
