@@ -1,3 +1,5 @@
+a (article)
+  definite: false
 and (conjunction)
 at (preposition)
 be (verb)

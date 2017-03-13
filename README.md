@@ -6,7 +6,7 @@ TODO
   - [ ] clearly organize
   - [ ] syntax/morphology
     - [ ] prefix/suffix
-      - [x] concatenative
+      - [ ] concatenative
       - [ ] stem changes
       - [ ] vary form by root phonology
     - [ ] infix
@@ -14,7 +14,7 @@ TODO
   - [ ] lexicon
     - [x] glosses in various languages
     - [x] semantics/usage notes
-    - [x] irregular forms
+    - [ ] irregular forms
     - [ ] syntactical oddities
     - [x] language-specific lexical properties
 - [ ] create langs
@@ -30,7 +30,10 @@ TODO
     - [ ] put on screen nicely
 - [ ] learn langs
   - [ ] store progress
-  - [x] generate sentences
-  - [x] generate translations
+  - [ ] generate sentences
+    - [x] generate deep structure
+    - [x] translate deep structure
+    - [ ] apply movement
+    - [ ] generate text
   - [ ] check input against translations
     - [ ] sentences sometimes specify grammatical information not marked by language

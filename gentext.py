@@ -1,9 +1,12 @@
 import random, itertools, loadlang
 def evalmorph(cond, morph):
-    for c in cond.split():
-        if morph.props[c.split('=')[0]] != c.split('=')[1]:
-            return False
-    return True
+    if cond:
+        for c in cond.split():
+            if morph.props[c.split('=')[0]] != c.split('=')[1]:
+                return False
+        return True
+    else:
+        return morph != None
 def pickword(lang, ask):
     if ask.endswith(')'):
         pos, conds = ask[:-1].split('(', 1)
@@ -55,7 +58,10 @@ def gennode(outline, name, depth):
             for i, conds in enumerate(intodo.conds):
                 ok = True
                 for c in conds:
-                    ok = evalmorph(c[:-1].split('(')[1], names[c.split('(')[0]])
+                    if '(' in c:
+                        ok = evalmorph(c[:-1].split('(')[1], names[c.split('(')[0]])
+                    else:
+                        ok = evalmorph('', names[c])
                     if not ok:
                         break
                 if ok:
@@ -98,7 +104,7 @@ def putnames(names, form):
     elif isinstance(form, loadlang.Morpheme):
         return [form]
     else:
-        return names[form]
+        return names[form] if isinstance(names[form], list) else [names[form]]
 def translatetree(tree, tolang): #general node patterns
     if isinstance(tree, loadlang.Morpheme):
         ret = []
@@ -161,18 +167,18 @@ def lexicaltransform(tree, tolang): #individual words like tan
 if __name__ == "__main__":
     loadlang.parselexiconfile(2)
     st = gennode(loadlang.parselangfile(2), None, None)
-    print(st)
-    print('\n\n')
+    #print(st)
+    #print('\n\n')
     print(st.display())
     print('\n\n')
     en = translatetree(st, 1)
-    print(en[0])
-    print('\n\n')
+    #print(en[0])
+    #print('\n\n')
     print(en[0].display())
     print('\n\n')
     done = []
     for t in en:
         done += lexicaltransform(t, 1)[0]
-    print(done)
-    print('\n\n')
+    #print(done)
+    #print('\n\n')
     print(done[0].display())

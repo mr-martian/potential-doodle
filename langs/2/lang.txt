@@ -16,8 +16,15 @@ syntax
       structure: [IP [I' $verb:VP $aux:#auxilliary] $subj:NP]
       translation (1): [CP ~ [C' ~ [IP $subj [I' $aux $verb]]]]
     NP
-      structure: [NP $spec:NP? [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
-      translation (1): [NP $spec [Nmod $adj [N' $head $post $rel]]]
+      variable: $spec:NP?
+      option
+        case ($spec)
+          structure: [NP $spec [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
+          translation (1): [NP $spec [Nmod $adj [N' $head $post $rel]]]
+        case
+          structure: [NP ~ [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
+          translation (1): [NP article=a [Nmod $adj [N' $head $post $rel]]]
+          translation (1): [NP article=the [Nmod $adj [N' $head $post $rel]]]
     PP
       structure: [PP $comp:NP $head:#postposition]
       translation (1): [PP ~ [P' $head $comp]]
