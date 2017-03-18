@@ -3,6 +3,28 @@ def makesentence(lang):
     x = general.Variable('', general.Language.getorloadlang(lang).syntaxstart, '', '')
     return x.generate(lang)
 def syntaxtrans(tolang, sen):
+    if isinstance(sen, general.MorphologyNode):
+        if sen.lang == tolang:
+            trs = syntaxtrans(tolang, sen.stem)
+            tra = syntaxtrans(tolang, sen.affix)
+            ret = []
+            for s in trs:
+                for a in tra:
+                    ret.append(general.MorphologyNode(sen.lang, s, a, sen.mode))
+            return ret
+        ret = []
+        for tr in general.Translation.gettrans(sen.lang, tolang):
+            t = sen.translate(tr)
+            if t:
+                for r in syntaxtrans(tolang, t):
+                    a = True
+                    for n in ret:
+                        if r == n:
+                            a = False
+                            break
+                    if a:
+                        ret.append(r)
+        return ret
     if isinstance(sen, general.Morpheme):
         if sen.lang == tolang:
             return [sen]
@@ -38,6 +60,23 @@ def lexicaltrans(tolang, sen):
                         r.append((tr, d))
                         break
         return [sen], r
+    elif isinstance(sen, general.MorphologyNode):
+        s, ts = lexicaltrans(tolang, sen.stem)
+        a, ta = lexicaltrans(tolang, sen.affix)
+        trs = [(c[0], c[1]-1) for c in ts+ta]
+        ret = [general.MorphologyNode(sen.lang, x[0], x[1], sen.mode) for x in itertools.product(s, a)]
+        rettr = []
+        for tr, d in trs:
+            if d < 0:
+                add = []
+                for s in ret:
+                    m = s.translate(tr)
+                    if m:
+                        add.append(m)
+                ret += add
+            else:
+                rettr.append((tr, d))
+        return ret, rettr
     elif isinstance(sen, general.SyntaxNode):
         nodes = []
         trs = []
@@ -82,6 +121,7 @@ if __name__ == '__main__':
     print(len(tr))
     #print(tr)
     print('\n'.join([t.debugdisplay() for t in tr]))
+    #print(tr[-1])
     #mr = [lexicaltrans(1, s) for s in tr]
     #print(len(mr))
     #print('\n'.join([m.debugdisplay() for m in mr]))

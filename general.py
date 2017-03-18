@@ -12,6 +12,10 @@ class Variable:
                 return names.props[self.prop] == self.cond
             else:
                 return names != None
+        elif isinstance(names, MorphologyNode):
+            return self.checkcond(names.stem)
+        elif isinstance(names[self.label], MorphologyNode):
+            return self.checkcond(names[self.label].stem)
         elif isinstance(names[self.label], Morpheme):
             if self.prop:
                 return names[self.label].props[self.prop] == self.cond
@@ -40,11 +44,19 @@ class Variable:
         return '$%s:%s(%s=%s)' % (self.label, self.value, self.prop, self.cond)
     def __repr__(self):
         return self.__str__()
+    def debugdisplay(self):
+        return self.__str__()
     def generate(self, lang, depth=1):
         if self.opt() and random.randint(1,100) > 10/depth:
             return None
         elif self.mode():
-            return Morpheme.pick(lang, self)
+            #return MorphologyNode(lang, Morpheme.pick(lang, self), None, None) #TONODE
+            self.value = self.value[1:]
+            r = self.generatemorph(lang, 1)
+            if isinstance(r, Morpheme):
+                r = MorphologyNode(lang, r, None, None)
+            self.value = '#' + self.value
+            return r
         else:
             #print(' '*depth + str(self))
             swap, alt = Language.getorloadlang(lang).getsyntax(self.strip())
@@ -58,6 +70,25 @@ class Variable:
                 if v.value:
                     names.addvar(v, v.generate(lang, depth+1))
             return n.rebuild(names)
+    def generatemorph(self, lang, depth=1):
+        if self.opt() and random.randint(1,100) > 10/depth:
+            return None
+        elif self.mode():
+            return Morpheme.pick(lang, self)
+        else:
+            pat = None
+            patls = Language.getorloadlang(lang).morphology[self.strip()]
+            for p in patls:
+                if random.randint(1,100) < 50:
+                    pat = p
+                    break
+            if not pat:
+                pat = patls[0]
+            names = VarDict()
+            for v in pat.getvars():
+                if v.value:
+                    names.addvar(v, v.generatemorph(lang, depth+1))
+            return pat.rebuild(names)
 class VarDict:
     def __init__(self):
         self.vals = {}
@@ -91,7 +122,8 @@ class VarDict:
         elif isinstance(key, Variable):
             return key.label in self.vals
         else:
-            print([94, 'VarDict.__contains__()', key])
+            print([125, 'VarDict.__contains__()', key])
+            assert(False)
             return False
 class SyntaxNode:
     def __init__(self, lang, ntype, children):
@@ -138,6 +170,8 @@ class SyntaxNode:
         else:
             for sch, nch in zip(self.children, node.children):
                 if isinstance(nch, SyntaxNode):
+                    if not isinstance(sch, SyntaxNode):
+                        return None
                     x = sch.itermatch(nch, names)
                     if x == None:
                         return None
@@ -146,6 +180,12 @@ class SyntaxNode:
                         return None
                 elif isinstance(nch, Morpheme):
                     if nch != sch:
+                        return None
+                elif isinstance(nch, MorphologyNode):
+                    if not isinstance(sch, MorphologyNode):
+                        return None
+                    x = sch.itermatch(nch, names)
+                    if x == None:
                         return None
                 elif nch in names:
                     if names[nch] != sch:
@@ -160,6 +200,8 @@ class SyntaxNode:
         for ch in self.children:
             if isinstance(ch, SyntaxNode):
                 ret.append(ch.rebuild(names))
+            elif isinstance(ch, MorphologyNode):
+                ret.append(ch.rebuild(names))
             elif isinstance(ch, Variable):
                 ret.append(names[ch])
             else:
@@ -168,6 +210,9 @@ class SyntaxNode:
     def itermorph(self): #yields all non-SyntaxNode non-None items and their depth
         for ch in self.children:
             if isinstance(ch, SyntaxNode):
+                for n, d in ch.itermorph():
+                    yield n, d+1
+            elif isinstance(ch, MorphologyNode):
                 for n, d in ch.itermorph():
                     yield n, d+1
             elif ch == None:
@@ -213,6 +258,8 @@ class SyntaxNode:
                 return False
             if isinstance(ch, Morpheme) and ch.lang != lang:
                 return False
+            if isinstance(ch, MorphologyNode) and not ch.islang(lang):
+                return False
         return True
     def debugdisplay(self):
         r = []
@@ -238,18 +285,123 @@ class SyntaxNode:
                 return False
         return True
 class MorphologyNode:
-    def __init__(self, stem, affix, mode):
+    __modes = {
+        'prefix': ['^', '(.*)', '\\1'],
+        'suffix': ['$', '(.*)', '\\1'],
+        'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
+    }
+    def __init__(self, lang, stem, affix, mode):
+        self.lang = lang
         self.stem = stem
         self.affix = affix
         self.mode = mode
+    def conjugate(self):
+        if isinstance(self.stem, Morpheme):
+            s = self.stem.root
+        else:
+            s = self.stem.conjugate()
+        if self.affix == None and self.mode == None:
+            return s
+        else:
+            a = self.affix.root
+        pat = MorphologyNode.__modes[self.mode]
+        return re.sub(pat[0], re.sub(pat[1], pat[2], a), s)
     def debugdisplay(self):
         return (self.stem.debugdisplay() if self.stem else '') + '-' + (self.affix.debugdisplay() if self.affix else '')
+    def itermorph(self):
+        yield self.affix, 0
+        if isinstance(self.stem, MorphologyNode):
+            for c, d in self.stem.itermorph():
+                yield c, d+1
+        else:
+            yield self.stem, 0
+    def itermatch(self, node, names=VarDict()):
+        if not isinstance(node, MorphologyNode):
+            return None
+        if isinstance(node.stem, MorphologyNode):
+            if not isinstance(self.stem, MorphologyNode):
+                return None
+            else:
+                x = self.stem.itermatch(node.stem, names)
+                if x == None:
+                    return None
+        elif isinstance(node.stem, Morpheme):
+            if node.stem != self.stem:
+                return None
+        elif node.stem != '@' and node.stem != None:
+            names.addvar(node.stem, self.stem)
+        else:
+            pass
+        if isinstance(node.affix, Morpheme):
+            if node.affix != self.affix:
+                return None
+        elif node.affix == None:
+            if self.affix != None:
+                return None
+        elif node.affix in names:
+            if names[node.affix] != self.affix:
+                return None
+        elif node.affix != '@':
+            names.addvar(node.affix, self.affix)
+        else:
+            pass
+        return names
+    def translate(self, pat):
+        x = self.itermatch(pat.form)
+        if x:
+            return pat.result.rebuild(x)
+        else:
+            return None
+    def rebuild(self, names):
+        r = MorphologyNode(self.lang, None, None, self.mode)
+        if isinstance(self.stem, MorphologyNode):
+            r.stem = self.stem.rebuild(names)
+        elif isinstance(self.stem, Variable):
+            r.stem = names[self.stem]
+        else:
+            r.stem = self.stem
+        if isinstance(self.affix, Variable):
+            r.affix = names[self.affix]
+        else:
+            r.affix = self.affix
+        return r
+    def getvars(self):
+        ret = []
+        if isinstance(self.affix, Variable):
+            ret.append(self.affix)
+        if isinstance(self.stem, Variable):
+            ret.append(self.stem)
+        if isinstance(self.stem, MorphologyNode):
+            ret += self.stem.getvars()
+        return ret
+    def islang(self, lang):
+        if self.lang != lang:
+            return False
+        if not (self.affix == None or self.affix.lang == lang):
+            return False
+        if isinstance(self.stem, MorphologyNode):
+            return self.stem.islang(lang)
+        if isinstance(self.stem, Morpheme):
+            return self.stem.lang == lang
+        return True
+    def addmode(name, root, affix, regex):
+        MorphologyNode.__modes[name] = [root, affix, regex]
     def __str__(self):
         return '<%s %s %s>' % (self.mode, self.stem, self.affix)
     def __repr__(self):
         return self.__str__()
     def __eq__(self, other):
-        return isinstance(other, MorphologyNode) and self.stem == other.stem and self.affix == other.affix and self.mode == other.mode
+        if not isinstance(other, MorphologyNode):
+            return False
+        if self.lang != other.lang:
+            return False
+        if self.stem != other.stem:
+            return False
+        if self.affix != other.affix:
+            return False
+        if self.stem and self.mode != other.mode:
+            return False
+        return True
 class Morpheme:
     __allmorphs = {}
     def __init__(self, lang, root, pos, forms, trans, props):
@@ -279,6 +431,8 @@ class Morpheme:
             m = random.choice(list(Morpheme.__allmorphs[lang][pos.strip()].values()))
             ok = pos.checkcond(m)
         return m
+    def islang(self, lang):
+        return self.lang == lang
     def debugdisplay(self):
         return self.root
     def __str__(self):
@@ -343,6 +497,7 @@ class Language:
         self.langid = langid
         self.syntax = {}
         self.syntaxstart = ''
+        self.morphology = {}
         Language.__langs[langid] = self
     def getsyntax(self, key):
         r1 = None
@@ -360,6 +515,10 @@ class Language:
             loadlexicon(langid)
             loadlang(langid)
         return Language.__langs[langid]
+    def addmorphopt(self, ntype, struct):
+        if ntype not in self.morphology:
+            self.morphology[ntype] = []
+        self.morphology[ntype].append(struct)
 
 ###PARSING
 class ParseError(Exception):
@@ -447,7 +606,7 @@ def destring(s, lang, at):
     elif s[0] == '@':
         return at, s[1:].lstrip()
     elif s[0] == '$': #Variable
-        m = re.match('^\\$([\\w\\-\'<>]*)(:#?[\\w\\-\'<>]+[*?]?|)(\\([\\w\\-\'<>]+=[\\w\\-\'<>]+\\)|)[ \t]*(.*)$', s)
+        m = re.match('^\\$([\\w\\-\'/]*)(:#?[\\w\\-\'/]+[*?]?|)(\\([\\w\\-\'/]+=[\\w\\-\'/]+\\)|)[ \t]*(.*)$', s)
         #allow $x:n(c) besides $x:n(c=z)  ??
         if m:
             if m.group(3):
@@ -457,32 +616,36 @@ def destring(s, lang, at):
             v = m.group(2)
             return Variable(m.group(1), v[1:] if v else '', p, c), m.group(4)
         else:
-            m = re.match('^(\\$[\\w\\-\'<>]*)(.*)$', s)
+            m = re.match('^(\\$[\\w\\-\'/]*)(.*)$', s)
             return Variable(m.group(1), '', '', ''), m.group(2).lstrip()
     elif s[0] == '[': #SyntaxNode
         ntype, r = s[1:].split(' ', 1)
         ch = []
         while r[0] != ']':
             t, r = destring(r, lang, at)
-            ch.append(t)
+            if isinstance(t, Morpheme):
+                ch.append(MorphologyNode(lang, t, None, None))
+            else:
+                ch.append(t)
             r = r.lstrip()
         return SyntaxNode(lang, ntype, ch), r[1:]
     elif s[0] == '<': #MorphologyNode
-        mode, r = s.split(' ', 1)
+        mode, r = s[1:].split(' ', 1)
+        mode = mode.strip()
         r = r.lstrip()
         a, r = destring(r, lang, at)
         r = r.lstrip()
         if r[0] == '>':
-            return MorphologyNode(a, '', mode), r[1:].lstrip()
+            return MorphologyNode(lang, a, '', mode), r[1:].lstrip()
         b, r = destring(r, lang, at)
         r = r.lstrip()
         if r[0] != '>':
             raise ParseError('MorphologyNode with too many elements.')
-        return MorphologyNode(a, b, mode), r[1:].lstrip()
+        return MorphologyNode(lang, a, b, mode), r[1:].lstrip()
     elif s[0] == '~': #None
         return None, s[1:].lstrip()
     else:
-        m = re.match('^([\\w\\-\']+)=([\\w\\-\']+)[ \t]*(.*)$', s)
+        m = re.match('^([\\w\\-\'/]+)=([\\w\\-\'/]+)[ \t]*(.*)$', s)
         if m: #Morpheme
             if lang not in Morpheme.langs():
                 loadlexicon(lang)
@@ -521,7 +684,6 @@ def loadlexicon(lang):
                     m.forms.append(Form(f, d))
             else:
                 m.props[p.label] = p.val
-        #Morpheme(lang, root.label, root.args[0], forms, trans, props)
 def loadlang(lang):
     things = ParseLine.fromfile('langs/%s/lang.txt' % lang)
     ret = Language(lang)
@@ -556,19 +718,33 @@ def loadlang(lang):
                             conds.append(cl)
                             ops.append(node)
                         ret.syntax[ty.label] = SyntaxPat(conds, ops, vrs)
+        if th.label == 'morphology':
+            for ch in th.children:
+                if ch.label == 'node-types':
+                    for ty in ch.children:
+                        for op in ty['option']:
+                            s, r = destring(op.firstval('structure'), lang, None)
+                            assert(r == '')
+                            ret.addmorphopt(ty.label, s)
+                            for tr in op['translation']:
+                                p, r = destring(tr.val, int(tr.args[0]), None)
+                                assert(r == '')
+                                Translation(s, p, True)
     return ret
 if __name__ == '__main__':
     loadlexicon(2)
-    loadlang(2)
-    v = destring('$:noun>noun', 2)[0]
+    l = loadlang(2)
+    print(l.morphology)
+    v = destring('$:noun/noun', 2, None)[0]
     m1 = Morpheme.pick(2, v)
     m2 = Morpheme.pick(2, v)
     print(m1)
     print(m2)
     print(m1 == m2)
-    s1 = destring('[NP noun=thefam]', 2)[0]
-    s2 = destring('[NP noun=thefam]', 2)[0]
+    s1 = destring('[NP noun=thefam]', 2, None)[0]
+    s2 = destring('[NP noun=thefam]', 2, None)[0]
     print(s1)
     print(s2)
     print(s1 == s2)
-    print(set([s1, s2]))
+    print(destring('<suffix #noun #noun/noun>', 2, None))
+    print(destring('$:#noun', 2, None)[0].generate(2))
