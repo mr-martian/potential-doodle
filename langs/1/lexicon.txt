@@ -8,19 +8,28 @@ be (verb)
 borrow (verb)
   objects: 1
   object1: NP
-chicken (noun)
 copy (verb)
   objects: 1
   object1: NP
 cosmic (adjective)
-day (noun)
+cower (verb)
+  objects: 0
+die (verb)
+  objects: 0
+doesnt (auxilliary)
 excell (verb)
   objects: 1
   object1: PP
 excellent (adjective)
 forcefully (adverb)
-history (noun)
+future (noun)
+hide (verb)
+  objects: 0
+hopeful (adjective)
 imitate (verb)
+  objects: 1
+  object1: NP
+kill (verb)
   objects: 1
   object1: NP
 measure (verb)
@@ -34,12 +43,531 @@ mouse (noun)
     comment: this needs work
 must (auxilliary)
   past: false
-rock (noun)
+O (preposition)
+optimism (noun)
+Q (complement-specifier)
 s (noun-inflection)
+'s (noun-inflection)
+sandwich (noun)
 so (conjunction)
 that (complementizer)
 the (article)
   definite: true
+thing (noun)
+thou (noun)
 to (preposition)
 towards (preposition)
+truth (noun)
+understand (verb)
+  objects: 1
+  object1: NP
 unproductive (adjective)
+you (noun)
+
+Calcium (noun)
+Copper (noun)
+Death (noun)
+Gold (noun)
+Helium (noun)
+Hydrogen (noun)
+Iron (noun)
+Klingon (noun)
+OCD (noun)
+Oxygen (noun)
+Photoshop (noun)
+Pokemon (noun)
+Quizlet (noun)
+Silicon (noun)
+Silver (noun)
+Tin (noun)
+adjective (noun)
+adventure (noun)
+adverb (noun)
+afternoon (noun)
+alphabet (noun)
+amusement (noun)
+anarchy (noun)
+ant (noun)
+anthill (noun)
+apple (noun)
+arm (noun)
+astronaut (noun)
+attempt (noun)
+axe (noun)
+bacon (noun)
+bathroom (noun)
+beacon (noun)
+bear (noun)
+bee (noun)
+beehive (noun)
+bird (noun)
+birth (noun)
+blizzard (noun)
+bovine (noun)
+bow (noun)
+bravery (noun)
+bread (noun)
+breeze (noun)
+brick (noun)
+buliding (noun)
+camera (noun)
+cart (noun)
+cat (noun)
+chameleon (noun)
+chaos (noun)
+charcoal (noun)
+cheese (noun)
+chicken (noun)
+child (noun)
+chopstick (noun)
+chromesthesia (noun)
+circle (noun)
+cliff (noun)
+clock (noun)
+cloth (noun)
+cloud (noun)
+clover (noun)
+club (noun)
+color (noun)
+communism (noun)
+compassion (noun)
+consonant (noun)
+cookie (noun)
+cosmonaut (noun)
+courage (noun)
+cow (noun)
+crack (noun)
+cudgel (noun)
+custom (noun)
+dad (noun)
+dam (noun)
+day (noun)
+death (noun)
+deluge (noun)
+destiny (noun)
+dignity (noun)
+dinosaur (noun)
+dipper (noun)
+dirt (noun)
+ditch (noun)
+dog (noun)
+domino (noun)
+door (noun)
+drop (noun)
+drum (noun)
+dusk (noun)
+ear (noun)
+echo (noun)
+effort (noun)
+electricity (noun)
+elephant (noun)
+emoji (noun)
+emotion (noun)
+eye (noun)
+fabric (noun)
+face (noun)
+farm (noun)
+fashion (noun)
+fate (noun)
+fear (noun)
+female (noun)
+fern (noun)
+fight (noun)
+fin (noun)
+fire (noun)
+fish (noun)
+flag (noun)
+flipper (noun)
+flood (noun)
+flower (noun)
+fog (noun)
+food (noun)
+foot (noun)
+forcefield (noun)
+fort (noun)
+fortress (noun)
+friend (noun)
+fruit (noun)
+game (noun)
+gas (noun)
+glass (noun)
+grass (noun)
+group (noun)
+hail (noun)
+hand (noun)
+harvester (noun)
+here (noun)
+history (noun)
+hive (noun)
+hole (noun)
+home (noun)
+honey (noun)
+honor (noun)
+hook (noun)
+house (noun)
+hurricane (noun)
+ice (noun)
+information (noun)
+insect (noun)
+inspiration (noun)
+juice (noun)
+kid (noun)
+knot (noun)
+ladle (noun)
+language (noun)
+leader (noun)
+leaf (noun)
+lemon (noun)
+letter (noun)
+library (noun)
+lie (noun)
+life (noun)
+lighthouse (noun)
+lightning (noun)
+lips (noun)
+liquid (noun)
+love (noun)
+mace (noun)
+magnet (noun)
+male (noun)
+mathematics (noun)
+melodrama (noun)
+meme (noun)
+metal (noun)
+milk (noun)
+mirror (noun)
+mist (noun)
+mistranslation (noun)
+mom (noun)
+monkey (noun)
+month (noun)
+moon (noun)
+mountain (noun)
+mouth (noun)
+mud (noun)
+nectar (noun)
+night (noun)
+nonahedron (noun)
+nose (noun)
+nothing (noun)
+noun (noun)
+now (noun)
+object (noun)
+ocean (noun)
+orchard (noun)
+orthography (noun)
+overseer (noun)
+pain (noun)
+panic (noun)
+paralysis (noun)
+particle (noun)
+past (noun)
+pedalpub (noun)
+phonology (noun)
+photograph (noun)
+picture (noun)
+pig (noun)
+pit (noun)
+pizza (noun)
+planet (noun)
+plant (noun)
+platoon (noun)
+pollen (noun)
+poop (noun)
+pragmatics (noun)
+pram (noun)
+praxis (noun)
+pregnancy (noun)
+problem (noun)
+projectile (noun)
+rain (noun)
+rainbow (noun)
+recreation (noun)
+river (noun)
+roof (noun)
+room (noun)
+root (noun)
+saxophone (noun)
+secret (noun)
+seed (noun)
+semen (noun)
+servant (noun)
+shelter (noun)
+shield (noun)
+shoe (noun)
+sibling (noun)
+silkworm (noun)
+silliness (noun)
+skeleton (noun)
+slope (noun)
+snail (noun)
+snake (noun)
+snow (noun)
+sound (noun)
+spaceship (noun)
+spear (noun)
+spider (noun)
+steroids (noun)
+stone (noun)
+storm (noun)
+story (noun)
+storyteller (noun)
+strength (noun)
+suffix (noun)
+sundial (noun)
+swamp (noun)
+syntax (noun)
+table (noun)
+tale (noun)
+tea (noun)
+tear (noun)
+telephone (noun)
+telescope (noun)
+tetrahedron (noun)
+thing (noun)
+thunder (noun)
+timekeeper (noun)
+tongue (noun)
+tribe (noun)
+tribemember (noun)
+trolley (noun)
+troop (noun)
+trumpet (noun)
+tuba (noun)
+unicycle (noun)
+untruth (noun)
+valley (noun)
+valor (noun)
+value (noun)
+victory (noun)
+vomit (noun)
+vowel (noun)
+warrior (noun)
+water (noun)
+wave (noun)
+way (noun)
+wheelbarrow (noun)
+wind (noun)
+window (noun)
+wing (noun)
+wisdom (noun)
+wood (noun)
+word (noun)
+worker (noun)
+worth (noun)
+writing (noun)
+year (noun)
+producer (noun)
+tree (noun)
+Google-Glass (noun)
+  form
+    structure: @
+    form: Google Glass
+Sherlock-Holmes (noun)
+  form
+    structure: @
+    form: Sherlock Holmes
+binding (noun)
+  form
+    structure: @
+    form: binding
+book-cover (noun)
+  form
+    structure: @
+    form: book cover
+boundary (noun)
+  form
+    structure: @
+    form: boundary
+bulletin-board (noun)
+  form
+    structure: @
+    form: bulletin board
+cane (noun)
+  form
+    structure: @
+    form: cane
+card-game (noun)
+  form
+    structure: @
+    form: card game
+cold (noun)
+  form
+    structure: @
+    form: cold
+community (noun)
+  form
+    structure: @
+    form: community
+contact-lens (noun)
+  form
+    structure: @
+    form: contact lens
+couch-potato (noun)
+  form
+    structure: @
+    form: couch potato
+donut (noun)
+  form
+    structure: @
+    form: donut
+doughnut (noun)
+  form
+    structure: @
+    form: doughnut
+end (noun)
+  form
+    structure: @
+    form: end
+energy-beam (noun)
+  form
+    structure: @
+    form: energy beam
+eyewear (noun)
+  form
+    structure: @
+    form: eyewear
+french-horn (noun)
+  form
+    structure: @
+    form: french horn
+gelato (noun)
+  form
+    structure: @
+    form: gelato
+glasses (noun)
+  form
+    structure: @
+    form: glasses
+hula-hoop (noun)
+  form
+    structure: @
+    form: hula hoop
+ice-cream (noun)
+  form
+    structure: @
+    form: ice cream
+laser (noun)
+  form
+    structure: @
+    form: laser
+limit (noun)
+  form
+    structure: @
+    form: limit
+marinara-sauce (noun)
+  form
+    structure: @
+    form: marinara sauce
+mind (noun)
+  form
+    structure: @
+    form: mind
+monocle (noun)
+  form
+    structure: @
+    form: monocle
+movie-theater (noun)
+  form
+    structure: @
+    form: movie theater
+music-box (noun)
+  form
+    structure: @
+    form: music box
+nature (noun)
+  form
+    structure: @
+    form: nature
+notebook (noun)
+  form
+    structure: @
+    form: notebook
+olive-oil (noun)
+  form
+    structure: @
+    form: olive oil
+outer-space (noun)
+  form
+    structure: @
+    form: outer space
+page (noun)
+  form
+    structure: @
+    form: page
+pedal-boat (noun)
+  form
+    structure: @
+    form: pedal boat
+phaser (noun)
+  form
+    structure: @
+    form: phaser
+playing-card (noun)
+  form
+    structure: @
+    form: playing card
+ray-gun (noun)
+  form
+    structure: @
+    form: ray gun
+rubber-duckie (noun)
+  form
+    structure: @
+    form: rubber duckie
+sign-language (noun)
+  form
+    structure: @
+    form: sign language
+space-helicopter (noun)
+  form
+    structure: @
+    form: space helicopter
+spectacles (noun)
+  form
+    structure: @
+    form: spectacles
+staff (noun)
+  form
+    structure: @
+    form: staff
+sugar-glider (noun)
+  form
+    structure: @
+    form: sugar glider
+termination-point (noun)
+  form
+    structure: @
+    form: termination point
+thought (noun)
+  form
+    structure: @
+    form: thought
+thumbs-down (noun)
+  form
+    structure: @
+    form: thumbs down
+thumbs-up (noun)
+  form
+    structure: @
+    form: thumbs up
+underachiever (noun)
+  form
+    structure: @
+    form: underachiever
+vegetable-oil (noun)
+  form
+    structure: @
+    form: vegetable oil
+walking-stick (noun)
+  form
+    structure: @
+    form: walking stick
+wiki (noun)
+  form
+    structure: @
+    form: wiki
+writing-system (noun)
+  form
+    structure: @
+    form: writing system

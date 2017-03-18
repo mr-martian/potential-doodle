@@ -1,126 +1,88 @@
-import random, itertools, loadlang
-def pickword(lang, ask):
-    return random.choice(list(loadlang.Morpheme.findpos(lang, ask)))
-def gennode(outline, name, depth):
-    if name:
-        n, a = outline[name]
-        if n and a:
-            if random.randint(0,100) < 10.0/depth: todo = a
-            else: todo = n
-        elif n: todo = n
-        elif a: todo = a
-        else: return None
-    else:
-        todo = outline[outline.start][0]
-        depth = 1
-    def dostring(var, lang, depth, outline): #returns value, varname
-        if not var.nodetype:
-            return -1, var.name or None
-        s = var.nodetype
-        if s[-1] in '*?':
-            s = s[:-1]
-            if not (random.randint(0,100) < 10/depth):
-                return None, var.name or None
-        if s[0] == '#':
-            return pickword(lang, var), var.name
-        else:
-            return gennode(outline, s, depth+1), var.name or None
-    def iterchildren(intodo, depth, outline):
-        if isinstance(intodo, loadlang.SyntaxNode):
-            todo = intodo
-            names = {}
-        else: #SyntaxNodeSwap
-            names = {}
-            for v in intodo.variables:
-                l, r = dostring(v, intodo.lang, depth, outline)
-                names[r] = l
-            for i, conds in enumerate(intodo.conds):
-                if all([c.findandcheck(names) for c in conds]):
-                    todo = intodo.ops[i]
-                    break
-        ret = []
-        for ch in todo.children:
-            if ch == None:
-                ret.append(None)
-            elif isinstance(ch, loadlang.Variable):
-                val, var = dostring(ch, todo.lang, depth, outline)
-                if var and val == -1:
-                    ret.append(names[var])
+import general, random, itertools
+def makesentence(lang):
+    x = general.Variable('', general.Language.getorloadlang(lang).syntaxstart, '', '')
+    return x.generate(lang)
+def syntaxtrans(tolang, sen):
+    if isinstance(sen, general.Morpheme):
+        if sen.lang == tolang:
+            return [sen]
+        r = []
+        add = False
+        for tr in sen.trans:
+            if tr.resultlang == tolang:
+                if tr.form == '@':
+                    r.append(tr.result)
                 else:
-                    ret.append(val)
-            else: #SyntaxNode
-                ret.append(iterchildren(ch, depth, outline))
-        return todo.swapchildren(ret)
-    return iterchildren(todo, depth, outline)
-def translatetree(tree, tolang): #general node patterns
-    if isinstance(tree, loadlang.Morpheme):
-        ret = []
-        todo = False
-        for tr in tree.gettranslations(tolang):
-            if tr.form == '@':
-                ret.append(tr.result)
-            else:
-                todo = True
-        if todo:
-            ret.append(tree)
-        return ret
-    elif tree == None:
-        return [None]
-    else:
-        ret = []
-        for tr in tree.gettranslations(tolang):
-            ret += tree.applytranslation(tr, lambda x: translatetree(x, tolang))
-        return ret
-def lexicaltransform(tree, tolang): #individual words like tan
-    def finddepth(pat):
-        if pat == "@":
-            return -1 #first node = 0
-        elif isinstance(pat, loadlang.SyntaxNode):
-            for ch in pat.children:
-                x = finddepth(ch)
-                if x:
-                    return x + 1
-        else:
-            return False
-    if isinstance(tree, loadlang.SyntaxNode):
-        pats = []
+                    add = True
+        if add:
+            r.append(sen)
+        return r
+    if not isinstance(sen, general.SyntaxNode):
+        return [sen]
+    if sen.lang == tolang:
+        ls = [syntaxtrans(tolang, x) for x in sen.children]
+        return [sen.swap(l) for l in itertools.product(*ls)]
+    ret = []
+    for tr in general.Translation.gettrans(sen.lang, tolang):
+        t = sen.translate(tr)
+        if t:
+            ret += syntaxtrans(tolang, t)
+    return ret
+def lexicaltrans(tolang, sen):
+    if isinstance(sen, general.Morpheme):
+        r = []
+        for tr in sen.trans:
+            if tr.resultlang == tolang and tr.form != '@':
+                for a, d in tr.form.itermorph():
+                    if a == '@' or a == sen:
+                        r.append((tr, d))
+                        break
+        return [sen], r
+    elif isinstance(sen, general.SyntaxNode):
         nodes = []
-        for ch in tree:
-            t, p = lexicaltransform(ch, tolang)
-            nodes.append(t if isinstance(t, list) else [t])
-            pats += p
-        trs = [tree.swapchildren(x) for x in itertools.product(*nodes)]
-        retpats = [[x[0]-1, x[1]] for x in pats if x[0] > 0]
-        for p in pats:
-            if p[0] == 0:
-                trs = list(itertools.chain(*[tr.applytranslation(p[1]) for tr in trs]))
-        return trs, retpats
-    elif isinstance(tree, loadlang.Morpheme):
-        if tree.lang != tolang:
-            ret = []
-            for p in tree.gettranslations(tolang):
-                if p.form != '@':
-                    ret.append([finddepth(p), p])
-            return tree, ret
-        else:
-            return tree, []
+        trs = []
+        for ch in sen.children:
+            n, t = lexicaltrans(tolang, ch)
+            nodes.append(n)
+            trs += [(c[0], c[1]-1) for c in t]
+        ret = [sen.swap(x) for x in itertools.product(*nodes)]
+        rettr = []
+        for tr, d in trs:
+            if d < 0:
+                add = []
+                for s in ret:
+                    m = s.translate(tr)
+                    if m:
+                        add.append(m)
+                ret += add
+            else:
+                rettr.append((tr, d))
+        return ret, rettr
     else:
-        return tree, []
-if __name__ == "__main__":
-    loadlang.parselexiconfile(2)
-    st = gennode(loadlang.parselangfile(2), None, None)
-    #print(st)
-    #print('\n\n')
-    print(st.display())
-    print('\n\n')
-    en = translatetree(st, 1)
-    #print(en[0])
-    #print('\n\n')
-    print(en[0].display())
-    print('\n\n')
-    done = []
-    for t in en:
-        done += lexicaltransform(t, 1)[0]
-    #print(done)
-    #print('\n\n')
-    print(done[0].display())
+        return [sen], []
+def translate(tolang, sen):
+    ls = syntaxtrans(tolang, sen)
+    #print(len(ls))
+    #print('\n'.join([t.debugdisplay() for t in ls]))
+    ret = []
+    for s in ls:
+        if s.islang(tolang):
+            ret += lexicaltrans(tolang, s)[0]
+    #print(len(ret))
+    #print('\n'.join([t.debugdisplay() for t in ret]))
+    r = []
+    for s in ret:
+        if s.ismorphlang(tolang) and s not in r:
+            r.append(s)
+    return r
+if __name__ == '__main__':
+    x = makesentence(2)
+    print(x.debugdisplay())
+    tr = translate(1, x)
+    print(len(tr))
+    #print(tr)
+    print('\n'.join([t.debugdisplay() for t in tr]))
+    #mr = [lexicaltrans(1, s) for s in tr]
+    #print(len(mr))
+    #print('\n'.join([m.debugdisplay() for m in mr]))
+    #print(mr)

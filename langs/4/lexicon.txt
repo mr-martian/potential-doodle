@@ -1,0 +1,86 @@
+ai (plurality)
+  gloss (1): noun-inflection=s
+bea (demonstrative)
+  comment: proximal demonstrative, this
+behu (adjective)
+  gloss (1): adjective=hopeful
+behujungnai (noun)
+  gender: feminine
+  gloss (1): noun=optimism
+bitoi (verb)
+  transitivity: transitive
+  gloss (1): verb=understand
+blabla (noun)
+  gender: feminine
+  gloss (1): noun=thing
+buga (verb)
+  transitivity: transitive
+  gloss (1): verb=kill
+chai (noun)
+  gender: feminine
+  gloss (1): noun=truth
+dea (copula)
+  comment: verb instead?
+  tense: present
+  gender: feminine
+  number: singular
+duko (demonstrative)
+  comment: question, which
+fai (pronoun)
+  gender: feminine
+  number: singular
+  gloss (1): noun=you; noun=thou
+fea (pronoun)
+  gender: masculine
+  number: singular
+  gloss (1): noun=you; noun=thou
+gea (derivational-suffix)
+  from: noun
+  from: verb
+  to: adjective
+heago (noun)
+  gender: masculine
+  gloss (1): noun=sandwich
+huga (verb)
+  transitivity: intransitive
+  gloss (1): verb=die
+jungnai (noun)
+  gender: feminine
+  gloss (1): noun=future
+kla (derivational-prefix)
+  comment: not
+klabitoisasu-tr (verb)
+  transitivity: transitive
+  comment: to be unable to understand due to a skewed view of reality
+klabitoisasu-di (verb)
+  transitivity: ditransitive
+  comment: to give metaphorical blindness concerning
+oi (preposition)
+  gloss (1): preposition=O
+  comment: vocative
+sasu (derivational-suffix)
+  comment: due to a previous experience
+se (case)
+  gloss (1): noun-inflection='s
+slugea (particle)
+  gloss (1): complement-specifier=Q
+  comment: question particle
+titahi (noun)
+  gender: feminine
+  comment: Not Elf (add proper noun support?)
+zeve (article)
+  gender: feminine
+  definite: true
+  gloss (1): article=the
+zivi (article)
+  gender: masculine
+  definite: true
+  gloss (1): article=the
+present (tense)
+  tense: present
+  form
+    structure: [IP [NP $spec [Nmod [N' $head(gender=feminine) $comp] $rel $adj $prep]] [I' @ $verb]]
+    form: zle
+  form
+    structure: [IP [NP $spec [Nmod [N' $head(gender=masculine) $comp] $rel $adj $prep]] [I' @ $verb]]
+    form: zlea

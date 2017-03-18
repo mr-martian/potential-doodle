@@ -17,14 +17,13 @@ syntax
       translation (1): [CP ~ [C' ~ [IP $subj [I' $aux $verb]]]]
     NP
       variable: $spec:NP?
+      option ($spec)
+        structure: [NP $spec [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
+        translation (1): [NP $spec [Nmod $adj [N' $head $post $rel]]]
       option
-        case ($spec)
-          structure: [NP $spec [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
-          translation (1): [NP $spec [Nmod $adj [N' $head $post $rel]]]
-        case
-          structure: [NP ~ [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
-          translation (1): [NP article=a [Nmod $adj [N' $head $post $rel]]]
-          translation (1): [NP article=the [Nmod $adj [N' $head $post $rel]]]
+        structure: [NP ~ [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
+        translation (1): [NP article=a [Nmod $adj [N' $head $post $rel]]]
+        translation (1): [NP article=the [Nmod $adj [N' $head $post $rel]]]
     PP
       structure: [PP $comp:NP $head:#postposition]
       translation (1): [PP ~ [P' $head $comp]]
@@ -33,19 +32,18 @@ syntax
       translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
     V'
       variable: $head:#verb
-      option
-        case ($head(transitive=true))
-          structure: [V' $comp:NP $head:#verb]
-          translation (1): [V' $head $comp]
-        case ($head(transitive=false))
-          structure: [V' ~ $head:#verb]
-          translation (1): [V' $head ~]
+      option ($head(transitive=true))
+        structure: [V' $comp:NP $head]
+        translation (1): [V' $head $comp]
+      option ($head(transitive=false))
+        structure: [V' ~ $head]
+        translation (1): [V' $head ~]
     -IP
       structure: [-IP $a:IP $head:#conjunction $b:IP]
       translation (1): [-IP $a $head $b]
     -NP
       structure: [-NP $a:NP $head:#conjunction(clause-only=false) $b:NP]
       translation (1): [-NP $a $head $b]
-    -VP
+    -VP-non
       structure: [-VP $a:VP $head:#conjunction $b:VP]
       translation (1): [-VP $a $head $b]
