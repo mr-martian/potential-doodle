@@ -1,16 +1,18 @@
 ah (noun/noun)
   gloss (1): noun-inflection=s
-danec (verb-)
+vmeh (case)
+  gloss (1): noun-inflection='s
+danec (verb)
   transitive: true
   gloss (1): verb=borrow; verb=copy; verb=imitate
 dasnan (describer)
   gloss (1): adjective=cosmic
-dyfnyn (verb-)
+dyfnyn (verb)
   gloss (1): verb=measure
   transitive: true
 golm (auxilliary)
   gloss (1): auxilliary=must
-jeltan (verb-)
+jeltan (verb)
   transitive: false
   gloss (1): verb=hide; verb=cower
 jezlan (verb)

@@ -11,33 +11,39 @@ syntax
   node-types
     AP
       structure: [AP $head:#describer]
-      translation (1): [AP ~ [A' $head ~]]
+      translation (1): [AP ~ [Abar $head ~]]
     IP
-      structure: [IP [I' $verb:VP $aux:#auxilliary] $subj:NP]
-      translation (1): [CP ~ [C' ~ [IP $subj [I' $aux $verb]]]]
+      structure: [IP [Ibar $verb:VP $aux:#auxilliary] $subj:NP]
+      translation (1): [CP ~ [Cbar ~ [IP $subj [Ibar $aux $verb]]]]
     NP
       variable: $spec:NP?
       option ($spec)
         structure: [NP $spec [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
-        translation (1): [NP $spec [Nmod $adj [N' $head $post $rel]]]
-      option
+        translation (1): [NP $spec [Nmod $adj [Nbar $head $post $rel]]]
+      option ($spec!)
         structure: [NP ~ [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
-        translation (1): [NP article=a [Nmod $adj [N' $head $post $rel]]]
-        translation (1): [NP article=the [Nmod $adj [N' $head $post $rel]]]
+        translation (1): [NP article=a [Nmod $adj [Nbar $head $post $rel]]]
+        translation (1): [NP article=the [Nmod $adj [Nbar $head $post $rel]]]
     PP
       structure: [PP $comp:NP $head:#postposition]
-      translation (1): [PP ~ [P' $head $comp]]
+      translation (1): [PP ~ [Pbar $head $comp]]
     VP
-      structure: [VP $post:PP* $adjunct:NP* $adv:#describer* $bar:V']
+      structure: [VP $post:PP* $adjunct:NP* $adv:#describer* $bar:Vbar]
       translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
-    V'
+    --Vbar
       variable: $head:#verb
       option ($head(transitive=true))
-        structure: [V' $comp:NP $head]
-        translation (1): [V' $head $comp]
+        structure: [Vbar $comp:NP $head]
+        translation (1): [Vbar $head $comp]
       option ($head(transitive=false))
-        structure: [V' ~ $head]
-        translation (1): [V' $head ~]
+        structure: [Vbar ~ $head]
+        translation (1): [Vbar $head ~]
+    Vbar
+      variable: $head:#verb
+      option ($head(transitive=true))
+        structure: [Vbar NP $head]
+      option ($head(transitive=false))
+        structure: [Vbar ~ $head]
     -IP
       structure: [-IP $a:IP $head:#conjunction $b:IP]
       translation (1): [-IP $a $head $b]
@@ -76,3 +82,7 @@ morphology
       option
         structure: <~ $c:#verb ~>
         translation (1): <~ $c ~>
+transform
+  rule
+    form: [NP [NP $spec [Nmod $post $rel $adj $head]] $nmod]
+    result: [NP [NP $spec [Nmod $post $rel $adj <suffix $head case=vmeh>]] $nmod]

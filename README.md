@@ -33,7 +33,7 @@ TODO
   - [ ] store progress
   - [ ] generate sentences
     - [x] generate deep structure
-    - [x] translate deep structure
+    - [ ] translate deep structure
     - [ ] apply movement
     - [ ] generate text
   - [ ] check input against translations

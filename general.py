@@ -267,6 +267,8 @@ class SyntaxNode:
             if ch:
                 r.append(ch.debugdisplay())
         return ' '.join(r)
+    def conjugate(self):
+        return ' '.join([x.conjugate() for x in self.children if x])
     def __str__(self):
         return '[%s %s]' % (self.ntype, ' '.join([str(x) for x in self.children]))
     def __repr__(self):
@@ -300,7 +302,7 @@ class MorphologyNode:
             s = self.stem.root
         else:
             s = self.stem.conjugate()
-        if self.affix == None and self.mode == None:
+        if self.affix == None:
             return s
         else:
             a = self.affix.root
@@ -423,6 +425,14 @@ class Morpheme:
             assert(isinstance(lang, int))
             print('Morpheme.find(%d, "%s", "%s") failed.' % (lang, pos, root))
             return None
+    def allfromlang(lang):
+        r = []
+        for pos in Morpheme.__allmorphs[lang].values():
+            for root in pos.values():
+                r.append(root)
+        return r
+    def langdict(lang):
+        return Morpheme.__allmorphs[lang]
     def langs():
         return list(Morpheme.__allmorphs.keys())
     def pick(lang, pos):
@@ -434,6 +444,8 @@ class Morpheme:
     def islang(self, lang):
         return self.lang == lang
     def debugdisplay(self):
+        return self.root
+    def conjugate(self):
         return self.root
     def __str__(self):
         return self.pos + '=' + self.root + ('(%s)' % self.props)
@@ -495,9 +507,10 @@ class Language:
     __langs = {}
     def __init__(self, langid):
         self.langid = langid
-        self.syntax = {}
-        self.syntaxstart = ''
-        self.morphology = {}
+        self.syntax = {} #sentence generation
+        self.syntaxstart = '' #sentence head
+        self.morphology = {} #word generation
+        self.transform = [] #movement and conjugation
         Language.__langs[langid] = self
     def getsyntax(self, key):
         r1 = None
@@ -606,7 +619,7 @@ def destring(s, lang, at):
     elif s[0] == '@':
         return at, s[1:].lstrip()
     elif s[0] == '$': #Variable
-        m = re.match('^\\$([\\w\\-\'/]*)(:#?[\\w\\-\'/]+[*?]?|)(\\([\\w\\-\'/]+=[\\w\\-\'/]+\\)|)[ \t]*(.*)$', s)
+        m = re.match('^\\$([\\w\\-\'/]*!?)(:#?[\\w\\-\'/]+[*?]?|)(\\([\\w\\-\'/]+=[\\w\\-\'/]+\\)|)[ \t]*(.*)$', s)
         #allow $x:n(c) besides $x:n(c=z)  ??
         if m:
             if m.group(3):
@@ -616,7 +629,7 @@ def destring(s, lang, at):
             v = m.group(2)
             return Variable(m.group(1), v[1:] if v else '', p, c), m.group(4)
         else:
-            m = re.match('^(\\$[\\w\\-\'/]*)(.*)$', s)
+            m = re.match('^(\\$[\\w\\-\'/]*!?)(.*)$', s)
             return Variable(m.group(1), '', '', ''), m.group(2).lstrip()
     elif s[0] == '[': #SyntaxNode
         ntype, r = s[1:].split(' ', 1)
@@ -632,6 +645,8 @@ def destring(s, lang, at):
     elif s[0] == '<': #MorphologyNode
         mode, r = s[1:].split(' ', 1)
         mode = mode.strip()
+        if mode == '~':
+            mode =  None
         r = r.lstrip()
         a, r = destring(r, lang, at)
         r = r.lstrip()
@@ -730,21 +745,102 @@ def loadlang(lang):
                                 p, r = destring(tr.val, int(tr.args[0]), None)
                                 assert(r == '')
                                 Translation(s, p, True)
+        if th.label == 'transform':
+            for ch in th['rule']:
+                tf, r = destring(ch.firstval('form'), lang, None)
+                assert(r == '')
+                tr, r = destring(ch.firstval('result'), lang, None)
+                assert(r == '')
+                ret.transform.append(Translation(tf, tr, False))
     return ret
+def tolisp(obj, at, iscond=False):
+    if obj == '@':
+        return tolisp(at, None)
+    elif obj == None:
+        return 'nil'
+    elif isinstance(obj, Morpheme):
+        pr = ' '.join(['(%s . %s)' % (k, obj.props[k]) for k in obj.props])
+        return '(morpheme %s ((lang . %d) %s) |%s|)' % (obj.pos, obj.lang, pr, obj.root)
+    elif isinstance(obj, MorphologyNode):
+        return '(morphology %s ((lang . %d)) %s %s)' % (obj.mode, obj.lang, tolisp(obj.stem, at), tolisp(obj.affix, at))
+    elif isinstance(obj, Variable):
+        s = ''
+        if obj.prop:
+            s = '(morpheme %s ((%s . %s)) ?)' % (obj.strip() or '?', obj.prop, obj.cond)
+        if iscond:
+            if obj.prop:
+                return s
+            elif obj.label and obj.label[-1] == '!':
+                return 'nil'
+            else:
+                return '(morpheme ? ? ?)'
+        return '(variable %s ((optional . %s)) %s)' % (obj.strip() or obj.label, 't' if obj.opt() else 'nil', s)
+    elif isinstance(obj, SyntaxNode):
+        return '(syntax %s ((lang . %d)) %s)' % (obj.ntype, obj.lang, ' '.join([tolisp(x, at) for x in obj.children]))
+    elif isinstance(obj, Translation):
+        return '(%s %s)' % (tolisp(obj.form, at), tolisp(obj.result, at))
+    elif isinstance(obj, SyntaxPat):
+        l = []
+        for c, o in zip(obj.conds, obj.ops):
+            l.append('(%s %s)' % (tolisp(c, at), tolisp(o, at)))
+        return '(swap (%s) () %s)' % (' '.join([tolisp(v, at) for v in obj.variables]), ' '.join(l))
+    elif isinstance(obj, list):
+        return '(%s)' % ' '.join([tolisp(x, at) for x in obj])
+    else:
+        print([783, obj])
+        return obj
+def langtolisp(lang, tolang):
+    l = Language.getorloadlang(lang)
+    f = open('langs/%d/gen.lisp' % lang, 'w')
+    f.write('(setf *start* \'%s)\n' % l.syntaxstart)
+    f.write('(setf *gen* \'(')
+    d = Morpheme.langdict(lang)
+    for k in d.keys():
+        ml = []
+        for r in d[k].values():
+            ml.append(tolisp(r, None))
+        f.write('(%s . (%s))\n' % (k, ' '.join(ml)))
+    def varls(ls, iscond):
+        return ' '.join(['(%s . %s)' % (v.label.rstrip('!'), tolisp(v, None, iscond)) for v in ls])
+    hasopt = False
+    alt = '(**useopt-var . (morpeme *for*internal* () *use*only*))'
+    for k, syn in l.syntax.items():
+        if k[0] != '-':
+            s = ''
+            cs = ''
+            if '-' + k in l.syntax:
+                s = '(**useopt-var . (variable **useopt-class ((optional . t))))'
+                cs = '(**useopt-var . nil)'
+                hasopt = True
+            f.write('(%s . (swap (%s %s) ()' % (k, s, varls(syn.variables, False)))
+            for c, o in zip(syn.conds, syn.ops):
+                f.write('((%s %s) %s)' % (cs, varls(c, True), tolisp(o, None)))
+            if s != '':
+                for c, o in zip(l.syntax['-' + k].conds, l.syntax['-' + k].ops):
+                    f.write('((%s %s) %s)' % (alt, varls(c, True), tolisp(o, None)))
+            f.write('))\n')
+    f.write('(**useopt-class . (morpeme *for*internal* () *use*only*))')
+    f.write('))')
+    #TODO: translations
+    f.close()
 if __name__ == '__main__':
     loadlexicon(2)
     l = loadlang(2)
-    print(l.morphology)
-    v = destring('$:noun/noun', 2, None)[0]
-    m1 = Morpheme.pick(2, v)
-    m2 = Morpheme.pick(2, v)
-    print(m1)
-    print(m2)
-    print(m1 == m2)
-    s1 = destring('[NP noun=thefam]', 2, None)[0]
-    s2 = destring('[NP noun=thefam]', 2, None)[0]
-    print(s1)
-    print(s2)
-    print(s1 == s2)
-    print(destring('<suffix #noun #noun/noun>', 2, None))
-    print(destring('$:#noun', 2, None)[0].generate(2))
+    #print(l.morphology)
+    #v = destring('$:noun/noun', 2, None)[0]
+    #m1 = Morpheme.pick(2, v)
+    #m2 = Morpheme.pick(2, v)
+    #print(m1)
+    #print(m2)
+    #print(m1 == m2)
+    #s1 = destring('[NP noun=thefam]', 2, None)[0]
+    #s2 = destring('[NP noun=thefam]', 2, None)[0]
+    #print(s1)
+    #print(s2)
+    #print(s1 == s2)
+    #print(destring('<suffix #noun #noun/noun>', 2, None))
+    #print(destring('$:#noun', 2, None)[0].generate(2))
+    #print('\n\n')
+    #print(tolisp(m1, None))
+    #print(tolisp(Morpheme.allfromlang(2), None))
+    langtolisp(2, 1)

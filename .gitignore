@@ -1,3 +1,6 @@
 *~
 *.pyc
 trace.txt
+failed.txt
+test.sh
+langs/*/*.lisp
