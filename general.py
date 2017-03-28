@@ -443,6 +443,8 @@ class Morpheme:
         return m
     def islang(self, lang):
         return self.lang == lang
+    def gettrans(self, lang):
+        return [t for t in self.trans if t.resultlang == lang]
     def debugdisplay(self):
         return self.root
     def conjugate(self):
@@ -753,20 +755,27 @@ def loadlang(lang):
                 assert(r == '')
                 ret.transform.append(Translation(tf, tr, False))
     return ret
-def tolisp(obj, at, iscond=False):
+def tolisp(obj, at, iscond=False, byname=False):
     if obj == '@':
-        return tolisp(at, None)
+        return tolisp(at, None, iscond, byname)
     elif obj == None:
         return 'nil'
     elif isinstance(obj, Morpheme):
         pr = ' '.join(['(%s . %s)' % (k, obj.props[k]) for k in obj.props])
         return '(morpheme %s ((lang . %d) %s) |%s|)' % (obj.pos, obj.lang, pr, obj.root)
     elif isinstance(obj, MorphologyNode):
-        return '(morphology %s ((lang . %d)) %s %s)' % (obj.mode, obj.lang, tolisp(obj.stem, at), tolisp(obj.affix, at))
+        s = tolisp(obj.stem, at, iscond, byname)
+        a = tolisp(obj.affix, at, iscond, byname)
+        return '(morphology %s ((lang . %d)) %s %s)' % (obj.mode or '~', obj.lang, s, a)
     elif isinstance(obj, Variable):
+        cadr = obj.strip() or '?'
+        if byname:
+            cadr = obj.label
+        else:
+            cadr = obj.strip()
         s = ''
         if obj.prop:
-            s = '(morpheme %s ((%s . %s)) ?)' % (obj.strip() or '?', obj.prop, obj.cond)
+            s = '(morpheme %s ((%s . %s)) ?)' % (cadr or '?', obj.prop, obj.cond)
         if iscond:
             if obj.prop:
                 return s
@@ -774,31 +783,34 @@ def tolisp(obj, at, iscond=False):
                 return 'nil'
             else:
                 return '(morpheme ? ? ?)'
-        return '(variable %s ((optional . %s)) %s)' % (obj.strip() or obj.label, 't' if obj.opt() else 'nil', s)
+        return '(variable %s ((optional . %s)) %s)' % (cadr or obj.label, 't' if obj.opt() else 'nil', s)
     elif isinstance(obj, SyntaxNode):
-        return '(syntax %s ((lang . %d)) %s)' % (obj.ntype, obj.lang, ' '.join([tolisp(x, at) for x in obj.children]))
+        return '(syntax %s ((lang . %d)) %s)' % (obj.ntype, obj.lang, ' '.join([tolisp(x, at, iscond, byname) for x in obj.children]))
     elif isinstance(obj, Translation):
-        return '(%s %s)' % (tolisp(obj.form, at), tolisp(obj.result, at))
+        return '(%s %s)' % (tolisp(obj.form, at, iscond, True), tolisp(obj.result, at, iscond, True))
     elif isinstance(obj, SyntaxPat):
         l = []
         for c, o in zip(obj.conds, obj.ops):
-            l.append('(%s %s)' % (tolisp(c, at), tolisp(o, at)))
-        return '(swap (%s) () %s)' % (' '.join([tolisp(v, at) for v in obj.variables]), ' '.join(l))
+            l.append('(%s %s)' % (tolisp(c, at, iscond, byname), tolisp(o, at, iscond, byname)))
+        return '(swap (%s) () %s)' % (' '.join([tolisp(v, at, iscond, byname) for v in obj.variables]), ' '.join(l))
     elif isinstance(obj, list):
-        return '(%s)' % ' '.join([tolisp(x, at) for x in obj])
+        return '(%s)' % ' '.join([tolisp(x, at, iscond, byname) for x in obj])
     else:
         print([783, obj])
         return obj
 def langtolisp(lang, tolang):
     l = Language.getorloadlang(lang)
     f = open('langs/%d/gen.lisp' % lang, 'w')
-    f.write('(setf *start* \'%s)\n' % l.syntaxstart)
-    f.write('(setf *gen* \'(')
+    f.write('(defparameter *start* \'%s)\n' % l.syntaxstart)
+    trls = []
+    f.write('(defparameter *gen* \'(')
     d = Morpheme.langdict(lang)
     for k in d.keys():
         ml = []
         for r in d[k].values():
             ml.append(tolisp(r, None))
+            for tr in r.gettrans(tolang):
+                trls.append(tolisp(tr, r, False))
         f.write('(%s . (%s))\n' % (k, ' '.join(ml)))
     def varls(ls, iscond):
         return ' '.join(['(%s . %s)' % (v.label.rstrip('!'), tolisp(v, None, iscond)) for v in ls])
@@ -820,8 +832,14 @@ def langtolisp(lang, tolang):
                     f.write('((%s %s) %s)' % (alt, varls(c, True), tolisp(o, None)))
             f.write('))\n')
     f.write('(**useopt-class . (morpeme *for*internal* () *use*only*))')
-    f.write('))')
-    #TODO: translations
+    f.write('))\n')
+    trlssyn = []
+    for tr in Translation.gettrans(lang, tolang):
+        trlssyn.append(tolisp(tr, None, False))
+    f.write('(defparameter *trans* \'(%s))\n' % '\n'.join(trlssyn + trls))
+    #TODO: movement
+    move = []
+    f.write('(defparameter *move* \'(%s))\n' % '\n'.join(move))
     f.close()
 if __name__ == '__main__':
     loadlexicon(2)

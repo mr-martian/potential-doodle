@@ -30,7 +30,7 @@ syntax
     VP
       structure: [VP $post:PP* $adjunct:NP* $adv:#describer* $bar:Vbar]
       translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
-    --Vbar
+    Vbar
       variable: $head:#verb
       option ($head(transitive=true))
         structure: [Vbar $comp:NP $head]
@@ -38,12 +38,6 @@ syntax
       option ($head(transitive=false))
         structure: [Vbar ~ $head]
         translation (1): [Vbar $head ~]
-    Vbar
-      variable: $head:#verb
-      option ($head(transitive=true))
-        structure: [Vbar NP $head]
-      option ($head(transitive=false))
-        structure: [Vbar ~ $head]
     -IP
       structure: [-IP $a:IP $head:#conjunction $b:IP]
       translation (1): [-IP $a $head $b]
