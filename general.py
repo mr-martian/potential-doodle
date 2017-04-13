@@ -755,22 +755,23 @@ def loadlang(lang):
                 assert(r == '')
                 ret.transform.append(Translation(tf, tr, False))
     return ret
-def tolisp(obj, at, iscond=False, byname=False):
+def tolisp(obj, at, iscond=False, byname=False, mode=None):
     if obj == '@':
-        return tolisp(at, None, iscond, byname)
+        return tolisp(at, None, iscond, byname, mode)
     elif obj == None:
         return 'nil'
     elif isinstance(obj, Morpheme):
         pr = ' '.join(['(%s . %s)' % (k, obj.props[k]) for k in obj.props])
         return '(morpheme %s ((lang . %d) %s) |%s|)' % (obj.pos, obj.lang, pr, obj.root)
     elif isinstance(obj, MorphologyNode):
-        s = tolisp(obj.stem, at, iscond, byname)
-        a = tolisp(obj.affix, at, iscond, byname)
+        s = tolisp(obj.stem, at, iscond, byname, mode)
+        a = tolisp(obj.affix, at, iscond, byname, mode)
         return '(morphology %s ((lang . %d)) %s %s)' % (obj.mode or '~', obj.lang, s, a)
     elif isinstance(obj, Variable):
-        cadr = obj.strip() or '?'
         if byname:
             cadr = obj.label
+        elif mode and obj.mode():
+            cadr = obj.strip() + mode
         else:
             cadr = obj.strip()
         s = ''
@@ -785,16 +786,16 @@ def tolisp(obj, at, iscond=False, byname=False):
                 return '(morpheme ? ? ?)'
         return '(variable %s ((optional . %s)) %s)' % (cadr or obj.label, 't' if obj.opt() else 'nil', s)
     elif isinstance(obj, SyntaxNode):
-        return '(syntax %s ((lang . %d)) %s)' % (obj.ntype, obj.lang, ' '.join([tolisp(x, at, iscond, byname) for x in obj.children]))
+        return '(syntax %s ((lang . %d)) %s)' % (obj.ntype, obj.lang, ' '.join([tolisp(x, at, iscond, byname, mode) for x in obj.children]))
     elif isinstance(obj, Translation):
-        return '(%s %s)' % (tolisp(obj.form, at, iscond, True), tolisp(obj.result, at, iscond, True))
+        return '(%s %s)' % (tolisp(obj.form, at, iscond, True, mode), tolisp(obj.result, at, iscond, True, mode))
     elif isinstance(obj, SyntaxPat):
         l = []
         for c, o in zip(obj.conds, obj.ops):
-            l.append('(%s %s)' % (tolisp(c, at, iscond, byname), tolisp(o, at, iscond, byname)))
-        return '(swap (%s) () %s)' % (' '.join([tolisp(v, at, iscond, byname) for v in obj.variables]), ' '.join(l))
+            l.append('(%s %s)' % (tolisp(c, at, iscond, byname, mode), tolisp(o, at, iscond, byname, mode)))
+        return '(swap (%s) () %s)' % (' '.join([tolisp(v, at, iscond, byname, mode) for v in obj.variables]), ' '.join(l))
     elif isinstance(obj, list):
-        return '(%s)' % ' '.join([tolisp(x, at, iscond, byname) for x in obj])
+        return '(%s)' % ' '.join([tolisp(x, at, iscond, byname, mode) for x in obj])
     else:
         print([783, obj])
         return obj
@@ -811,7 +812,7 @@ def langtolisp(lang, tolang):
             ml.append(tolisp(r, None))
             for tr in r.gettrans(tolang):
                 trls.append(tolisp(tr, r, False))
-        f.write('(%s . (%s))\n' % (k, ' '.join(ml)))
+        f.write('(%s-morph . (%s))\n' % (k, ' '.join(ml)))
     def varls(ls, iscond):
         return ' '.join(['(%s . %s)' % (v.label.rstrip('!'), tolisp(v, None, iscond)) for v in ls])
     hasopt = False
@@ -831,6 +832,12 @@ def langtolisp(lang, tolang):
                 for c, o in zip(l.syntax['-' + k].conds, l.syntax['-' + k].ops):
                     f.write('((%s %s) %s)' % (alt, varls(c, True), tolisp(o, None)))
             f.write('))\n')
+    print(l.morphology)
+    for k, syn in l.morphology.items():
+        f.write('(%s . (swap () ()' % k)
+        for o in syn:
+            f.write('(() %s)' % tolisp(o, None, mode="-morph"))
+        f.write('))\n')
     f.write('(**useopt-class . (morpeme *for*internal* () *use*only*))')
     f.write('))\n')
     trlssyn = []

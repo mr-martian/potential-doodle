@@ -9,8 +9,8 @@ syntax
     AP: [AP #degree? [A' #adjective PP?]]
     CP: [CP ~ [C' #complementizer IP]]
     IP: [IP NP [I' #auxilliary VP]]
-    NP: [NP (#determiner NP)? [Nmod AP* [N' #noun PP?]]]
-    VP: [VP #adverb [Vmod V' PP*]]
+    NP: [NP (#determiner NP)? [Nmod AP? [N' #noun PP?]]]
+    VP: [VP #adverb [Vmod V' PP?]]
     V'
       variable: $head:#verb
       option (structure)

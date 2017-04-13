@@ -18,17 +18,17 @@ syntax
     NP
       variable: $spec:NP?
       option ($spec)
-        structure: [NP $spec [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
+        structure: [NP $spec [Nmod $post:PP? $rel:IP? $adj:AP? $head:#noun]]
         translation (1): [NP $spec [Nmod $adj [Nbar $head $post $rel]]]
       option ($spec!)
-        structure: [NP ~ [Nmod $post:PP* $rel:IP* $adj:AP* $head:#noun]]
+        structure: [NP ~ [Nmod $post:PP? $rel:IP? $adj:AP? $head:#noun]]
         translation (1): [NP article=a [Nmod $adj [Nbar $head $post $rel]]]
         translation (1): [NP article=the [Nmod $adj [Nbar $head $post $rel]]]
     PP
       structure: [PP $comp:NP $head:#postposition]
       translation (1): [PP ~ [Pbar $head $comp]]
     VP
-      structure: [VP $post:PP* $adjunct:NP* $adv:#describer* $bar:Vbar]
+      structure: [VP $post:PP? $adjunct:NP? $adv:#describer? $bar:Vbar]
       translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
     Vbar
       variable: $head:#verb

@@ -105,8 +105,7 @@
     (case (car tree)
       (syntax (format nil "[~A~{ ~A~}]" (cadr tree) (mapcar #'to-python (cdddr tree))))
       (morphology (format nil "<~A ~A ~A>" (cadr tree) (to-python (fourth tree)) (to-python (fifth tree))))
-      (morpheme (format nil "~A=~A" (cadr tree) (fourth tree)))
-    )
+      (morpheme (format nil "~A=~A" (cadr tree) (fourth tree))))
     "~"))
 
 ;;;;;;;;;;;;;;
@@ -114,21 +113,6 @@
 ;;;;;;;;;;;;;;
 (load "langs/2/gen.lisp")
 (setq sen (gen *gen* (cdr (assoc *start* *gen*)) 1 nil))
-(setf sen2 '(SYNTAX -IP ((LANG . 2))
- (SYNTAX IP ((LANG . 2))
-  (SYNTAX IBAR ((LANG . 2))
-   (SYNTAX VP ((LANG . 2)) NIL (SYNTAX NP ((LANG . 2)) NIL (SYNTAX NMOD ((LANG . 2)) NIL NIL NIL (MORPHEME NOUN ((LANG . 2)) dyculm))) NIL
-    (SYNTAX VBAR ((LANG . 2)) NIL (MORPHEME VERB ((LANG . 2) (TRANSITIVE . FALSE)) jeltan)))
-   (MORPHEME AUXILLIARY ((LANG . 2)) golm))
-  (SYNTAX NP ((LANG . 2)) NIL (SYNTAX NMOD ((LANG . 2)) NIL NIL NIL (MORPHEME NOUN ((LANG . 2)) jikin))))
- (MORPHEME CONJUNCTION ((LANG . 2) (CLAUSE-ONLY . FALSE)) keh)
- (SYNTAX IP ((LANG . 2))
-  (SYNTAX IBAR ((LANG . 2))
-   (SYNTAX VP ((LANG . 2)) NIL NIL NIL
-    (SYNTAX VBAR ((LANG . 2)) (SYNTAX NP ((LANG . 2)) NIL (SYNTAX NMOD ((LANG . 2)) NIL NIL NIL (MORPHEME NOUN ((LANG . 2)) cejym)))
-     (MORPHEME VERB ((LANG . 2) (TRANSITIVE . TRUE)) danec)))
-   (MORPHEME AUXILLIARY ((LANG . 2)) molt))
-  (SYNTAX NP ((LANG . 2)) NIL (SYNTAX NMOD ((LANG . 2)) NIL NIL NIL (MORPHEME NOUN ((LANG . 2)) gyznyt))))))
 (format t "GENERATE:~%~A~%" sen)
 (format t "MOVEMENT:~%~A~%" (translate sen *move*))
 (time (setq tr (translate sen *trans*)))
