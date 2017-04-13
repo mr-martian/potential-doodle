@@ -10,71 +10,61 @@ syntax
   start-with: IP
   node-types
     AP
-      structure: [AP $head:#describer]
+      structure: [AP $head:describer]
       translation (1): [AP ~ [Abar $head ~]]
     IP
-      structure: [IP [Ibar $verb:VP $aux:#auxilliary] $subj:NP]
+      structure: [IP [Ibar $verb:VP $aux:Mauxilliary] $subj:NP]
       translation (1): [CP ~ [Cbar ~ [IP $subj [Ibar $aux $verb]]]]
     NP
       variable: $spec:NP?
       option ($spec)
-        structure: [NP $spec [Nmod $post:PP? $rel:IP? $adj:AP? $head:#noun]]
+        structure: [NP $spec [Nmod $post:PP? $rel:IP? $adj:AP? $head:Mnoun]]
         translation (1): [NP $spec [Nmod $adj [Nbar $head $post $rel]]]
       option ($spec!)
-        structure: [NP ~ [Nmod $post:PP? $rel:IP? $adj:AP? $head:#noun]]
+        structure: [NP ~ [Nmod $post:PP? $rel:IP? $adj:AP? $head:Mnoun]]
         translation (1): [NP article=a [Nmod $adj [Nbar $head $post $rel]]]
         translation (1): [NP article=the [Nmod $adj [Nbar $head $post $rel]]]
     PP
-      structure: [PP $comp:NP $head:#postposition]
+      structure: [PP $comp:NP $head:postposition]
       translation (1): [PP ~ [Pbar $head $comp]]
     VP
-      structure: [VP $post:PP? $adjunct:NP? $adv:#describer? $bar:Vbar]
+      structure: [VP $post:PP? $adjunct:NP? $adv:describer? $bar:Vbar]
       translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
     Vbar
-      variable: $head:#verb
-      option ($head(transitive=true))
+      variable: $head:Mverb
+      -option ($head(transitive=true))
+      option ($head(<* {transitive=true} *>))
         structure: [Vbar $comp:NP $head]
         translation (1): [Vbar $head $comp]
-      option ($head(transitive=false))
+      -option ($head(transitive=false))
+      option ($head(<* {transitive=false} *>))
         structure: [Vbar ~ $head]
         translation (1): [Vbar $head ~]
     -IP
-      structure: [-IP $a:IP $head:#conjunction $b:IP]
+      structure: [-IP $a:IP $head:conjunction $b:IP]
       translation (1): [-IP $a $head $b]
     -NP
-      structure: [-NP $a:NP $head:#conjunction(clause-only=false) $b:NP]
+      structure: [-NP $a:NP $head:conjunction(clause-only=false) $b:NP]
       translation (1): [-NP $a $head $b]
     -VP
-      structure: [-VP $a:VP $head:#conjunction $b:VP]
+      structure: [-VP $a:VP $head:conjunction $b:VP]
       translation (1): [-VP $a $head $b]
 morphology
   node-types
-    auxilliary
+    Mauxilliary
       option
-        structure: <~ $c:#auxilliary ~>
+        structure: <~ $c:auxilliary ~>
         translation (1): <~ $c ~>
-    conjunction
+    Mnoun
       option
-        structure: <~ $c:#conjunction ~>
-        translation (1): <~ $c ~>
-    describer
-      option
-        structure: <~ $d:#describer ~>
-        translation (1): <~ $d ~>
-    noun
-      option
-        structure: <~ $n:#noun ~>
+        structure: <~ $n:noun ~>
         translation (1): <~ $n ~>
       option
-        structure: <suffix $n:#noun $s:#noun/noun>
+        structure: <suffix $n:noun $s:noun/noun>
         translation (1): <suffix $n $s>
-    postposition
+    Mverb
       option
-        structure: <~ $c:#postposition ~>
-        translation (1): <~ $c ~>
-    verb
-      option
-        structure: <~ $c:#verb ~>
+        structure: <~ $c:verb ~>
         translation (1): <~ $c ~>
 transform
   rule

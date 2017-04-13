@@ -2,22 +2,35 @@ import re, itertools, random, copy
 from collections import defaultdict
 ###VARIABLES
 class Variable:
-    def __init__(self, label, value, prop, cond):
+    def __init__(self, label, value, cond):
         self.label = label
         self.value = value
-        self.prop = prop
-        self.cond = cond
-        self.mode = False
         self.opt = False
-        if self.value and self.value[0] == '#':
-            self.mode = True
-            self.value = self.value[1:]
         if self.value and self.value[-1] == '?':
             self.opt = True
             self.value = self.value[:-1]
-class Unknown(Variable):
+        if self.label and self.label[-1] == '!':
+            self.__check = None
+            self.label = self.label[:-1]
+        elif isinstance(cond, list):
+            self.__check = Node(Unknown(), Unknown(), Unknown(), {})
+            if cond[0]:
+                self.__check.props[cond[0]] = cond[1] or Unknown()
+        else:
+            self.__check = cond
+    def check(self, vrs):
+        return match(self.__check, vrs[self.label])
+    def __str__(self):
+        return '$%s:%s(%s)' % (self.label, self.value, self.__check)
+    def __repr__(self):
+        return self.__str__()
+class Unknown:
     def __init__(self):
-        Variable.__init__(self, None, None, None, None)
+        self.n = None
+    def __str__(self):
+        return 'Unknown()'
+    def __repr__(self):
+        return 'Unknown()'
 ###DATA STRUCTURES
 class Node:
     def __init__(self, lang, ntype, children, props=defaultdict(list)):
@@ -70,49 +83,56 @@ class Node:
         if vrs[' failed']:
             return []
         return copy.deepcopy(tr.result).putvars(vrs)
+    def __str__(self):
+        if isinstance(self.children, list):
+            s = ' '.join([str(x) for x in self.children])
+        else:
+            s = str(self.children)
+        return '%s[%s %s]' % (self.__class__.__name__, self.ntype, s)
+    def __repr__(self):
+        return self.__str__()
 def match(a, b):
     if isinstance(a, Unknown) or isinstance(b, Unknown):
         return True
     elif isinstance(a, Node) and isinstance(b, Node):
-        if type(a) != type(b):
+        if type(a) != type(b) and type(a) != Node and type(b) != Node:
             return False
         if not match(a.lang, b.lang):
             return False
         if not match(a.ntype, b.ntype):
             return False
-        if len(a.children) != len(b.children):
+        if not isinstance(a.children, Unknown) and not isinstance(b.children, Unknown) and len(a.children) != len(b.children):
             return False
-        for ac, bc in zip(a.children, b.children):
-            if not match(ac, bc):
+        if isinstance(a.children, list) and isinstance(b.children, list):
+            for ac, bc in zip(a.children, b.children):
+                if not match(ac, bc):
+                    return False
+        ka = set(a.props.keys()) - set(['translations', 'forms'])
+        kb = set(b.props.keys()) - set(['translations', 'forms'])
+        ks = ka.intersection(kb)
+        if len(ks) != len(ka) and len(ks) != len(kb):
+            return False
+        for k in ks:
+            if not match(a.props[k], b.props[k]):
                 return False
-        ka = set(a.props.keys())
-        kb = set(b.props.keys())
-        if kb < ka:
-            for k in kb:
-                if not match(a.props[k], b.props[k]):
-                    return False
-        elif ka < kb:
-            for k in ka:
-                if not match(a.props[k], b.props[k]):
-                    return False
-        else:
-            return False
         return True
     else:
         return a == b
 class Morpheme(Node):
     __allmorphs = defaultdict(lambda: defaultdict(dict))
     def __init__(self, lang, root, pos):
-        Node.__init__(self, lang, pos, [root])
+        Node.__init__(self, lang, pos, [root], defaultdict(list))
         Morpheme.__allmorphs[lang][pos][root] = self
     def langs():
         return list(Morpheme.__allmorphs.keys())
+    def iterpos(lang):
+        for p in Morpheme.__allmorphs[lang]:
+            yield p, list(Morpheme.__allmorphs[lang][p].values())
     def find(lang, pos, root):
         try:
             return Morpheme.__allmorphs[lang][pos][root]
         except:
             assert(isinstance(lang, int))
-            print(Morpheme.__allmorphs)
             print('Morpheme.find(%d, "%s", "%s") failed.' % (lang, pos, root))
             return None
     def addform(self, form):
@@ -126,7 +146,7 @@ class MorphologyNode(Node):
         'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
     }
     def __init__(self, lang, stem, affix, mode):
-        Node.__init__(self, lang, mode, [stem, affix])
+        Node.__init__(self, lang, mode, [stem, affix], defaultdict(list))
 class SyntaxNode(Node):
     pass
 ###TRANSFORMATIONS
@@ -156,8 +176,18 @@ class Language:
         self.syntax = {}
         self.morphology = defaultdict(list)
         self.transform = []
+        self.syntaxstart = None
     def addmorphopt(self, ntype, struct):
         self.morphology[ntype].append(struct)
+    def getpats(self):
+        r = {}
+        for k in self.syntax:
+            r[k] = self.syntax[k]
+        for k in self.morphology:
+            r[k] = self.morphology[k]
+        for k, v in Morpheme.iterpos(self.lang):
+            r[k] = v
+        return r
 ###PARSING
 class ParseError(Exception):
     pass
@@ -244,18 +274,26 @@ def destring(s, lang, at):
     elif s[0] == '@':
         return at, s[1:].lstrip()
     elif s[0] == '$': #Variable
-        m = re.match('^\\$([\\w\\-\'/]*!?)(:#?[\\w\\-\'/]+[*?]?|)(\\([\\w\\-\'/]+=[\\w\\-\'/]+\\)|)[ \t]*(.*)$', s)
-        #allow $x:n(c) besides $x:n(c=z)  ??
-        if m:
-            if m.group(3):
-                p, c = m.group(3)[1:-1].split('=', 1)
+        m = re.match('^\\$([\\w\\-\'/!]*)[\t ]*(.*)$', s)
+        label = m.group(1)
+        rest = m.group(2)
+        value = ''
+        if rest and rest[0] == ':':
+            m = re.match('^:([\\w\\-\'/?]*)[\t ]*(.*)$', rest)
+            value = m.group(1)
+            rest = m.group(2)
+        cond = Unknown()
+        if rest and rest[0] == '(':
+            m = re.match('^(\\([\\w\\-\'/]+=[\\w\\-\'/]+\\))[ \t]*(.*)$', rest)
+            if m:
+                cond = m.group(1).split('=')
+                rest = m.group(2)
             else:
-                p, c = '', ''
-            v = m.group(2)
-            return Variable(m.group(1), v[1:] if v else '', p, c), m.group(4)
-        else:
-            m = re.match('^(\\$[\\w\\-\'/]*!?)(.*)$', s)
-            return Variable(m.group(1), '', '', ''), m.group(2).lstrip()
+                cond, rest = destring(rest[1:], lang, at)
+                if rest[0] != ')':
+                    raise ParseError('Badly formed variable condition.')
+                rest = rest[1:].lstrip()
+        return Variable(label, value, cond), rest
     elif s[0] == '[': #SyntaxNode
         ntype, r = s[1:].split(' ', 1)
         ch = []
@@ -271,7 +309,9 @@ def destring(s, lang, at):
         mode, r = s[1:].split(' ', 1)
         mode = mode.strip()
         if mode == '~':
-            mode =  None
+            mode = None
+        if mode == '*':
+            mode = Unknown()
         r = r.lstrip()
         a, r = destring(r, lang, at)
         r = r.lstrip()
@@ -284,6 +324,19 @@ def destring(s, lang, at):
         return MorphologyNode(lang, a, b, mode), r[1:].lstrip()
     elif s[0] == '~': #None
         return None, s[1:].lstrip()
+    elif s[0] == '*': #Unknown
+        return Unknown(), s[1:].lstrip()
+    elif s[0] == '{': #Morpheme pattern
+        i = 1
+        while s[i] != '}':
+            i += 1
+        d = {}
+        for p in s[1:i].split(','):
+            k, v = p.split('=')
+            d[k.strip()] = v.strip()
+        r = Morpheme(lang, Unknown(), Unknown())
+        r.props = d
+        return r, s[i+1:].lstrip()
     else:
         m = re.match('^([\\w\\-\'/]+)=([\\w\\-\'/]+)[ \t]*(.*)$', s)
         if m: #Morpheme
@@ -380,5 +433,7 @@ def loadlang(lang):
                 ret.transform.append(Translation(tf, tr))
     return ret
 if __name__ == '__main__':
-    loadlexicon(2)
-    l = loadlang(2)
+    #loadlexicon(2)
+    #l = loadlang(2)
+    #print([x[0].label for x in l.syntax['NP'].conds])
+    print(destring('$head(<* {transitive=true} *>)', 7, None))
