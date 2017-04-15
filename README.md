@@ -33,7 +33,6 @@ TODO
   - [ ] store progress
   - [ ] generate sentences
     - [x] generate deep structure
-      - there may be a bug somewhere that results in swap statements screwing up sometimes (e.g. confusing transitive and intransitive verbs)
     - [x] translate deep structure
     - [ ] apply movement
     - [ ] generate text

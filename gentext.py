@@ -1,168 +1,98 @@
-import general, random, itertools
-def makesentence(lang):
-    x = general.Variable('', general.Language.getorloadlang(lang).syntaxstart, '', '')
-    return x.generate(lang)
-tracing = False
-indent = 0
-def syntaxtrans(tolang, sen):
-    global indent, tracing
-    if tracing: print(' '*indent, 'syntaxtrans(%d, %s)' % (tolang, sen))
-    indent += 1
-    if isinstance(sen, general.MorphologyNode):
-        if sen.lang == tolang:
-            trs = syntaxtrans(tolang, sen.stem)
-            tra = syntaxtrans(tolang, sen.affix)
-            ret = []
-            for s in trs:
-                for a in tra:
-                    ret.append(general.MorphologyNode(sen.lang, s, a, sen.mode))
-            indent -= 1
-            if tracing: print(' '*indent, 'return20', ret)
-            return ret
-        ret = []
-        print([23, sen.lang, tolang])
-        for tr in general.Translation.gettrans(sen.lang, tolang):
-            if isinstance(tr.form, general.MorphologyNode):
-                t = sen.translate(tr)
-                if t:
-                    ret += syntaxtrans(tolang, t)
-                #for r in syntaxtrans(tolang, t):
-                #    a = True
-                #    for n in ret:
-                #        if r == n:
-                #            a = False
-                #            break
-                #    if a:
-                #        ret.append(r)
-        indent -= 1
-        if tracing: print(' '*indent, 'return35', ret)
-        return ret
-    if isinstance(sen, general.Morpheme):
-        if sen.lang == tolang:
-            indent -= 1
-            return [sen]
-        r = []
-        add = False
-        for tr in sen.trans:
-            if tr.resultlang == tolang:
-                if tr.form == '@':
-                    r.append(tr.result)
-                else:
-                    add = True
-        if add:
-            r.append(sen)
-        indent -= 1
-        if tracing: print(' '*indent, 'return', r)
+import general2 as general, random, itertools, copy
+def gen(pats, tree, depth, setvars):
+    #print('gen(pats, %s, %s, %s)' % (tree, depth, setvars))
+    if isinstance(tree, general.Node):
+        r = copy.copy(tree)
+        rc = []
+        for c in copy.deepcopy(r.children):
+            rc.append(gen(pats, c, depth+1, setvars))
+        r.children = rc
         return r
-    if not isinstance(sen, general.SyntaxNode):
-        indent -= 1
-        if tracing: print(' '*indent, 'return', [sen])
-        return [sen]
-    if sen.lang == tolang:
-        ls = [syntaxtrans(tolang, x) for x in sen.children]
-        indent -= 1
-        if tracing: print(' '*indent, 'swapping')
-        return [sen.swap(l) for l in itertools.product(*ls)]
-    ret = []
-    for tr in general.Translation.gettrans(sen.lang, tolang):
-        t = sen.translate(tr)
-        if t:
-            ret += syntaxtrans(tolang, t)
-    indent -= 1
-    if tracing: print(' '*indent, 'return', ret)
-    return ret
-indent = 0
-def lexicaltrans(tolang, sen):
-    global indent, tracing
-    if tracing: print(' '*indent, 'lexicaltrans(%d, %s)' % (tolang, sen))
-    indent += 1
-    if isinstance(sen, general.Morpheme):
+    elif isinstance(tree, list):
+        return random.choice(tree)
+    elif isinstance(tree, general.Variable):
+        if not tree.opt or random.randint(1,100) < 10/depth:
+            if tree.label in setvars:
+                return setvars[tree.label]
+            else:
+                newtree = pats[tree.value]
+                if isinstance(newtree, list):
+                    newtree = random.choice(newtree)
+                return gen(pats, newtree, depth+1, setvars)
+    elif isinstance(tree, general.SyntaxPat):
+        vrs = {}
+        for v in tree.vrs:
+            vrs[v.label] = gen(pats, v, depth, {})
+        il = []
+        for i, cl in enumerate(tree.conds):
+            ad = True
+            for c in cl:
+                if not c.check(vrs):
+                    ad = False
+                    break
+            if ad:
+                il.append(i)
+        return gen(pats, tree.opts[random.choice(il)], depth, vrs)
+    else:
+        return tree
+def getroots(tree):
+    if isinstance(tree, general.Morpheme):
+        return [tree.children[0]]
+    elif isinstance(tree, general.Node):
         r = []
-        for tr in sen.trans:
-            if tr.resultlang == tolang and tr.form != '@':
-                for a, d in tr.form.itermorph():
-                    if a == '@' or a == sen:
-                        r.append((tr, d))
-                        break
-        indent -= 1
-        if tracing: print(' '*indent, 'return [%s], %s' % (sen, r))
-        return [sen], r
-    elif isinstance(sen, general.MorphologyNode):
-        s, ts = lexicaltrans(tolang, sen.stem)
-        a, ta = lexicaltrans(tolang, sen.affix)
-        trs = [(c[0], c[1]-1) for c in ts+ta]
-        ret = [general.MorphologyNode(sen.lang, x[0], x[1], sen.mode) for x in itertools.product(s, a)]
-        rettr = []
-        for tr, d in trs:
-            if d < 0:
-                add = []
-                for s in ret:
-                    m = s.translate(tr)
-                    if m:
-                        add.append(m)
-                ret += add
-            else:
-                rettr.append((tr, d))
-        indent -= 1
-        print(' '*indent, 'return %s, %s' % (ret, rettr))
-        return ret, rettr
-    elif isinstance(sen, general.SyntaxNode):
-        nodes = []
-        trs = []
-        for ch in sen.children:
-            n, t = lexicaltrans(tolang, ch)
-            nodes.append(n)
-            trs += [(c[0], c[1]-1) for c in t]
-        ret = [sen.swap(x) for x in itertools.product(*nodes)]
-        rettr = []
-        for tr, d in trs:
-            if d < 0:
-                add = []
-                for s in ret:
-                    m = s.translate(tr)
-                    if m:
-                        add.append(m)
-                ret += add
-            else:
-                rettr.append((tr, d))
-        indent -= 1
-        print(' '*indent, 'return %s, %s' % (ret, rettr))
-        return ret, rettr
+        for c in tree.children:
+            r += getroots(c)
+        return r
     else:
-        indent -= 1
-        print(' '*indent, 'return [%s], []' % sen)
-        return [sen], []
-def translate(tolang, sen):
-    ls = syntaxtrans(tolang, sen)
-    if tracing: print(len(ls))
-    if tracing: print('\n'.join([t.debugdisplay() for t in ls]))
-    ret = []
-    done = []
-    for s in ls:
-        if s.islang(tolang) and s not in done:
-            ret += lexicaltrans(tolang, s)[0]
-            done.append(s)
-    if tracing: print(len(ret))
-    if tracing: print('\n'.join([t.debugdisplay() for t in ret]))
-    r = []
-    for s in ret:
-        if s.ismorphlang(tolang) and s not in r:
-            r.append(s)
-    return r
+        return []
+def transform(tree, pats):
+    if isinstance(tree, general.Node):
+        chs = [transform(c, pats) for c in tree.children]
+        nodes = [tree.swapchildren(list(cl)) for cl in itertools.product(*chs)]
+        ret = []
+        retstr = []
+        for n in nodes:
+            added = False
+            for p in pats:
+                x = n.trans(p)
+                if x:
+                    s = str(x)
+                    if s not in retstr:
+                        ret.append(x)
+                        retstr.append(s)
+                    added = True
+            if not added:
+                ret.append(n)
+        return ret
+    else:
+        return [tree]
+def make(lang):
+    general.loadlexicon(lang)
+    l = general.loadlang(lang)
+    p = l.getpats()
+    return gen(p, p[l.syntaxstart], 1, {})
+def translate(sen, tolang):
+    fromlang = sen.lang
+    rootpats = list(general.Translation.find(fromlang, tolang, getroots(sen)))
+    tr1 = []
+    tr1str = []
+    for t in transform(sen, rootpats):
+        s = str(t)
+        if s not in tr1str:
+            tr1.append(t)
+            tr1str.append(s)
+    tr = []
+    trstr = []
+    pts = list(general.Translation.find(fromlang, tolang, ['syntax', 'morphology']))
+    for t in tr1:
+        for tt in transform(t, pts):
+            s = str(tt)
+            if s not in trstr:
+                tr.append(tt)
+                trstr.append(s)
+    return tr
 if __name__ == '__main__':
-    x = makesentence(2)
-    print(x.debugdisplay())
-    tr = translate(1, x)
-    print(len(tr))
-    if len(tr) > 0:
-        print('\n'.join([t.debugdisplay() for t in tr]))
-    else:
-        f = open('failed.txt', 'a')
-        f.write(str(x)+'\n')
-        f.close()
-        tracing = True
-        print("TRYING AGAIN, WITH TRACING\n\n\n===================\n\n")
-        tr = translate(1, x)
-    print('\n\n\n\n\n')
-    for t in tr:
-        print(t.conjugate())
+    sen = make(2)
+    print(sen.display())
+    print('\n\n\n')
+    print('\n'.join([x.display() for x in translate(sen, 1)]))

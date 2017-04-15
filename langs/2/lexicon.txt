@@ -19,8 +19,8 @@ jezlan (verb)
   transitive: true
   translate
     lang: 1
-    from: [V' @ $comp]
-    to: [V' verb=excell [PP ~ [PP' preposition=at $comp]]]
+    from: [Vbar $comp <~ @ ~>]
+    to: [Vbar verb=excell [PP ~ [Pbar preposition=at $comp]]]
 keh (conjunction)
   gloss (1): conjunction=and
   clause-only: false

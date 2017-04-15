@@ -1,423 +1,168 @@
-import re, itertools, random
-###DATA STRUCTURES
+import re, itertools, random, copy
+from collections import defaultdict
+###VARIABLES
 class Variable:
-    def __init__(self, label, value, prop, cond):
+    def __init__(self, label, value, cond):
         self.label = label
         self.value = value
-        self.prop = prop
-        self.cond = cond
-    def checkcond(self, names):
-        if isinstance(names, Morpheme):
-            if self.prop:
-                return names.props[self.prop] == self.cond
-            else:
-                return names != None
-        elif isinstance(names, MorphologyNode):
-            return self.checkcond(names.stem)
-        elif isinstance(names[self.label], MorphologyNode):
-            return self.checkcond(names[self.label].stem)
-        elif isinstance(names[self.label], Morpheme):
-            if self.prop:
-                return names[self.label].props[self.prop] == self.cond
-            else:
-                return names[self.label] != None
+        self.opt = False
+        if self.value and self.value[-1] == '?':
+            self.opt = True
+            self.value = self.value[:-1]
+        if self.label and self.label[-1] == '!':
+            self.__check = None
+            self.label = self.label[:-1]
+        elif isinstance(cond, list):
+            self.__check = Node(Unknown(), Unknown(), Unknown(), {})
+            if cond[0]:
+                self.__check.props[cond[0]] = cond[1] or Unknown()
         else:
-            return False #TODO other conds?
-    def strip(self):
-        r = self.value
-        if r and r[0] == '#':
-            r = r[1:]
-        if r and r[-1] in '*?':
-            r = r[:-1]
-        return r
-    def mode(self):
-        if self.value and self.value[0] == '#':
-            return '#'
-        else:
-            return ''
-    def opt(self):
-        if self.value and self.value[-1] in '*?':
-            return self.value[-1]
-        else:
-            return ''
+            self.__check = cond
+    def check(self, vrs):
+        return match(self.__check, vrs[self.label])
     def __str__(self):
-        return '$%s:%s(%s=%s)' % (self.label, self.value, self.prop, self.cond)
+        return '$%s:%s(%s)' % (self.label, self.value, self.__check)
     def __repr__(self):
         return self.__str__()
-    def debugdisplay(self):
-        return self.__str__()
-    def generate(self, lang, depth=1):
-        if self.opt() and random.randint(1,100) > 10/depth:
-            return None
-        elif self.mode():
-            #return MorphologyNode(lang, Morpheme.pick(lang, self), None, None) #TONODE
-            self.value = self.value[1:]
-            r = self.generatemorph(lang, 1)
-            if isinstance(r, Morpheme):
-                r = MorphologyNode(lang, r, None, None)
-            self.value = '#' + self.value
-            return r
-        else:
-            #print(' '*depth + str(self))
-            swap, alt = Language.getorloadlang(lang).getsyntax(self.strip())
-            if alt and random.randint(1,100) < 10/depth:
-                swap, alt = alt, swap
-            names = VarDict()
-            for v in swap.variables:
-                names.addvar(v, v.generate(lang, depth+1))
-            n = swap.getopt(names)
-            for v in n.getvars():
-                if v.value:
-                    names.addvar(v, v.generate(lang, depth+1))
-            return n.rebuild(names)
-    def generatemorph(self, lang, depth=1):
-        if self.opt() and random.randint(1,100) > 10/depth:
-            return None
-        elif self.mode():
-            return Morpheme.pick(lang, self)
-        else:
-            pat = None
-            patls = Language.getorloadlang(lang).morphology[self.strip()]
-            for p in patls:
-                if random.randint(1,100) < 50:
-                    pat = p
-                    break
-            if not pat:
-                pat = patls[0]
-            names = VarDict()
-            for v in pat.getvars():
-                if v.value:
-                    names.addvar(v, v.generatemorph(lang, depth+1))
-            return pat.rebuild(names)
-class VarDict:
+class Unknown:
     def __init__(self):
-        self.vals = {}
-    def addvar(self, var, val):
-        if isinstance(var, Variable) and var.label:
-            self.vals[var.label] = val
-        elif isinstance(var, str):
-            self.vals[var] = val
-        else:
-            print([70, 'VarDict.addvar()', var, val])
-            assert(False)
-    def __getitem__(self, key):
-        if isinstance(key, Variable) and key.label:
-            return self.vals[key.label]
-        elif key == None:
-            return None
-        elif isinstance(key, str):
-            return self.vals[key]
-        else:
-            print([80, 'VarDict.addvar()', key])
-            assert(False)
-    def iter(self):
-        return self.vals.items()
+        self.n = None
     def __str__(self):
-        return 'VarDict(' + str(self.vals) + ')'
+        return 'Unknown()'
     def __repr__(self):
-        return self.__str__()
-    def __contains__(self, key):
-        if isinstance(key, str):
-            return key in self.vals
-        elif isinstance(key, Variable):
-            return key.label in self.vals
-        else:
-            print([125, 'VarDict.__contains__()', key])
-            assert(False)
-            return False
-class SyntaxNode:
-    def __init__(self, lang, ntype, children):
+        return 'Unknown()'
+###DATA STRUCTURES
+class Node:
+    def __init__(self, lang, ntype, children, props=defaultdict(list)):
         self.lang = lang
         self.ntype = ntype
         self.children = children
-    def swap(self, chs):
-        return SyntaxNode(self.lang, self.ntype, chs)
-    def iterbuild(self, callback):
-        r = SyntaxNode(self.lang, self.ntype, [])
-        for ch in self.children:
-            if isinstance(ch, SyntaxNode):
-                r.children.append(ch.iterbuild(callback))
-            else:
-                yield callback(ch)
-    def getvars(self):
-        ret = []
-        for ch in self.children:
-            if isinstance(ch, SyntaxNode):
-                ret += ch.getvars()
-            elif ch == None:
-                pass
-            else:
-                ret.append(ch)
-        return ret
-    def iterfind(self, node, names=VarDict()):
-        for sch, nch in zip(self.children, node.children):
-            if isinstance(nch, SyntaxNode):
-                sch.iterfind(nch, names)
-            elif nch == None or nch == '@':
-                pass
-            else:
-                names.addvar(nch, sch)
-        return names
-    def itermatch(self, node, names=VarDict()):
-        if not isinstance(node, SyntaxNode):
-            return None
-        elif len(self.children) != len(node.children):
-            return None
-        elif self.ntype != node.ntype:
-            return None
-        elif self.lang != node.lang:
-            return None
+        self.props = props
+    def map(self, fn):
+        r = copy.deepcopy(self)
+        r.children = map(fn, r.children)
+        return r
+    def swapchildren(self, ls):
+        r = copy.deepcopy(self)
+        r.children = ls
+        return r
+    def getvars(self, form, vrs={' failed': False}):
+        if isinstance(form, Variable):
+            vrs[form.label] = self
+        elif type(self) != type(form):
+            vrs[' failed'] = 'type'#True
+        elif not match(self.lang, form.lang) or not match(self.ntype, form.ntype):
+            vrs[' failed'] = 'lang or ntype'#True
+        elif match(self, form):
+            pass
+        elif len(self.children) != len(form.children):
+            vrs[' failed'] = 'len(children)'#True
+        elif not set(form.props.keys()) <= set(self.props.keys()):
+            vrs[' failed'] = 'too many properties: %s not <= %s' % (form.props.keys(), self.props.keys())#True
         else:
-            for sch, nch in zip(self.children, node.children):
-                if isinstance(nch, SyntaxNode):
-                    if not isinstance(sch, SyntaxNode):
-                        return None
-                    x = sch.itermatch(nch, names)
-                    if x == None:
-                        return None
-                elif nch == None:
-                    if sch != None:
-                        return None
-                elif isinstance(nch, Morpheme):
-                    if nch != sch:
-                        return None
-                elif isinstance(nch, MorphologyNode):
-                    if not isinstance(sch, MorphologyNode):
-                        return None
-                    x = sch.itermatch(nch, names)
-                    if x == None:
-                        return None
-                elif nch in names:
-                    if names[nch] != sch:
-                        return None
-                elif nch == '@':
+            for s, f in zip(self.children, form.children):
+                if isinstance(s, Node):
+                    s.getvars(f, vrs)
+                elif isinstance(f, Variable):
+                    vrs[f.label] = s
+                elif match(s, f):
                     pass
                 else:
-                    names.addvar(nch, sch)
-            return names
-    def rebuild(self, names):
-        ret = []
-        for ch in self.children:
-            if isinstance(ch, SyntaxNode):
-                ret.append(ch.rebuild(names))
-            elif isinstance(ch, MorphologyNode):
-                ret.append(ch.rebuild(names))
-            elif isinstance(ch, Variable):
-                ret.append(names[ch])
-            else:
-                ret.append(ch)
-        return SyntaxNode(self.lang, self.ntype, ret)
-    def itermorph(self): #yields all non-SyntaxNode non-None items and their depth
-        for ch in self.children:
-            if isinstance(ch, SyntaxNode):
-                for n, d in ch.itermorph():
-                    yield n, d+1
-            elif isinstance(ch, MorphologyNode):
-                for n, d in ch.itermorph():
-                    yield n, d+1
-            elif ch == None:
+                    vrs[' failed'] = 'failed on child %s with form %s' % (s, f)
+            for k in form.props.keys():
+                if isinstance(form.props[k], Variable):
+                    vrs[forms.props[k].label] = self.props[k]
+                elif match(self.props[k], form.props[k]):
+                    pass
+                else:
+                    vrs[' failed'] = 'failed on property %s with value %s and form %s' % (k, self.props[k], form.props[k])
+        return vrs
+    def putvars(self, vrs): #DESTRUCTIVE
+        for k in self.props:
+            if isinstance(self.props[k], Variable):
+                self.props[k] = vrs[self.props[k].label]
+        for i, ch in enumerate(self.children):
+            if isinstance(ch, Node):
+                self.children[i] = ch.putvars(vrs)
+            if isinstance(ch, Variable):
+                self.children[i] = vrs[ch.label]
+        return self
+    def trans(self, tr):
+        if type(tr.form) != type(self) or tr.form.ntype != self.ntype or tr.form.lang != self.lang:
+            return []
+        elif tr.hasvars:
+            vrs = self.getvars(tr.form, {' failed': False})
+            if vrs[' failed']:
+                return []
+            return copy.deepcopy(tr.result).putvars(vrs)
+        elif match(self, tr.form):
+            return copy.deepcopy(tr.result)
+        else:
+            return []
+    def __str__(self):
+        if isinstance(self.children, list):
+            s = ' '.join([str(x) for x in self.children])
+        else:
+            s = str(self.children)
+        return '%s(%s)[%s %s]' % (self.__class__.__name__, self.lang, self.ntype, s)
+    def __repr__(self):
+        return self.__str__()
+    def display(self):
+        l = []
+        for c in self.children:
+            if isinstance(c, Node):
+                l.append(c.display())
+            elif not c:
                 pass
             else:
-                yield ch, 0
-    def translate(self, trans, inmorph=None):
-        if inmorph == None:
-            morph = VarDict()
-        elif isinstance(inmorph, VarDict):
-            morph = inmorph
-        else:
-            morph = VarDict()
-            morph.addvar('@', inmorph)
-        x = self.itermatch(trans.form, morph)
-        if x:
-            return trans.result.rebuild(x)
-        else:
-            return None
-    def itertrans(self, trans, morph=None):
-        n = self.translate(trans, morph)
-        if n == None:
-            n = self
-        r = []
-        for ch in n.children:
-            if isinstance(ch, SyntaxNode):
-                r.append(ch.itertrans(trans, morph))
+                l.append(str(c))
+        return ' '.join(l)
+    def iternest(self):
+        for ch in self.children:
+            if isinstance(ch, Node):
+                for c in ch.iternest():
+                    yield c
             else:
-                r.append(ch)
-        return n.swap(r)
-    def islang(self, lang):
-        if self.lang != lang:
+                yield ch
+def match(a, b):
+    if isinstance(a, Unknown) or isinstance(b, Unknown):
+        return True
+    elif isinstance(a, Node) and isinstance(b, Node):
+        if type(a) != type(b) and type(a) != Node and type(b) != Node:
             return False
-        for ch in self.children:
-            if isinstance(ch, SyntaxNode) and not ch.islang(lang):
+        if not match(a.lang, b.lang):
+            return False
+        if not match(a.ntype, b.ntype):
+            return False
+        if not isinstance(a.children, Unknown) and not isinstance(b.children, Unknown) and len(a.children) != len(b.children):
+            return False
+        if isinstance(a.children, list) and isinstance(b.children, list):
+            for ac, bc in zip(a.children, b.children):
+                if not match(ac, bc):
+                    return False
+        ka = set(a.props.keys()) - set(['translations', 'forms'])
+        kb = set(b.props.keys()) - set(['translations', 'forms'])
+        ks = ka.intersection(kb)
+        if len(ks) != len(ka) and len(ks) != len(kb):
+            return False
+        for k in ks:
+            if not match(a.props[k], b.props[k]):
                 return False
         return True
-    def ismorphlang(self, lang):
-        if self.lang != lang:
-            return False
-        for ch in self.children:
-            if isinstance(ch, SyntaxNode) and not ch.ismorphlang(lang):
-                return False
-            if isinstance(ch, Morpheme) and ch.lang != lang:
-                return False
-            if isinstance(ch, MorphologyNode) and not ch.islang(lang):
-                return False
-        return True
-    def debugdisplay(self):
-        r = []
-        for ch in self.children:
-            if ch:
-                r.append(ch.debugdisplay())
-        return ' '.join(r)
-    def conjugate(self):
-        return ' '.join([x.conjugate() for x in self.children if x])
-    def __str__(self):
-        return '[%s %s]' % (self.ntype, ' '.join([str(x) for x in self.children]))
-    def __repr__(self):
-        return self.__str__()
-    def __eq__(self, other):
-        if not isinstance(other, SyntaxNode):
-            return False
-        if self.lang != other.lang:
-            return False
-        if self.ntype != other.ntype:
-            return False
-        if len(self.children) != len(other.children):
-            return False
-        for sch, nch in zip(self.children, other.children):
-            if sch != nch:
-                return False
-        return True
-class MorphologyNode:
-    __modes = {
-        'prefix': ['^', '(.*)', '\\1'],
-        'suffix': ['$', '(.*)', '\\1'],
-        'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
-    }
-    def __init__(self, lang, stem, affix, mode):
-        self.lang = lang
-        self.stem = stem
-        self.affix = affix
-        self.mode = mode
-    def conjugate(self):
-        if isinstance(self.stem, Morpheme):
-            s = self.stem.root
-        else:
-            s = self.stem.conjugate()
-        if self.affix == None:
-            return s
-        else:
-            a = self.affix.root
-        pat = MorphologyNode.__modes[self.mode]
-        return re.sub(pat[0], re.sub(pat[1], pat[2], a), s)
-    def debugdisplay(self):
-        return (self.stem.debugdisplay() if self.stem else '') + '-' + (self.affix.debugdisplay() if self.affix else '')
-    def itermorph(self):
-        yield self.affix, 0
-        if isinstance(self.stem, MorphologyNode):
-            for c, d in self.stem.itermorph():
-                yield c, d+1
-        else:
-            yield self.stem, 0
-    def itermatch(self, node, names=VarDict()):
-        if not isinstance(node, MorphologyNode):
-            return None
-        if isinstance(node.stem, MorphologyNode):
-            if not isinstance(self.stem, MorphologyNode):
-                return None
-            else:
-                x = self.stem.itermatch(node.stem, names)
-                if x == None:
-                    return None
-        elif isinstance(node.stem, Morpheme):
-            if node.stem != self.stem:
-                return None
-        elif node.stem != '@' and node.stem != None:
-            names.addvar(node.stem, self.stem)
-        else:
-            pass
-        if isinstance(node.affix, Morpheme):
-            if node.affix != self.affix:
-                return None
-        elif node.affix == None:
-            if self.affix != None:
-                return None
-        elif node.affix in names:
-            if names[node.affix] != self.affix:
-                return None
-        elif node.affix != '@':
-            names.addvar(node.affix, self.affix)
-        else:
-            pass
-        return names
-    def translate(self, pat):
-        x = self.itermatch(pat.form)
-        if x:
-            return pat.result.rebuild(x)
-        else:
-            return None
-    def rebuild(self, names):
-        r = MorphologyNode(self.lang, None, None, self.mode)
-        if isinstance(self.stem, MorphologyNode):
-            r.stem = self.stem.rebuild(names)
-        elif isinstance(self.stem, Variable):
-            r.stem = names[self.stem]
-        else:
-            r.stem = self.stem
-        if isinstance(self.affix, Variable):
-            r.affix = names[self.affix]
-        else:
-            r.affix = self.affix
-        return r
-    def getvars(self):
-        ret = []
-        if isinstance(self.affix, Variable):
-            ret.append(self.affix)
-        if isinstance(self.stem, Variable):
-            ret.append(self.stem)
-        if isinstance(self.stem, MorphologyNode):
-            ret += self.stem.getvars()
-        return ret
-    def islang(self, lang):
-        if self.lang != lang:
-            return False
-        if not (self.affix == None or self.affix.lang == lang):
-            return False
-        if isinstance(self.stem, MorphologyNode):
-            return self.stem.islang(lang)
-        if isinstance(self.stem, Morpheme):
-            return self.stem.lang == lang
-        return True
-    def addmode(name, root, affix, regex):
-        MorphologyNode.__modes[name] = [root, affix, regex]
-    def __str__(self):
-        return '<%s %s %s>' % (self.mode, self.stem, self.affix)
-    def __repr__(self):
-        return self.__str__()
-    def __eq__(self, other):
-        if not isinstance(other, MorphologyNode):
-            return False
-        if self.lang != other.lang:
-            return False
-        if self.stem != other.stem:
-            return False
-        if self.affix != other.affix:
-            return False
-        if self.stem and self.mode != other.mode:
-            return False
-        return True
-class Morpheme:
-    __allmorphs = {}
-    def __init__(self, lang, root, pos, forms, trans, props):
-        self.lang = lang
-        self.root = root
-        self.pos = pos
-        self.forms = forms
-        self.trans = trans
-        self.props = props
-        if lang not in Morpheme.__allmorphs:
-            Morpheme.__allmorphs[lang] = {}
-        if pos not in Morpheme.__allmorphs[lang]:
-            Morpheme.__allmorphs[lang][pos] = {}
+    elif isinstance(a, Translation) and isinstance(b, Translation):
+        return match(a.form, b.form) and match(a.result, b.result)
+    else:
+        return a == b
+class Morpheme(Node):
+    __allmorphs = defaultdict(lambda: defaultdict(dict))
+    def __init__(self, lang, root, pos):
+        Node.__init__(self, lang, pos, [root], defaultdict(list))
         Morpheme.__allmorphs[lang][pos][root] = self
+    def langs():
+        return list(Morpheme.__allmorphs.keys())
+    def iterpos(lang):
+        for p in Morpheme.__allmorphs[lang]:
+            yield p, list(Morpheme.__allmorphs[lang][p].values())
     def find(lang, pos, root):
         try:
             return Morpheme.__allmorphs[lang][pos][root]
@@ -425,116 +170,79 @@ class Morpheme:
             assert(isinstance(lang, int))
             print('Morpheme.find(%d, "%s", "%s") failed.' % (lang, pos, root))
             return None
-    def allfromlang(lang):
-        r = []
-        for pos in Morpheme.__allmorphs[lang].values():
-            for root in pos.values():
-                r.append(root)
-        return r
-    def langdict(lang):
-        return Morpheme.__allmorphs[lang]
-    def langs():
-        return list(Morpheme.__allmorphs.keys())
-    def pick(lang, pos):
-        ok = False
-        while not ok:
-            m = random.choice(list(Morpheme.__allmorphs[lang][pos.strip()].values()))
-            ok = pos.checkcond(m)
-        return m
-    def islang(self, lang):
-        return self.lang == lang
-    def gettrans(self, lang):
-        return [t for t in self.trans if t.resultlang == lang]
-    def debugdisplay(self):
-        return self.root
-    def conjugate(self):
-        return self.root
-    def __str__(self):
-        return self.pos + '=' + self.root + ('(%s)' % self.props)
-    def __repr__(self):
-        return self.__str__()
-    def __eq__(self, other):
-        if not isinstance(other, Morpheme):
-            return False
-        return self.lang == other.lang and self.root == other.root
+    def addform(self, form):
+        self.props['forms'].append(form)
+    def addtrans(self, trans):
+        self.props['trans'].append(trans)
+class MorphologyNode(Node):
+    __modes = {
+        'prefix': ['^', '(.*)', '\\1'],
+        'suffix': ['$', '(.*)', '\\1'],
+        'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
+    }
+    def __init__(self, lang, stem, affix, mode):
+        Node.__init__(self, lang, mode, [stem, affix], defaultdict(list))
+    def display(self):
+        s = self.children[0].display()
+        if self.children[1] == None:
+            return s
+        else:
+            a = self.children[1].display()
+        pat = MorphologyNode.__modes[self.ntype]
+        return re.sub(pat[0], re.sub(pat[1], pat[2], a), s)
+class SyntaxNode(Node):
+    pass
+###TRANSFORMATIONS
 class Translation:
-    __gentrans = []
-    def __init__(self, form, result, general):
-        if isinstance(form, int):
-            self.formlang = form
-            self.form = '@'
-        else:
-            self.formlang = form.lang
-            self.form = form
-        self.resultlang = result.lang
-        self.result = result
-        if general:
-            Translation.__gentrans.append(self)
-    def gettrans(flang, tlang):
-        ret = []
-        for tr in Translation.__gentrans:
-            if tr.formlang == flang and tr.resultlang == tlang:
-                ret.append(tr)
-        return ret
-    def __str__(self):
-        return '(%d) %s => (%d) %s' % (self.formlang, self.form, self.resultlang, self.result)
-    def __repr__(self):
-        return self.__str__()
-class Form:
-    def __init__(self, form, pat):
+    __alltrans = []
+    def __init__(self, form, result, category):
         self.form = form
-        self.pat = pat
-class SyntaxPat:
-    def __init__(self, conds, ops, variables):
-        self.conds = conds
-        self.ops = ops
-        self.variables = variables
-    def getopt(self, names):
-        if not self.conds:
-            return self.ops[0]
-        for i, cl in enumerate(self.conds):
-            ok = True
-            for c in cl:
-                if not c.checkcond(names):
-                    ok = False
-                    break
-            if ok:
-                return self.ops[i]
-        raise Exception('No option found for conditions %s and variables %s.' % (self.conds, names))
+        self.result = result
+        self.langs = [form.lang, result.lang]
+        self.category = category
+        self.hasvars = False
+        for c in form.iternest():
+            if isinstance(c, Variable):
+                self.hasvars = True
+                break
+        Translation.__alltrans.append(self)
+    def find(fromlang, tolang, limit):
+        for tr in Translation.__alltrans:
+            #try:
+            #    if tr.form.lang == fromlang and tr.result.lang == tolang:
+            #        yield tr
+            #except:
+            #    pass
+            if tr.langs == [fromlang, tolang] and tr.category in limit:
+                yield tr
     def __str__(self):
-        return 'SyntaxPat(%s, %s, %s)' % (self.conds, self.ops, self.variables)
+        return '{%s => %s}' % (self.form, self.result)
     def __repr__(self):
         return self.__str__()
+###GENERATION
+class SyntaxPat:
+    def __init__(self, conds, opts, vrs):
+        self.conds = conds
+        self.opts = opts
+        self.vrs = vrs
 class Language:
-    __langs = {}
-    def __init__(self, langid):
-        self.langid = langid
-        self.syntax = {} #sentence generation
-        self.syntaxstart = '' #sentence head
-        self.morphology = {} #word generation
-        self.transform = [] #movement and conjugation
-        Language.__langs[langid] = self
-    def getsyntax(self, key):
-        r1 = None
-        r2 = None
-        if key in self.syntax:
-            r1 = self.syntax[key]
-        if '-' + key in self.syntax:
-            r2 = self.syntax['-' + key]
-        if r1:
-            return r1, r2
-        else:
-            return r2, r1
-    def getorloadlang(langid):
-        if langid not in Language.__langs:
-            loadlexicon(langid)
-            loadlang(langid)
-        return Language.__langs[langid]
+    def __init__(self, lang):
+        self.lang = lang
+        self.syntax = {}
+        self.morphology = defaultdict(list)
+        self.transform = []
+        self.syntaxstart = None
     def addmorphopt(self, ntype, struct):
-        if ntype not in self.morphology:
-            self.morphology[ntype] = []
         self.morphology[ntype].append(struct)
-
+    def getpats(self):
+        r = {}
+        for k in self.syntax:
+            r[k] = self.syntax[k]
+        for k in self.morphology:
+            r[k] = self.morphology[k]
+        for k, v in Morpheme.iterpos(self.lang):
+            r[k] = v
+        return r
 ###PARSING
 class ParseError(Exception):
     pass
@@ -621,18 +329,26 @@ def destring(s, lang, at):
     elif s[0] == '@':
         return at, s[1:].lstrip()
     elif s[0] == '$': #Variable
-        m = re.match('^\\$([\\w\\-\'/]*!?)(:#?[\\w\\-\'/]+[*?]?|)(\\([\\w\\-\'/]+=[\\w\\-\'/]+\\)|)[ \t]*(.*)$', s)
-        #allow $x:n(c) besides $x:n(c=z)  ??
-        if m:
-            if m.group(3):
-                p, c = m.group(3)[1:-1].split('=', 1)
+        m = re.match('^\\$([\\w\\-\'/!]*)[\t ]*(.*)$', s)
+        label = m.group(1)
+        rest = m.group(2)
+        value = ''
+        if rest and rest[0] == ':':
+            m = re.match('^:([\\w\\-\'/?]*)[\t ]*(.*)$', rest)
+            value = m.group(1)
+            rest = m.group(2)
+        cond = Unknown()
+        if rest and rest[0] == '(':
+            m = re.match('^(\\([\\w\\-\'/]+=[\\w\\-\'/]+\\))[ \t]*(.*)$', rest)
+            if m:
+                cond = m.group(1).split('=')
+                rest = m.group(2)
             else:
-                p, c = '', ''
-            v = m.group(2)
-            return Variable(m.group(1), v[1:] if v else '', p, c), m.group(4)
-        else:
-            m = re.match('^(\\$[\\w\\-\'/]*!?)(.*)$', s)
-            return Variable(m.group(1), '', '', ''), m.group(2).lstrip()
+                cond, rest = destring(rest[1:], lang, at)
+                if rest[0] != ')':
+                    raise ParseError('Badly formed variable condition.')
+                rest = rest[1:].lstrip()
+        return Variable(label, value, cond), rest
     elif s[0] == '[': #SyntaxNode
         ntype, r = s[1:].split(' ', 1)
         ch = []
@@ -648,7 +364,9 @@ def destring(s, lang, at):
         mode, r = s[1:].split(' ', 1)
         mode = mode.strip()
         if mode == '~':
-            mode =  None
+            mode = None
+        if mode == '*':
+            mode = Unknown()
         r = r.lstrip()
         a, r = destring(r, lang, at)
         r = r.lstrip()
@@ -661,6 +379,19 @@ def destring(s, lang, at):
         return MorphologyNode(lang, a, b, mode), r[1:].lstrip()
     elif s[0] == '~': #None
         return None, s[1:].lstrip()
+    elif s[0] == '*': #Unknown
+        return Unknown(), s[1:].lstrip()
+    elif s[0] == '{': #Morpheme pattern
+        i = 1
+        while s[i] != '}':
+            i += 1
+        d = {}
+        for p in s[1:i].split(','):
+            k, v = p.split('=')
+            d[k.strip()] = v.strip()
+        r = Morpheme(lang, Unknown(), Unknown())
+        r.props = d
+        return r, s[i+1:].lstrip()
     else:
         m = re.match('^([\\w\\-\'/]+)=([\\w\\-\'/]+)[ \t]*(.*)$', s)
         if m: #Morpheme
@@ -675,7 +406,7 @@ def destring(s, lang, at):
 def loadlexicon(lang):
     rootslist = ParseLine.fromfile('langs/%s/lexicon.txt' % lang)
     for root in rootslist:
-        m = Morpheme(lang, root.label, root.args[0], [], [], {})
+        m = Morpheme(lang, root.label, root.args[0])
         forms = []
         trans = []
         props = {}
@@ -684,21 +415,22 @@ def loadlexicon(lang):
                 for g in p.val.split(';'):
                     d, r = destring(g.strip(), int(p.args[0]), m)
                     assert(r == '')
-                    m.trans.append(Translation(lang, d, False))
+                    Translation(m, d, root.label)
             elif p.label == 'translate':
                 l = int(p.firstval('lang'))
-                f, r = destring(p.firstval('from'), l, m)
+                f, r = destring(p.firstval('from'), lang, m)
                 assert(r == '')
                 for t in p.vals('to'):
                     d, r = destring(t, l, m)
                     assert(r == '')
-                    m.trans.append(Translation(f, d, False))
+                    Translation(f, d, root.label)
             elif p.label == 'form':
-                f = list(p['form'])[0].val.strip()
-                for s in p['structure']:
-                    d, r = destring(s.val, lang, m)
-                    assert(r == '')
-                    m.forms.append(Form(f, d))
+                s, r = destring(p.first('structure').val.strip(), lang, m)
+                assert(r == '')
+                for f in p['form']:
+                    fm = Morpheme(lang, f.val.strip(), root.args[0])
+                    fm.props['form of'] = m
+                    Translation(s, fm, root.label)
             else:
                 m.props[p.label] = p.val
 def loadlang(lang):
@@ -726,7 +458,7 @@ def loadlang(lang):
                             for tr in op['translation']:
                                 res, r = destring(tr.val, int(tr.args[0]), None)
                                 assert(r == '')
-                                Translation(node, res, True)
+                                Translation(node, res, 'syntax')
                             cl = []
                             for x in op.args:
                                 c, r = destring(x, lang, None)
@@ -746,126 +478,17 @@ def loadlang(lang):
                             for tr in op['translation']:
                                 p, r = destring(tr.val, int(tr.args[0]), None)
                                 assert(r == '')
-                                Translation(s, p, True)
+                                Translation(s, p, 'morphology')
         if th.label == 'transform':
             for ch in th['rule']:
                 tf, r = destring(ch.firstval('form'), lang, None)
                 assert(r == '')
                 tr, r = destring(ch.firstval('result'), lang, None)
                 assert(r == '')
-                ret.transform.append(Translation(tf, tr, False))
+                ret.transform.append(Translation(tf, tr, 'transform'))
     return ret
-def tolisp(obj, at, iscond=False, byname=False, mode=None):
-    if obj == '@':
-        return tolisp(at, None, iscond, byname, mode)
-    elif obj == None:
-        return 'nil'
-    elif isinstance(obj, Morpheme):
-        pr = ' '.join(['(%s . %s)' % (k, obj.props[k]) for k in obj.props])
-        return '(morpheme %s ((lang . %d) %s) |%s|)' % (obj.pos, obj.lang, pr, obj.root)
-    elif isinstance(obj, MorphologyNode):
-        s = tolisp(obj.stem, at, iscond, byname, mode)
-        a = tolisp(obj.affix, at, iscond, byname, mode)
-        return '(morphology %s ((lang . %d)) %s %s)' % (obj.mode or '~', obj.lang, s, a)
-    elif isinstance(obj, Variable):
-        if byname:
-            cadr = obj.label
-        elif mode and obj.mode():
-            cadr = obj.strip() + mode
-        else:
-            cadr = obj.strip()
-        s = ''
-        if obj.prop:
-            s = '(morpheme %s ((%s . %s)) ?)' % (cadr or '?', obj.prop, obj.cond)
-        if iscond:
-            if obj.prop:
-                return s
-            elif obj.label and obj.label[-1] == '!':
-                return 'nil'
-            else:
-                return '(morpheme ? ? ?)'
-        return '(variable %s ((optional . %s)) %s)' % (cadr or obj.label, 't' if obj.opt() else 'nil', s)
-    elif isinstance(obj, SyntaxNode):
-        return '(syntax %s ((lang . %d)) %s)' % (obj.ntype, obj.lang, ' '.join([tolisp(x, at, iscond, byname, mode) for x in obj.children]))
-    elif isinstance(obj, Translation):
-        return '(%s %s)' % (tolisp(obj.form, at, iscond, True, mode), tolisp(obj.result, at, iscond, True, mode))
-    elif isinstance(obj, SyntaxPat):
-        l = []
-        for c, o in zip(obj.conds, obj.ops):
-            l.append('(%s %s)' % (tolisp(c, at, iscond, byname, mode), tolisp(o, at, iscond, byname, mode)))
-        return '(swap (%s) () %s)' % (' '.join([tolisp(v, at, iscond, byname, mode) for v in obj.variables]), ' '.join(l))
-    elif isinstance(obj, list):
-        return '(%s)' % ' '.join([tolisp(x, at, iscond, byname, mode) for x in obj])
-    else:
-        print([783, obj])
-        return obj
-def langtolisp(lang, tolang):
-    l = Language.getorloadlang(lang)
-    f = open('langs/%d/gen.lisp' % lang, 'w')
-    f.write('(defparameter *start* \'%s)\n' % l.syntaxstart)
-    trls = []
-    f.write('(defparameter *gen* \'(')
-    d = Morpheme.langdict(lang)
-    for k in d.keys():
-        ml = []
-        for r in d[k].values():
-            ml.append(tolisp(r, None))
-            for tr in r.gettrans(tolang):
-                trls.append(tolisp(tr, r, False))
-        f.write('(%s-morph . (%s))\n' % (k, ' '.join(ml)))
-    def varls(ls, iscond):
-        return ' '.join(['(%s . %s)' % (v.label.rstrip('!'), tolisp(v, None, iscond)) for v in ls])
-    hasopt = False
-    alt = '(**useopt-var . (morpeme *for*internal* () *use*only*))'
-    for k, syn in l.syntax.items():
-        if k[0] != '-':
-            s = ''
-            cs = ''
-            if '-' + k in l.syntax:
-                s = '(**useopt-var . (variable **useopt-class ((optional . t))))'
-                cs = '(**useopt-var . nil)'
-                hasopt = True
-            f.write('(%s . (swap (%s %s) ()' % (k, s, varls(syn.variables, False)))
-            for c, o in zip(syn.conds, syn.ops):
-                f.write('((%s %s) %s)' % (cs, varls(c, True), tolisp(o, None)))
-            if s != '':
-                for c, o in zip(l.syntax['-' + k].conds, l.syntax['-' + k].ops):
-                    f.write('((%s %s) %s)' % (alt, varls(c, True), tolisp(o, None)))
-            f.write('))\n')
-    print(l.morphology)
-    for k, syn in l.morphology.items():
-        f.write('(%s . (swap () ()' % k)
-        for o in syn:
-            f.write('(() %s)' % tolisp(o, None, mode="-morph"))
-        f.write('))\n')
-    f.write('(**useopt-class . (morpeme *for*internal* () *use*only*))')
-    f.write('))\n')
-    trlssyn = []
-    for tr in Translation.gettrans(lang, tolang):
-        trlssyn.append(tolisp(tr, None, False))
-    f.write('(defparameter *trans* \'(%s))\n' % '\n'.join(trlssyn + trls))
-    #TODO: movement
-    move = []
-    f.write('(defparameter *move* \'(%s))\n' % '\n'.join(move))
-    f.close()
 if __name__ == '__main__':
-    loadlexicon(2)
-    l = loadlang(2)
-    #print(l.morphology)
-    #v = destring('$:noun/noun', 2, None)[0]
-    #m1 = Morpheme.pick(2, v)
-    #m2 = Morpheme.pick(2, v)
-    #print(m1)
-    #print(m2)
-    #print(m1 == m2)
-    #s1 = destring('[NP noun=thefam]', 2, None)[0]
-    #s2 = destring('[NP noun=thefam]', 2, None)[0]
-    #print(s1)
-    #print(s2)
-    #print(s1 == s2)
-    #print(destring('<suffix #noun #noun/noun>', 2, None))
-    #print(destring('$:#noun', 2, None)[0].generate(2))
-    #print('\n\n')
-    #print(tolisp(m1, None))
-    #print(tolisp(Morpheme.allfromlang(2), None))
-    langtolisp(2, 1)
+    #loadlexicon(2)
+    #l = loadlang(2)
+    #print([x[0].label for x in l.syntax['NP'].conds])
+    print(destring('$head(<* {transitive=true} *>)', 7, None))
