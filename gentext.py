@@ -1,4 +1,4 @@
-import general2 as general, random, itertools, copy
+import general, random, itertools, copy
 def gen(pats, tree, depth, setvars):
     #print('gen(pats, %s, %s, %s)' % (tree, depth, setvars))
     if isinstance(tree, general.Node):
@@ -46,7 +46,7 @@ def getroots(tree):
     else:
         return []
 def transform(tree, pats):
-    if isinstance(tree, general.Node):
+    if len(pats) > 0 and isinstance(tree, general.Node):
         chs = [transform(c, pats) for c in tree.children]
         nodes = [tree.swapchildren(list(cl)) for cl in itertools.product(*chs)]
         ret = []
@@ -71,28 +71,42 @@ def make(lang):
     l = general.loadlang(lang)
     p = l.getpats()
     return gen(p, p[l.syntaxstart], 1, {})
-def translate(sen, tolang):
+def translate(sen, tolang): #TODO: add back root-specific pats
     fromlang = sen.lang
     rootpats = list(general.Translation.find(fromlang, tolang, getroots(sen)))
-    tr1 = []
-    tr1str = []
-    for t in transform(sen, rootpats):
-        s = str(t)
-        if s not in tr1str:
-            tr1.append(t)
-            tr1str.append(s)
+    tr1 = transform(sen, rootpats)
     tr = []
     trstr = []
     pts = list(general.Translation.find(fromlang, tolang, ['syntax', 'morphology']))
+    movpts = list(general.Translation.find(tolang, tolang, ['transform']))
     for t in tr1:
-        for tt in transform(t, pts):
+        for tt in transform(t, pts + movpts):
             s = str(tt)
             if s not in trstr:
                 tr.append(tt)
                 trstr.append(s)
     return tr
+def movement(sen): #only for gen sen (too slow otherwise)
+    rootlist = getroots(sen)
+    rootpats = list(general.Translation.find(sen.lang, sen.lang, rootlist))
+    tr = transform(sen, list(general.Translation.find(sen.lang, sen.lang, ['transform'])))
+    tr2 = []
+    tr2str = []
+    for t in tr:
+        for tt in transform(t, rootpats):
+            s = str(tt)
+            if s not in tr2str:
+                tr2.append(tt)
+                tr2str.append(s)
+    return tr2
 if __name__ == '__main__':
-    sen = make(2)
-    print(sen.display())
-    print('\n\n\n')
-    print('\n'.join([x.display() for x in translate(sen, 1)]))
+    import sys
+    fl = int(sys.argv[1])
+    tl = int(sys.argv[2])
+    general.loadlexicon(tl)
+    general.loadlang(tl)
+
+    sen = make(fl)
+    print(movement(sen)[0].display())
+    tr = translate(sen, tl)
+    print('\n'.join([x.display() for x in tr]))

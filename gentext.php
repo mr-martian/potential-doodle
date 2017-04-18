@@ -15,9 +15,11 @@
         $st = strval($t);
         $output = array();
         exec('python3 gentext.py '.$sf.' '.$st, $output);
-        foreach($output as $line) {
-          echo $line;
+        echo "<h2>Sentence:</h2><p>".$output[0]."</p><h2>Translations:</h2><ul>";
+        foreach(array_slice($output,1) as $line) {
+          echo "<li>".$line."</li>";
         }
+        echo "</ul>";
       } else {
         echo "<h1>No language with that ID</h1>";
       }

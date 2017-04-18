@@ -5,32 +5,44 @@ metadata
 syntax
   start-with: CPstart
   node-types
-    CPstart: [CP ~ [C' ~ IP]]
-    AP: [AP #degree? [A' #adjective PP?]]
-    CP: [CP ~ [C' #complementizer IP]]
-    IP: [IP NP [I' #auxilliary VP]]
-    NP: [NP (#determiner NP)? [Nmod AP? [N' #noun PP?]]]
-    VP: [VP #adverb [Vmod V' PP?]]
-    V'
-      variable: $head:#verb
-      option (structure)
-        case ($head(objects=0))
-          structure: [V' $head]
-        case ($head(objects=1), $head(object1=NP))
-          structure: [V' $head NP]
-        case ($head(objects=1), $head(object1=PP))
-          structure: [V' $head PP]
-        case ($head(objects=1), $head(object1=CP))
-          structure: [V' $head CP]
-        case ($head(objects=1), $head(object1=AP))
-          structure: [V' $head AP]
-        case ($head(objects=2), $head(object1=NP), $head(object2=NP))
-          structure: [V' $head NP NP]
-        case ($head(objects=2), $head(object1=NP), $head(object2=PP))
-          structure: [V' $head NP PP]
-        case ($head(objects=2), $head(object1=PP), $head(object2=PP))
-          structure: [V' $head PP PP]
+    CPstart
+      structure: [CP ~ [Cbar ~ IP]]
+    AP
+      structure: [AP degree? [Abar adjective PP?]]
+    CP
+      structure: [CP ~ [Cbar complementizer IP]]
+    IP
+      structure: [IP NP [Ibar auxilliary VP]]
+    NP
+      option
+        structure: [NP determiner Nmod]
+      option
+        structure: [NP NP? Nmod]
+    Nmod
+      structure: [Nmod AP? [Nbar noun PP?]]
+    VP
+      structure: [VP adverb [Vmod Vbar PP?]]
+    Vbar
+      variable: $head:verb
+      option ($head(objects=0))
+        structure: [Vbar $head]
+      option ($head(objects=1), $head(object1=NP))
+        structure: [Vbar $head NP]
+      option ($head(objects=1), $head(object1=PP))
+        structure: [Vbar $head PP]
+      option ($head(objects=1), $head(object1=CP))
+        structure: [Vbar $head CP]
+      option ($head(objects=1), $head(object1=AP))
+        structure: [Vbar $head AP]
+      option ($head(objects=2), $head(object1=NP), $head(object2=NP))
+        structure: [Vbar $head NP NP]
+      option ($head(objects=2), $head(object1=NP), $head(object2=PP))
+        structure: [Vbar $head NP PP]
+      option ($head(objects=2), $head(object1=PP), $head(object2=PP))
+        structure: [Vbar $head PP PP]
+    PP
+      structure: [PP preposition NP]
   coordination
-    nodes: AP, A' #adjective, CP, C', IP, I', NP, Nmod, N', #noun, VP, Vmod, V'
+    nodes: AP, Abar, adjective, CP, Cbar, IP, Ibar, NP, Nmod, Nbar, noun, VP, Vmod, Vbar
     count: 2
-    order: 1 #conjunction 2
+    order: 1 conjunction 2

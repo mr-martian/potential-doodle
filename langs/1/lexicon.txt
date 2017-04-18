@@ -51,6 +51,7 @@ s (noun-inflection)
 sandwich (noun)
 so (conjunction)
 that (complementizer)
+that (determiner)
 the (article)
   definite: true
 thing (noun)

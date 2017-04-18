@@ -34,7 +34,7 @@ TODO
   - [ ] generate sentences
     - [x] generate deep structure
     - [x] translate deep structure
-    - [ ] apply movement
+    - [x] apply movement
     - [ ] generate text
   - [ ] check input against translations
     - [ ] sentences sometimes specify grammatical information not marked by language

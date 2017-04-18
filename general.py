@@ -10,18 +10,18 @@ class Variable:
             self.opt = True
             self.value = self.value[:-1]
         if self.label and self.label[-1] == '!':
-            self.__check = None
+            self.cond = None
             self.label = self.label[:-1]
         elif isinstance(cond, list):
-            self.__check = Node(Unknown(), Unknown(), Unknown(), {})
+            self.cond = Node(Unknown(), Unknown(), Unknown(), {})
             if cond[0]:
-                self.__check.props[cond[0]] = cond[1] or Unknown()
+                self.cond.props[cond[0]] = cond[1] or Unknown()
         else:
-            self.__check = cond
+            self.cond = cond
     def check(self, vrs):
-        return match(self.__check, vrs[self.label])
+        return match(self.cond, vrs[self.label])
     def __str__(self):
-        return '$%s:%s(%s)' % (self.label, self.value, self.__check)
+        return '$%s:%s(%s)' % (self.label, self.value, self.cond)
     def __repr__(self):
         return self.__str__()
 class Unknown:
@@ -339,7 +339,7 @@ def destring(s, lang, at):
             rest = m.group(2)
         cond = Unknown()
         if rest and rest[0] == '(':
-            m = re.match('^(\\([\\w\\-\'/]+=[\\w\\-\'/]+\\))[ \t]*(.*)$', rest)
+            m = re.match('^\\(([\\w\\-\'/]+=[\\w\\-\'/]+)\\)[ \t]*(.*)$', rest)
             if m:
                 cond = m.group(1).split('=')
                 rest = m.group(2)
