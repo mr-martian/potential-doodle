@@ -53,7 +53,7 @@ def transform(tree, pats):
         retstr = []
         for n in nodes:
             added = False
-            for p in pats:
+            for i, p in enumerate(pats):
                 x = n.trans(p)
                 if x:
                     s = str(x)
@@ -61,52 +61,69 @@ def transform(tree, pats):
                         ret.append(x)
                         retstr.append(s)
                     added = True
+                    if p.category == 'transform':
+                        l = transform(x, pats[:i] + pats[i+1:])
+                        ret += l
+                        retstr += [str(li) for li in l]
             if not added:
                 ret.append(n)
         return ret
     else:
         return [tree]
 def make(lang):
-    general.loadlexicon(lang)
     l = general.loadlang(lang)
     p = l.getpats()
     return gen(p, p[l.syntaxstart], 1, {})
-def translate(sen, tolang): #TODO: add back root-specific pats
-    fromlang = sen.lang
-    rootpats = list(general.Translation.find(fromlang, tolang, getroots(sen)))
-    tr1 = transform(sen, rootpats)
-    tr = []
-    trstr = []
-    pts = list(general.Translation.find(fromlang, tolang, ['syntax', 'morphology']))
-    movpts = list(general.Translation.find(tolang, tolang, ['transform']))
-    for t in tr1:
-        for tt in transform(t, pts + movpts):
-            s = str(tt)
-            if s not in trstr:
-                tr.append(tt)
-                trstr.append(s)
-    return tr
+def gettransroots(patls):
+    r = []
+    for p in patls:
+        r += p.roots
+    return r
+def getallrootpats(lang, rootls):
+    pats = list(general.Translation.find(lang, lang, rootls))
+    done = rootls
+    todo = gettransroots(pats)
+    find = []
+    while len(todo) > 0:
+        find = [t for t in todo if t not in done]
+        done += find
+        todo = []
+        if find:
+            pts = list(general.Translation.find(lang, lang, find))
+            todo = gettransroots(pts)
+            pats += pts
+            find = []
+    return pats
+def translate(sen, tolang):
+    pats = list(general.Translation.find(sen.lang, tolang, getroots(sen) + ['syntax', 'morphology']))
+    pats += getallrootpats(tolang, gettransroots(pats) + ['transform'])
+    return transform(sen, pats)
 def movement(sen): #only for gen sen (too slow otherwise)
-    rootlist = getroots(sen)
-    rootpats = list(general.Translation.find(sen.lang, sen.lang, rootlist))
-    tr = transform(sen, list(general.Translation.find(sen.lang, sen.lang, ['transform'])))
-    tr2 = []
-    tr2str = []
-    for t in tr:
-        for tt in transform(t, rootpats):
-            s = str(tt)
-            if s not in tr2str:
-                tr2.append(tt)
-                tr2str.append(s)
-    return tr2
+    return transform(sen, getallrootpats(sen.lang, getroots(sen) + ['transform']))
+def filterlang(sens, lang):
+    for s in sens:
+        y = True
+        for n in s.iternest():
+            if isinstance(n, general.Node) and n.lang != lang:
+                y = False
+                break
+        if y:
+            yield s
 if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
     tl = int(sys.argv[2])
-    general.loadlexicon(tl)
     general.loadlang(tl)
 
     sen = make(fl)
     print(movement(sen)[0].display())
     tr = translate(sen, tl)
-    print('\n'.join([x.display() for x in tr]))
+    ok = False
+    for f in filterlang(tr, tl):
+        print(f.display())
+        ok = True
+    #print(tr[0])
+    if not ok:
+        print('Full translation failed.')
+        for t in tr:
+            print(t)

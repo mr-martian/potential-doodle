@@ -1,5 +1,15 @@
+mu (rel)
+  form
+    structure: @
+    form: [
+om (rel)
+  form
+    structure: @
+    form: ]
+zho (pronoun)
 ah (noun/noun)
   gloss (1): noun-inflection=s
+feh (aspect)
 vmeh (case)
   gloss (1): noun-inflection='s
 danec (verb)
@@ -19,7 +29,13 @@ jezlan (verb)
   transitive: true
   translate
     lang: 1
-    from: [Vbar $comp <~ @ ~>]
+    comment: this will have to change once I figure out how to translate aspects generally
+    from: [Vbar $comp <(1) ~ @ ~>]
+    to: [Vbar verb=excell [PP ~ [Pbar preposition=at $comp]]]
+  translate
+    lang: 1
+    comment: this will have to change once I figure out how to translate aspects generally
+    from: [Vbar $comp <(1) * @ *>]
     to: [Vbar verb=excell [PP ~ [Pbar preposition=at $comp]]]
 keh (conjunction)
   gloss (1): conjunction=and

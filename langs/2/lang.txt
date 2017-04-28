@@ -64,9 +64,12 @@ morphology
         translation (1): <suffix $n $s>
     Mverb
       option
-        structure: <~ $c:verb ~>
+        structure: <suffix $c:verb $a:aspect>
         translation (1): <~ $c ~>
 transform
   rule
     form: [NP [NP $spec [Nmod $post $rel $adj $head]] $nmod]
     result: [NP [NP $spec [Nmod $post $rel $adj <suffix $head case=vmeh>]] $nmod]
+  rule
+    form: [Nmod $post [IP $ibar $subj] $adj $head]
+    result: [Nmod $post [IPmark rel=mu [IP $ibar $subj] rel=om] $adj $head]

@@ -19,7 +19,7 @@ syntax
       option
         structure: [NP NP? Nmod]
     Nmod
-      structure: [Nmod AP? [Nbar noun PP?]]
+      structure: [Nmod AP? [Nbar noun PP? CP?]]
     VP
       structure: [VP adverb [Vmod Vbar PP?]]
     Vbar
@@ -46,3 +46,7 @@ syntax
     nodes: AP, Abar, adjective, CP, Cbar, IP, Ibar, NP, Nmod, Nbar, noun, VP, Vmod, Vbar
     count: 2
     order: 1 conjunction 2
+transform
+  rule
+    form: [NP [NP $spec [Nmod $ap [Nbar $head $pp $rel]]] $nmod]
+    result: [NP [NP $spec [Nmod $ap [Nbar <suffix $head noun-inflection=gen> $pp $rel]]] $nmod]

@@ -1,5 +1,12 @@
 a (article)
   definite: false
+Q (complement-specifier)
+s (noun-inflection)
+gen (noun-inflection)
+  form
+    structure: @
+    form: 's
+
 and (conjunction)
 at (preposition)
 be (verb)
@@ -37,17 +44,13 @@ measure (verb)
   object1: NP
 mouse (noun)
   usagenotes (1): rodent, often used as example of a small creature
-  irregularforms
-    plural: true
+  form
+    structure: <suffix @ noun-inflection=s>
     form: mice
-    comment: this needs work
 must (auxilliary)
   past: false
 O (preposition)
 optimism (noun)
-Q (complement-specifier)
-s (noun-inflection)
-'s (noun-inflection)
 sandwich (noun)
 so (conjunction)
 that (complementizer)

@@ -6,11 +6,13 @@ TODO
   - [ ] clearly organize
   - [ ] syntax/morphology
     - [x] deep structure
-    - [ ] movement
-    - [ ] conjugation
+    - [x] movement
+    - [x] conjugation
     - [ ] prefix/suffix
-      - [ ] concatenative
+      - [x] concatenative
       - [ ] stem changes
+        - [ ] regular
+        - [x] irregular
       - [ ] vary form by root phonology
     - [ ] infix
     - [ ] agreement
@@ -38,3 +40,16 @@ TODO
     - [ ] generate text
   - [ ] check input against translations
     - [ ] sentences sometimes specify grammatical information not marked by language
+- [ ] current langs
+  - [ ] English (1)
+    - [ ] fix genitive rule
+    - [ ] add assorted conjugations
+    - [ ] add derivation?
+  - [ ] Sajem Tan (2)
+    - [ ] fill in lexicon
+    - [ ] switch orthographies?
+    - [ ] add auxilliary tenses
+    - [ ] add derivation?
+  - [ ] Vimium (3)
+    - [ ] convert to new format
+  - [ ] (4)

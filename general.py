@@ -119,11 +119,12 @@ class Node:
         return ' '.join(l)
     def iternest(self):
         for ch in self.children:
+            yield ch
             if isinstance(ch, Node):
                 for c in ch.iternest():
                     yield c
-            else:
-                yield ch
+            #else:
+            #    yield ch
 def match(a, b):
     if isinstance(a, Unknown) or isinstance(b, Unknown):
         return True
@@ -168,7 +169,7 @@ class Morpheme(Node):
             return Morpheme.__allmorphs[lang][pos][root]
         except:
             assert(isinstance(lang, int))
-            print('Morpheme.find(%d, "%s", "%s") failed.' % (lang, pos, root))
+            print('Morpheme.find(%d, "%s", "%s") failed. %s' % (lang, pos, root, Morpheme.__allmorphs[lang].keys()))
             return None
     def addform(self, form):
         self.props['forms'].append(form)
@@ -201,10 +202,16 @@ class Translation:
         self.langs = [form.lang, result.lang]
         self.category = category
         self.hasvars = False
+        self.roots = [] #roots of all morphemes added during translation
+        #froots = []
         for c in form.iternest():
             if isinstance(c, Variable):
                 self.hasvars = True
-                break
+            #if isinstance(c, Morpheme):
+                #froots.append(c.children[0])
+        for c in result.iternest():
+            if isinstance(c, Morpheme):# and c.children[0] not in froots:
+                self.roots.append(c.children[0])
         Translation.__alltrans.append(self)
     def find(fromlang, tolang, limit):
         for tr in Translation.__alltrans:
@@ -226,14 +233,18 @@ class SyntaxPat:
         self.opts = opts
         self.vrs = vrs
 class Language:
+    __alllangs = {}
     def __init__(self, lang):
         self.lang = lang
         self.syntax = {}
         self.morphology = defaultdict(list)
         self.transform = []
         self.syntaxstart = None
+        Language.__alllangs[lang] = self
     def addmorphopt(self, ntype, struct):
         self.morphology[ntype].append(struct)
+    def isloaded(lang):
+        return lang in Language.__alllangs
     def getpats(self):
         r = {}
         for k in self.syntax:
@@ -319,7 +330,7 @@ class ParseLine:
     def firstval(self, key):
         return self.first(key).val
 def destring(s, lang, at):
-    #print('destring("%s", %d)' % (s, lang))
+    #print('destring("%s", %d, %s)' % (s, lang, at))
     assert(isinstance(lang, int))
     if s[0].isnumeric(): #number
         i = 1
@@ -361,7 +372,13 @@ def destring(s, lang, at):
             r = r.lstrip()
         return SyntaxNode(lang, ntype, ch), r[1:]
     elif s[0] == '<': #MorphologyNode
-        mode, r = s[1:].split(' ', 1)
+        r = s[1:]
+        l = None
+        if s[1] == '(':
+            l, r = s[2:].split(')', 1)
+            l = int(l.strip())
+            r = r.lstrip()
+        mode, r = r.split(' ', 1)
         mode = mode.strip()
         if mode == '~':
             mode = None
@@ -371,12 +388,12 @@ def destring(s, lang, at):
         a, r = destring(r, lang, at)
         r = r.lstrip()
         if r[0] == '>':
-            return MorphologyNode(lang, a, '', mode), r[1:].lstrip()
+            return MorphologyNode(l or lang, a, '', mode), r[1:].lstrip()
         b, r = destring(r, lang, at)
         r = r.lstrip()
         if r[0] != '>':
             raise ParseError('MorphologyNode with too many elements.')
-        return MorphologyNode(lang, a, b, mode), r[1:].lstrip()
+        return MorphologyNode(l or lang, a, b, mode), r[1:].lstrip()
     elif s[0] == '~': #None
         return None, s[1:].lstrip()
     elif s[0] == '*': #Unknown
@@ -403,6 +420,10 @@ def destring(s, lang, at):
             return r, m.group(3)
         else:
             return destring('$:'+s, lang, at)
+def toobj(s, lang, at=None):
+    ret, rest = destring(s, lang, at)
+    assert(rest == '')
+    return ret
 def loadlexicon(lang):
     rootslist = ParseLine.fromfile('langs/%s/lexicon.txt' % lang)
     for root in rootslist:
@@ -413,27 +434,28 @@ def loadlexicon(lang):
         for p in root.children:
             if p.label == 'gloss':
                 for g in p.val.split(';'):
-                    d, r = destring(g.strip(), int(p.args[0]), m)
-                    assert(r == '')
+                    d = toobj(g.strip(), int(p.args[0]), m)
                     Translation(m, d, root.label)
             elif p.label == 'translate':
                 l = int(p.firstval('lang'))
-                f, r = destring(p.firstval('from'), lang, m)
-                assert(r == '')
+                f = toobj(p.firstval('from'), lang, m)
                 for t in p.vals('to'):
-                    d, r = destring(t, l, m)
-                    assert(r == '')
-                    Translation(f, d, root.label)
+                    Translation(f, toobj(t, l, m), root.label)
             elif p.label == 'form':
-                s, r = destring(p.first('structure').val.strip(), lang, m)
-                assert(r == '')
+                if p.first('context'):
+                    c = p.first('context').val.strip()
+                else:
+                    c = '@'
+                s = toobj(p.first('structure').val.strip(), lang, m)
+                form = toobj(c, lang, s)
                 for f in p['form']:
                     fm = Morpheme(lang, f.val.strip(), root.args[0])
                     fm.props['form of'] = m
-                    Translation(s, fm, root.label)
+                    Translation(form, toobj(c, lang, fm), root.label)
             else:
                 m.props[p.label] = p.val
 def loadlang(lang):
+    loadlexicon(lang)
     things = ParseLine.fromfile('langs/%s/lang.txt' % lang)
     ret = Language(lang)
     for th in things:
@@ -443,28 +465,17 @@ def loadlang(lang):
                     ret.syntaxstart = ch.val
                 elif ch.label == 'node-types':
                     for ty in ch.children:
-                        vrs = []
-                        for s in ty.vals('variable'):
-                            v, r = destring(s, lang, None)
-                            assert(r == '')
-                            vrs.append(v)
+                        vrs = [toobj(s, lang) for s in ty.vals('variable')]
                         if not list(ty['option']):
                             ty.children.append(ParseLine(-1, 'option', [], '', list(ty['structure']) + list(ty['translation'])))
                         conds = []
                         ops = []
                         for op in ty['option']:
-                            node, r = destring(op.firstval('structure'), lang, None)
-                            assert(r == '')
+                            node = toobj(op.firstval('structure'), lang)
                             for tr in op['translation']:
-                                res, r = destring(tr.val, int(tr.args[0]), None)
-                                assert(r == '')
+                                res = toobj(tr.val, int(tr.args[0]))
                                 Translation(node, res, 'syntax')
-                            cl = []
-                            for x in op.args:
-                                c, r = destring(x, lang, None)
-                                assert(r == '')
-                                cl.append(c)
-                            conds.append(cl)
+                            conds.append([toobj(x, lang) for x in op.args])
                             ops.append(node)
                         ret.syntax[ty.label] = SyntaxPat(conds, ops, vrs)
         if th.label == 'morphology':
@@ -472,23 +483,21 @@ def loadlang(lang):
                 if ch.label == 'node-types':
                     for ty in ch.children:
                         for op in ty['option']:
-                            s, r = destring(op.firstval('structure'), lang, None)
-                            assert(r == '')
+                            s = toobj(op.firstval('structure'), lang, None)
                             ret.addmorphopt(ty.label, s)
                             for tr in op['translation']:
-                                p, r = destring(tr.val, int(tr.args[0]), None)
-                                assert(r == '')
+                                p = toobj(tr.val, int(tr.args[0]), None)
                                 Translation(s, p, 'morphology')
         if th.label == 'transform':
             for ch in th['rule']:
-                tf, r = destring(ch.firstval('form'), lang, None)
-                assert(r == '')
-                tr, r = destring(ch.firstval('result'), lang, None)
-                assert(r == '')
+                tf = toobj(ch.firstval('form'), lang, None)
+                tr = toobj(ch.firstval('result'), lang, None)
                 ret.transform.append(Translation(tf, tr, 'transform'))
     return ret
 if __name__ == '__main__':
     #loadlexicon(2)
     #l = loadlang(2)
     #print([x[0].label for x in l.syntax['NP'].conds])
-    print(destring('$head(<* {transitive=true} *>)', 7, None))
+    #print(destring('$head(<* {transitive=true} *>)', 7, None))
+    #print(l)
+    print(destring('<(3) ~ ~ ~>', 7, None))
