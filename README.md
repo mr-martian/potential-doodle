@@ -37,12 +37,13 @@ TODO
     - [x] generate deep structure
     - [x] translate deep structure
     - [x] apply movement
+    - [ ] recursively apply rules
     - [ ] generate text
   - [ ] check input against translations
     - [ ] sentences sometimes specify grammatical information not marked by language
 - [ ] current langs
   - [ ] English (1)
-    - [ ] fix genitive rule
+    - [x] fix genitive rule
     - [ ] add assorted conjugations
     - [ ] add derivation?
   - [ ] Sajem Tan (2)

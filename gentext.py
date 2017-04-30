@@ -1,7 +1,9 @@
-import general, random, itertools, copy
+import random, itertools, copy
+from compilelang import loadlang
+from datatypes import *
 def gen(pats, tree, depth, setvars):
     #print('gen(pats, %s, %s, %s)' % (tree, depth, setvars))
-    if isinstance(tree, general.Node):
+    if isinstance(tree, Node):
         r = copy.copy(tree)
         rc = []
         for c in copy.deepcopy(r.children):
@@ -10,7 +12,7 @@ def gen(pats, tree, depth, setvars):
         return r
     elif isinstance(tree, list):
         return random.choice(tree)
-    elif isinstance(tree, general.Variable):
+    elif isinstance(tree, Variable):
         if not tree.opt or random.randint(1,100) < 10/depth:
             if tree.label in setvars:
                 return setvars[tree.label]
@@ -19,7 +21,7 @@ def gen(pats, tree, depth, setvars):
                 if isinstance(newtree, list):
                     newtree = random.choice(newtree)
                 return gen(pats, newtree, depth+1, setvars)
-    elif isinstance(tree, general.SyntaxPat):
+    elif isinstance(tree, SyntaxPat):
         vrs = {}
         for v in tree.vrs:
             vrs[v.label] = gen(pats, v, depth, {})
@@ -35,95 +37,92 @@ def gen(pats, tree, depth, setvars):
         return gen(pats, tree.opts[random.choice(il)], depth, vrs)
     else:
         return tree
-def getroots(tree):
-    if isinstance(tree, general.Morpheme):
-        return [tree.children[0]]
-    elif isinstance(tree, general.Node):
-        r = []
-        for c in tree.children:
-            r += getroots(c)
-        return r
-    else:
-        return []
-def transform(tree, pats):
-    if len(pats) > 0 and isinstance(tree, general.Node):
-        chs = [transform(c, pats) for c in tree.children]
+def transform(tree, pats, dropdup=False):
+    if len(pats) > 0 and isinstance(tree, Node):
+        chs = [transform(c, pats, dropdup) for c in tree.children]
         nodes = [tree.swapchildren(list(cl)) for cl in itertools.product(*chs)]
         ret = []
-        retstr = []
+        retstr = ['[]']
         for n in nodes:
             added = False
             for i, p in enumerate(pats):
                 x = n.trans(p)
-                if x:
-                    s = str(x)
-                    if s not in retstr:
-                        ret.append(x)
-                        retstr.append(s)
-                    added = True
-                    if p.category == 'transform':
-                        l = transform(x, pats[:i] + pats[i+1:])
-                        ret += l
-                        retstr += [str(li) for li in l]
-            if not added:
+                s = str(x)
+                if s not in retstr:
+                    ret.append(x)
+                    retstr.append(s)
+                added |= bool(x)
+            if not added and not dropdup:
                 ret.append(n)
         return ret
     else:
         return [tree]
 def make(lang):
-    l = general.loadlang(lang)
+    l = loadlang(lang)
     p = l.getpats()
     return gen(p, p[l.syntaxstart], 1, {})
-def gettransroots(patls):
-    r = []
-    for p in patls:
-        r += p.roots
-    return r
-def getallrootpats(lang, rootls):
-    pats = list(general.Translation.find(lang, lang, rootls))
-    done = rootls
-    todo = gettransroots(pats)
-    find = []
+def getpats(lang, sen):
+    fromlang = None
+    if sen.lang != lang:
+        fromlang = sen.lang
+    todo = ['transform']
+    if fromlang:
+        todo += ['syntax', 'morphology']
+    for ch in sen.iternest():
+        if isinstance(ch, Morpheme):
+            todo.append(ch.children[0])
+    done = []
+    pats = []
     while len(todo) > 0:
-        find = [t for t in todo if t not in done]
-        done += find
+        todo = [x for x in list(set(todo)) if x not in done]
+        temp = list(Translation.find(lang, lang, todo))
+        if fromlang:
+            temp += list(Translation.find(fromlang, lang, todo))
+        done += todo
         todo = []
-        if find:
-            pts = list(general.Translation.find(lang, lang, find))
-            todo = gettransroots(pts)
-            pats += pts
-            find = []
+        for tr in temp:
+            pats.append(tr)
+            todo += tr.roots
+        break
     return pats
 def translate(sen, tolang):
-    pats = list(general.Translation.find(sen.lang, tolang, getroots(sen) + ['syntax', 'morphology']))
-    pats += getallrootpats(tolang, gettransroots(pats) + ['transform'])
-    return transform(sen, pats)
-def movement(sen): #only for gen sen (too slow otherwise)
-    return transform(sen, getallrootpats(sen.lang, getroots(sen) + ['transform']))
+    roots = ['syntax', 'morphology']
+    for ch in sen.iternest():
+        if isinstance(ch, Morpheme):
+            roots.append(ch.children[0])
+    pats = list(Translation.find(sen.lang, tolang, roots))
+    for tr in transform(sen, pats):
+        for m in movement(tr):
+            yield m
+def movement(sen):
+    roots = ['transform']
+    for ch in sen.iternest():
+        if isinstance(ch, Morpheme):
+            roots.append(ch.children[0])
+    pats = list(Translation.find(sen.lang, sen.lang, roots))
+    return transform(sen, pats, True) or [sen]
 def filterlang(sens, lang):
     for s in sens:
         y = True
         for n in s.iternest():
-            if isinstance(n, general.Node) and n.lang != lang:
+            if isinstance(n, Node) and n.lang != lang:
                 y = False
                 break
         if y:
             yield s
+def filter1(s, l):
+    for n in s.iternest():
+        if isinstance(n, Node) and n.lang != l:
+            return False
+    return True
 if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
     tl = int(sys.argv[2])
-    general.loadlang(tl)
+    loadlang(tl)
 
     sen = make(fl)
     print(movement(sen)[0].display())
-    tr = translate(sen, tl)
-    ok = False
-    for f in filterlang(tr, tl):
-        print(f.display())
-        ok = True
-    #print(tr[0])
-    if not ok:
-        print('Full translation failed.')
-        for t in tr:
-            print(t)
+    for tr in translate(sen, tl):
+        if filter1(tr, tl):
+            print(tr.display())

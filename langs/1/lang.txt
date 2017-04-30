@@ -48,5 +48,6 @@ syntax
     order: 1 conjunction 2
 transform
   rule
-    form: [NP [NP $spec [Nmod $ap [Nbar $head $pp $rel]]] $nmod]
-    result: [NP [NP $spec [Nmod $ap [Nbar <suffix $head noun-inflection=gen> $pp $rel]]] $nmod]
+    context: [NP [NP $spec [Nmod $ap [Nbar @ $pp $rel]]] $nmod]
+    form: $head
+    result: <suffix $head noun-inflection=gen>

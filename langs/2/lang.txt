@@ -68,8 +68,10 @@ morphology
         translation (1): <~ $c ~>
 transform
   rule
-    form: [NP [NP $spec [Nmod $post $rel $adj $head]] $nmod]
-    result: [NP [NP $spec [Nmod $post $rel $adj <suffix $head case=vmeh>]] $nmod]
+    context: [NP [NP $spec [Nmod $post $rel $adj @]] $nmod]
+    form: $head
+    result: <suffix $head case=vmeh>
   rule
-    form: [Nmod $post [IP $ibar $subj] $adj $head]
-    result: [Nmod $post [IPmark rel=mu [IP $ibar $subj] rel=om] $adj $head]
+    context: [Nmod $post @ $adj $head]
+    form: [IP $ibar $subj]
+    result: [IPmark rel=mu [IP $ibar $subj] rel=om]
