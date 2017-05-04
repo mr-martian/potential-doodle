@@ -31,13 +31,11 @@ syntax
       structure: [VP $post:PP? $adjunct:NP? $adv:describer? $bar:Vbar]
       translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
     Vbar
-      variable: $head:Mverb
-      -option ($head(transitive=true))
-      option ($head(<* {transitive=true} *>))
+      variable: $head:verb
+      option ($head(transitive=true))
         structure: [Vbar $comp:NP $head]
         translation (1): [Vbar $head $comp]
-      -option ($head(transitive=false))
-      option ($head(<* {transitive=false} *>))
+      option ($head(transitive=false))
         structure: [Vbar ~ $head]
         translation (1): [Vbar $head ~]
     -IP
@@ -49,23 +47,26 @@ syntax
     -VP
       structure: [-VP $a:VP $head:conjunction $b:VP]
       translation (1): [-VP $a $head $b]
-morphology
-  node-types
     Mauxilliary
-      option
-        structure: <~ $c:auxilliary ~>
-        translation (1): <~ $c ~>
+      variable: $aux:auxilliary
+      option ($aux!)
+        structure: [I $a:aspect ~]
+      option ($aux(vowel=i))
+        structure: [I $a:aspect <aux $aux $t:i-tense>]
+      option ($aux(vowel=ol))
+        structure: [I $a:aspect <aux $aux $t:ol-tense>]
     Mnoun
       option
-        structure: <~ $n:noun ~>
-        translation (1): <~ $n ~>
+        structure: $n:noun
+        translation (1): $n
       option
         structure: <suffix $n:noun $s:noun/noun>
         translation (1): <suffix $n $s>
-    Mverb
-      option
-        structure: <suffix $c:verb $a:aspect>
-        translation (1): <~ $c ~>
+morphology
+  aux
+    re: _
+    re: \\1
+    re: .*
 transform
   rule
     context: [NP [NP $spec [Nmod $post $rel $adj @]] $nmod]

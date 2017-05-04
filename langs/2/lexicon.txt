@@ -6,12 +6,28 @@ om (rel)
   form
     structure: @
     form: ]
+ol (ol-tense)
+  tense: nonpast
+el (ol-tense)
+  tense: immediate-past
+y (ol-tense)
+  tense: mid-past
+uh (ol-tense)
+  tense: remote-past
+i (i-tense)
+  tense: nonpast
+e (i-tense)
+  tense: immediate-past
+a (i-tense)
+  tense: mid-past
+ul (i-tense)
+  tense: remote-past
 zho (pronoun)
 ah (noun/noun)
   gloss (1): noun-inflection=s
 feh (aspect)
 vmeh (case)
-  gloss (1): noun-inflection='s
+  gloss (1): noun-inflection=gen
 danec (verb)
   transitive: true
   gloss (1): verb=borrow; verb=copy; verb=imitate
@@ -20,8 +36,9 @@ dasnan (describer)
 dyfnyn (verb--)
   gloss (1): verb=measure
   transitive: true
-golm (auxilliary)
+g_m (auxilliary)
   gloss (1): auxilliary=must
+  vowel: ol
 jeltan (verb--)
   transitive: false
   gloss (1): verb=hide; verb=cower
@@ -40,8 +57,9 @@ jezlan (verb--)
 keh (conjunction)
   gloss (1): conjunction=and
   clause-only: false
-molt (auxilliary)
+m_t (auxilliary)
   gloss (1): auxilliary=doesnt
+  vowel: ol
 seln (postposition)
   gloss (1): preposition=to; preposition=towards
 tyk (conjunction)

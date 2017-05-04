@@ -14,7 +14,7 @@ TODO
         - [ ] regular
         - [x] irregular
       - [ ] vary form by root phonology
-    - [ ] infix
+    - [x] infix
     - [ ] agreement
   - [x] lexicon
     - [x] glosses in various languages
@@ -37,7 +37,7 @@ TODO
     - [x] generate deep structure
     - [x] translate deep structure
     - [x] apply movement
-    - [ ] recursively apply rules
+    - [ ] recursively apply rules (or apply in layers)
     - [ ] generate text
   - [ ] check input against translations
     - [ ] sentences sometimes specify grammatical information not marked by language
@@ -49,7 +49,8 @@ TODO
   - [ ] Sajem Tan (2)
     - [ ] fill in lexicon
     - [ ] switch orthographies?
-    - [ ] add auxilliary tenses
+    - [x] add auxilliary tenses
+    - [ ] translation of auxillaries and aspects
     - [ ] add derivation?
   - [ ] Vimium (3)
     - [ ] convert to new format

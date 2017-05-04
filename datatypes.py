@@ -7,20 +7,28 @@ class Variable:
         self.value = value
         self.opt = False
         self.lang = lang
+        self.blankcond = True
         if self.value and self.value[-1] == '?':
             self.opt = True
             self.value = self.value[:-1]
         if self.label and self.label[-1] == '!':
             self.cond = None
             self.label = self.label[:-1]
+            self.blankcond = False
         elif isinstance(cond, list):
             self.cond = Node(Unknown(), Unknown(), Unknown(), {})
             if cond[0]:
                 self.cond.props[cond[0]] = cond[1] or Unknown()
+            self.blankcond = False
         else:
             self.cond = cond
+            if cond:
+                self.blankcond = False
     def check(self, vrs):
-        return match(self.cond, vrs[self.label])
+        if self.blankcond:
+            return vrs[self.label] != None
+        else:
+            return match(self.cond, vrs[self.label])
     def putvars(self, vrs):
         return vrs[self.label]
     def __str__(self):
@@ -38,16 +46,18 @@ class Option(list):
     pass
 ###DATA STRUCTURES
 class Node:
+    __modes = defaultdict(lambda: [], {
+        'prefix': ['^', '(.*)', '\\1'],
+        'suffix': ['$', '(.*)', '\\1'],
+        'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
+    })
     def __init__(self, lang, ntype, children, props=defaultdict(list)):
         self.lang = lang
         self.ntype = ntype
         self.children = children
         self.props = props
-    def map(self, fn):
-        r = copy.deepcopy(self)
-        r.children = map(fn, r.children)
-        return r
     def swapchildren(self, ls):
+        return Node(self.lang, self.ntype, ls, copy.deepcopy(self.props))
         r = copy.deepcopy(self)
         r.children = ls
         return r
@@ -112,6 +122,13 @@ class Node:
         return '%s(%s)[%s %s]' % (self.__class__.__name__, self.lang, self.ntype, s)
     def __repr__(self):
         return self.__str__()
+    __modes = defaultdict(lambda: None, {
+        'prefix': ['^', '(.*)', '\\1'],
+        'suffix': ['$', '(.*)', '\\1'],
+        'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
+    })
+    def addmode(name, pats):
+        Node.__modes[name] = pats
     def display(self):
         l = []
         for c in self.children:
@@ -121,7 +138,15 @@ class Node:
                 pass
             else:
                 l.append(str(c))
-        return ' '.join(l)
+        mode = Node.__modes[self.ntype]
+        if not mode or len(l) != (len(mode) - 1):
+            return ' '.join(l)
+        i = len(l) - 1
+        s = re.sub(mode[i], mode[i+1], l[i])
+        while i > 0:
+            i -= 1
+            s = re.sub(mode[i], s, l[i])
+        return s
     def iternest(self):
         yield self
         for ch in self.children:
@@ -143,13 +168,13 @@ def match(a, b):
                 return True
         return False
     elif isinstance(a, Node) and isinstance(b, Node):
-        if type(a) != type(b) and type(a) != Node and type(b) != Node:
-            return False
         if not match(a.lang, b.lang):
             return False
         if not match(a.ntype, b.ntype):
             return False
-        if not isinstance(a.children, Unknown) and not isinstance(b.children, Unknown) and len(a.children) != len(b.children):
+        if isinstance(a.children, Unknown) or isinstance(b.children, Unknown):
+            return True
+        if len(a.children) != len(b.children):
             return False
         if isinstance(a.children, list) and isinstance(b.children, list):
             for ac, bc in zip(a.children, b.children):
@@ -168,48 +193,11 @@ def match(a, b):
         return match(a.form, b.form) and match(a.result, b.result)
     else:
         return a == b
-class Morpheme(Node):
-    __allmorphs = defaultdict(lambda: defaultdict(dict))
-    def __init__(self, lang, root, pos):
-        Node.__init__(self, lang, pos, [root], defaultdict(list))
-        Morpheme.__allmorphs[lang][pos][root] = self
-    def checkkey(self):
-        if 'searchkey' in self.props:
-            Morpheme.__allmorphs[self.lang][self.ntype][self.props['searchkey']] = self
-    def langs():
-        return list(Morpheme.__allmorphs.keys())
-    def iterpos(lang):
-        for p in Morpheme.__allmorphs[lang]:
-            yield p, list(Morpheme.__allmorphs[lang][p].values())
-    def find(lang, pos, root):
-        try:
-            return Morpheme.__allmorphs[lang][pos][root]
-        except:
-            assert(isinstance(lang, int))
-            print('Morpheme.find(%d, "%s", "%s") failed. %s' % (lang, pos, root, Morpheme.__allmorphs[lang].keys()))
-            return None
-    def addform(self, form):
-        self.props['forms'].append(form)
-    def addtrans(self, trans):
-        self.props['trans'].append(trans)
-class MorphologyNode(Node):
-    __modes = {
-        'prefix': ['^', '(.*)', '\\1'],
-        'suffix': ['$', '(.*)', '\\1'],
-        'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
-    }
-    def __init__(self, lang, stem, affix, mode):
-        Node.__init__(self, lang, mode, [stem, affix], defaultdict(list))
-    def display(self):
-        s = self.children[0].display()
-        if self.children[1] == None:
-            return s
-        else:
-            a = self.children[1].display()
-        pat = MorphologyNode.__modes[self.ntype]
-        return re.sub(pat[0], re.sub(pat[1], pat[2], a), s)
-class SyntaxNode(Node):
-    pass
+AllMorphemes = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
+def register(morph):
+    AllMorphemes[morph.lang][morph.ntype][morph.children[0]] = morph
+    if 'searchkey' in morph.props:
+        AllMorphemes[morph.lang][morph.ntype][morph.props['searchkey']] = morph
 ###TRANSFORMATIONS
 class Translation:
     __alltrans = []
@@ -221,8 +209,8 @@ class Translation:
         self.roots = [] #roots of all morphemes in result
         if isinstance(result, Node):
             for c in result.iternest():
-                if isinstance(c, Morpheme):
-                    self.roots.append(c.children[0])
+                if isinstance(c, str):
+                    self.roots.append(c)
         if not context:
             self.context = Variable(' ', None, Unknown(), form.lang)
         else:
@@ -240,10 +228,15 @@ class Translation:
         return list(Translation.find(self.langs[1], self.langs[1], self.roots))
 ###GENERATION
 class SyntaxPat:
-    def __init__(self, conds, opts, vrs):
+    def __init__(self, name, conds, opts, vrs):
+        self.name = name
         self.conds = conds
         self.opts = opts
         self.vrs = vrs
+    def __str__(self):
+        return 'SyntaxPat(%s, %s, %s, %s)' % (self.name, self.conds, self.opts, self.vrs)
+    def __repr__(self):
+        return self.__str__()
 class Language:
     __alllangs = {}
     def __init__(self, lang):
@@ -263,6 +256,6 @@ class Language:
             r[k] = self.syntax[k]
         for k in self.morphology:
             r[k] = self.morphology[k]
-        for k, v in Morpheme.iterpos(self.lang):
-            r[k] = v
+        for k, v in AllMorphemes[self.lang].items():
+            r[k] = list(v.values())
         return r

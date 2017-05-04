@@ -34,7 +34,8 @@ def gen(pats, tree, depth, setvars):
                     break
             if ad:
                 il.append(i)
-        return gen(pats, tree.opts[random.choice(il)], depth, vrs)
+        try: return gen(pats, tree.opts[random.choice(il)], depth, vrs)
+        except: print("error with generating tree %s at depth %s" % (tree, depth))
     else:
         return tree
 def transform(tree, pats, dropdup=False):
@@ -88,8 +89,8 @@ def getpats(lang, sen):
 def translate(sen, tolang):
     roots = ['syntax', 'morphology']
     for ch in sen.iternest():
-        if isinstance(ch, Morpheme):
-            roots.append(ch.children[0])
+        if isinstance(ch, str):
+            roots.append(ch)
     pats = list(Translation.find(sen.lang, tolang, roots))
     for tr in transform(sen, pats):
         for m in movement(tr):
@@ -97,8 +98,8 @@ def translate(sen, tolang):
 def movement(sen):
     roots = ['transform']
     for ch in sen.iternest():
-        if isinstance(ch, Morpheme):
-            roots.append(ch.children[0])
+        if isinstance(ch, str):
+            roots.append(ch)
     pats = list(Translation.find(sen.lang, sen.lang, roots))
     return transform(sen, pats, True) or [sen]
 def filterlang(sens, lang):
@@ -123,6 +124,6 @@ if __name__ == '__main__':
 
     sen = make(fl)
     print(movement(sen)[0].display())
-    for tr in translate(sen, tl):
-        if filter1(tr, tl):
-            print(tr.display())
+    #for tr in translate(sen, tl):
+    #    if filter1(tr, tl):
+    #        print(tr.display())

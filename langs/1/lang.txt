@@ -3,10 +3,8 @@ metadata
     local: English
   creator: Natlang
 syntax
-  start-with: CPstart
+  start-with: CP
   node-types
-    CPstart
-      structure: [CP ~ [Cbar ~ IP]]
     AP
       structure: [AP degree? [Abar adjective PP?]]
     CP
@@ -41,7 +39,7 @@ syntax
       option ($head(objects=2), $head(object1=PP), $head(object2=PP))
         structure: [Vbar $head PP PP]
     PP
-      structure: [PP preposition NP]
+      structure: [PP [Pbar preposition NP]]
   coordination
     nodes: AP, Abar, adjective, CP, Cbar, IP, Ibar, NP, Nmod, Nbar, noun, VP, Vmod, Vbar
     count: 2
