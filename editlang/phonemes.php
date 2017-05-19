@@ -40,6 +40,12 @@
       <input type="number" id="id" name="id"></input>
       <input type="text" id="langdata" name="langdata"></input>
     </form>
+    <span>Display characters in: </span>
+    <select id="charmode" onchange="phoneupdate();">
+      <option value="ipa">International Phonetic Alphabet (IPA)</option>
+      <option value="cxs">Conlang X-Sampa (CXS)</option>
+    </select>
+    <br />
     <div id="consphonefeatures">
       <span>Include features:</span>
     </div>
@@ -122,6 +128,7 @@
         return 'voice' + (voice ? 'd' : 'less') + ' ' + mods.join(' ') + ' ' + manner;
       };
       var phoneupdate = function() {
+        var alpha = getel('charmode').value;
         var mods = [];
         for (var i = 0; i < modifiers.length; i++) {
           if (getel(modifiers[i]).checked) {
@@ -146,7 +153,7 @@
               }
               s += '><td>' + getrowname(voices[i], manners[j], mods[m]) + '</td>';
               for (var k = 0; k < places.length; k++) {
-                var ch = cmakecheck('ipa', manners[j], places[k], voices[i], mods[m], cons);
+                var ch = cmakecheck(alpha, manners[j], places[k], voices[i], mods[m], cons);
                 s += '<td>' + ch + '</td>';
               }
               s += '</tr>';
@@ -176,9 +183,9 @@
             }
             s += '><td>' + mods[m].join(' ') + ' ' + heights[j] + '</td>';
             for (var k = 0; k < backs.length; k++) {
-              var ch = vmakecheck('ipa', backs[k], heights[j], false, mods[m], vows);
+              var ch = vmakecheck(alpha, backs[k], heights[j], false, mods[m], vows);
               s += '<td>' + ch;
-              var ch = vmakecheck('ipa', backs[k], heights[j], true, mods[m], vows);
+              var ch = vmakecheck(alpha, backs[k], heights[j], true, mods[m], vows);
               s += ch + '</td>';
             }
             s += '</tr>';
