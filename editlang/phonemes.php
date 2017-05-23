@@ -6,7 +6,10 @@
       $lang = json_decode($s, true);
       echo "<title>Editting ".htmlspecialchars($lang["display name"])." Phonemic Inventory</title>";
       echo "<script>var langdata = ".$s.";";
-      echo "langdata.id = ".$_GET["lang"].";</script>";
+      echo "langdata.id = ".$_GET["lang"].";";
+      echo file_get_contents("../ipadata.js");
+      echo file_get_contents("../ipatools.js");
+      echo "</script>";
     ?>
     <style type="text/css">
       #submit {

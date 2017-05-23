@@ -13,14 +13,8 @@
       echo "<title>Editting ".htmlspecialchars($lang["display name"])." Phonotactics and Allophony</title>\n";
       echo "<script>var langdata = ".$s.";";
       echo "langdata.id = $langid;";
-      if ($_GET["preload"] == 'true') {
-        $output = array();
-        exec('python3 ../ipa.py', $output);
-        echo $output[0]."\n";
-        echo file_get_contents("../ipatools.js");
-      } else {
-        echo file_get_contents("../ipa.js");
-      }
+      echo file_get_contents("../ipadata.js");
+      echo file_get_contents("../ipatools.js");
       echo "</script>";
     ?>
     <style type="text/css">
@@ -55,12 +49,16 @@
     <p id="errors"></p>
     <div id="holder"></div>
     <script>
+      //abbreviate document.getElementById()
       var getel = function(id) {
         return document.getElementById(id);
       };
+      //retrieve first child node with a particular class name
       var firstclass = function(el, cls) {
         return el.getElementsByClassName(cls)[0];
       };
+      //list all phonemes in langdata as source for <option>s
+      //set as "selected" if id == sel
       var listphones = function(sel) {
         var mode = getel('charmode').value;
         var s = '';
@@ -87,6 +85,7 @@
         }
         return s;
       };
+      //add and delete inputs for categories to match input number
       var catcount = 0;
       var catlen = function(id) {
         var el = getel(id);
@@ -105,6 +104,7 @@
           div.appendChild(add);
         }
       };
+      //add category
       var makecat = function(nam, val) {
         if (!nam) {
           nam = '';
@@ -128,6 +128,7 @@
         getel('cats').appendChild(cat);
         catcount++;
       };
+      //read data from all categories
       var readcats = function() {
         var cats = getel('cats').children;
         var ret = {};
@@ -142,6 +143,7 @@
         }
         return ret;
       };
+      //display a character
       var getname = function(n) {
         var mode = getel('charmode').value;
         if (n[0] == 'c') {
@@ -152,6 +154,7 @@
           return vgetchr(mode, i) || vgetname(i);
         }
       };
+      //make a category input
       var makesel = function(cls, val) {
         var s = '<option value="null"'
         if (val == null) {
@@ -194,6 +197,7 @@
         }
         return sel;
       };
+      //make a rule input
       var count = 0;
       var makeinput = function(cls, vals) {
         var s = '<div class="' + cls + '" id="s'+count+'">';
@@ -209,6 +213,7 @@
         count++;
         return s;
       };
+      //read a rule input
       var readinput = function(div) {
         var ls = firstclass(div, 'phones').children;
         var ret = [];
