@@ -1,22 +1,25 @@
 <html>
-  <!-- TODO:
-    1. metathesis
-    2. degeminnation
-  -->
   <head>
     <meta charset="utf-8" />
     <?php
-      $langid = 2;//intval($_GET["lang"]);
-      $s = file_get_contents("../langs/$langid/lang.json");
+      $s = file_get_contents("langs/".$_GET["lang"]."/lang.json");
       $lang = json_decode($s, true);
-      echo "<title>Editting ".htmlspecialchars($lang["display name"])." Phonotactics, Allophony, and Romanization</title>\n";
+      echo "<title>Editting ".htmlspecialchars($lang["display name"])." Phonology</title>";
       echo "<script>var langdata = ".$s.";";
-      echo "langdata.id = $langid;";
-      echo file_get_contents("../ipadata.js");
-      echo file_get_contents("../ipatools.js");
+      echo "langdata.id = ".$_GET["lang"].";";
+      echo file_get_contents("ipadata.js");
+      echo file_get_contents("tools.js");
       echo "</script>";
     ?>
     <style type="text/css">
+      #submit { display: none; }
+      #consonantstable, #vowelstable {
+        border-collapse: collapse;
+        border: 1px solid black;
+      }
+      td, tr { border: 1px solid black; }
+      .cboldedge { border-top-width: 3px; }
+      .mlab { text-transform: capitalize; }
       #submit { display: none; }
       div { display: inline-block; }
       .phones { margin-left: 20px; }
@@ -27,43 +30,127 @@
     </style>
   </head>
   <body>
-    <form id="submit" method="post" action="../submitlang.php/">
-      <input type="text" id="mode" name="mode" value="allophony"></input>
+    <form id="submit" method="post" action="submitlang.php/">
+      <input type="text" id="mode" name="mode" value="phonology"></input>
       <input type="number" id="id" name="id"></input>
       <input type="text" id="langdata" name="langdata"></input>
     </form>
     <span>Display characters in: </span>
-    <select id="charmode">
+    <select id="charmode" onchange="phoneupdate();">
       <option value="ipa">International Phonetic Alphabet (IPA)</option>
       <option value="cxs">Conlang X-Sampa (CXS)</option>
     </select>
+    <br />
+    <div id="consphonefeatures">
+      <span>Include features:</span>
+    </div>
+    <table id="consonantstable">
+      <tbody id="consonants"></tbody>
+    </table>
+    <div id="vowphonefeatures">
+      <span>Include features:</span>
+    </div>
+    <table id="vowelstable">
+      <tbody id="vowels"></tbody>
+    </table>
     <h2>Categories</h2>
     <ul id="cats"></ul>
     <button onclick="makecat(null, null);">Add Category</button>
+    <p>If your category name is v or c followed by numbers, it will end up being interpreted as some random vowel or consonant (respectively). If your category name is an IPA or CXS symbol, it could be interpreted as that phone. Naming a category "new" can also have messy results. To use a category in a rule already on the page, you may have to delete the rule and recreate it.</p>
     <h2>Phonotactics</h2>
     <ul id="syls"></ul>
     <button onclick="makesyl(null, 'word');">Add Syllable Type</button>
     <h2>Allophonic Rules</h2>
     <ol id="rules"></ol>
     <button onclick="makerule(null);">Add Rule</button>
-    <p>If your category name is v or c followed by numbers, it will end up being interpreted as some random vowel or consonant (respectively). If your category name is an IPA or CXS symbol, it could be interpreted as that phone. Naming a category "new" can also have messy results. To use a category in a rule already on the page, you may have to delete the rule and recreate it.</p>
+    <br>
     <button onclick="validate_all();">Save</button>
     <p id="errors"></p>
     <script>
-      //abbreviate document.getElementById()
-      var getel = function(id) {
-        return document.getElementById(id);
+      var checks = getel('consphonefeatures');
+      for (var i = 0; i < modifiers.length; i++) {
+        mkchk(checks, modifiers[i], modifiers[i][0].toUpperCase()+modifiers[i].slice(1), phoneupdate, langdata['consonant features']);
+      }
+      var checks = getel('vowphonefeatures');
+      for (var i = 0; i < vmodifiers.length; i++) {
+        mkchk(checks, vmodifiers[i], vmodifiers[i][0].toUpperCase()+vmodifiers[i].slice(1), phoneupdate, langdata['vowel features']);
+      }
+      var getchecks = function(elname) {
+        var els = document.querySelectorAll('#' + elname + ' input');
+        var ch = [];
+        for (var i = 0; i < els.length; i++) {
+          if (els[i].checked) {
+            ch.push(els[i].value);
+          }
+        }
+        return ch;
       };
-      //retrieve first child node with a particular class name
-      var firstclass = function(el, cls) {
-        return el.getElementsByClassName(cls)[0];
+      var modsubsets = function(ml) {
+        if (ml.length == 0) {
+          return [[]];
+        } else {
+          var r = modsubsets(ml.slice(1));
+          var ret = [];
+          for (var i = 0; i < r.length; i++) {
+            ret.push(r[i]);
+            ret.push(r[i].concat(ml[0]));
+          }
+          return ret;
+        }
       };
-      //make an element, set innerHTML and return
-      var mkel = function(nam, inner) {
-        var r = document.createElement(nam);
-        r.innerHTML = inner;
-        return r;
+      var phoneupdate = function() {
+        var alpha = getel('charmode').value;
+        var mods = [];
+        var mods = modsubsets(getchecks('consphonefeatures'));
+        var ctb = getel('consonants');
+        ctb.innerHTML = '<tr><td></td><td>'+places.join('</td><td>')+'</td></tr>';
+        var cons = getchecks('consonants');
+        var voices = [false, true];
+        var id, s;
+        for (var j = 0; j < manners.length; j++) {
+          for (var i = 0; i < voices.length; i++) {
+            for (var m = 0; m < mods.length; m++) {
+              id = getcid(places[0], voices[i], manners[j], mods[m]);
+              s = mkel('tr', '<td>' + cgetname(id, true) + '</td>');
+              if (i == 0 && m == 0) {
+                s.className = 'cboldedge';
+              }
+              for (var k = 0; k < places.length; k++) {
+                s.appendChild(mkel('td', ''));
+                mkchk(s.children[k+1], 'c'+id, cgetchr(alpha, id) || ' ', null, cons);
+                id += 2;
+              }
+              ctb.appendChild(s);
+            }
+          }
+        }
+        
+        var mods = modsubsets(getchecks('vowphonefeatures'));
+        var vows = getchecks('vowels');
+        var vtb = getel('vowels');
+        vtb.innerHTML = '<tr><td></td><td>'+backs.join('</td><td>')+'</td></tr>';
+        for (var j = 0; j < heights.length; j++) {
+          for (var m = 0; m < mods.length; m++) {
+            s = mkel('tr', '<td>'+mods[m].join(' ')+' '+heights[j]+'</td>');
+            if (m == 0) {
+              s.className = 'cboldedge';
+            }
+            for (var k = 0; k < backs.length; k++) {
+              s.appendChild(mkel('td', ''));
+              id = getvid(backs[k], heights[j], false, mods[m]);
+              mkchk(s.children[k+1], 'v'+id, vgetchr(alpha, id)||' ', null, vows);
+              mkchk(s.children[k+1], 'v'+(id+1), vgetchr(alpha, (id+1))||' ', null, vows);
+            }
+            vtb.appendChild(s);
+          }
+        }
       };
+      phoneupdate();
+      if (langdata.hasOwnProperty('phonemes')) {
+        for (var i = 0; i < langdata.phonemes.length; i++) {
+          getel(langdata.phonemes[i]).checked = true;
+        }
+      }
       //retrieve all values from a <div> of <input>s or <select>s
       var getvals = function(div) {
         var r = [];
@@ -92,32 +179,23 @@
         }
         return ret;
       };
+      //get the ids of all checked phones
+      var allphones = function() {
+        return getchecks('consonants').concat(getchecks('vowels'));
+      };
       //list all phonemes in langdata as source for <option>s
       //set as "selected" if id == sel
       //subsequently list all categories if withcats == true
       var listphones = function(sel, withcats) {
         var mode = getel('charmode').value;
         var s = '';
-        var id;
-        for (var i = 0; i < langdata.consonants.length; i++) {
-          id = langdata.consonants[i];
-          if ('c' + id == sel) {
-            s += '<option value="c'+id+'" selected="selected">';
-          } else {
-            s += '<option value="c'+id+'">';
+        var phones = allphones();
+        for (var i = 0; i < phones.length; i++) {
+          s += '<option value="'+phones[i]+'"';
+          if (phones[i] == sel) {
+            s += ' selected="selected"';
           }
-          s += cgetchr(mode, id) || cgetname(id);
-          s += '</option>';
-        }
-        for (var i = 0; i < langdata.vowels.length; i++) {
-          id = langdata.vowels[i];
-          if ('v' + id == sel) {
-            s += '<option value="v'+id+'" selected="selected">';
-          } else {
-            s += '<option value="v'+id+'">';
-          }
-          s += vgetchr(mode, id) || vgetname(id);
-          s += '</option>';
+          s += '>'+getname(mode, phones[i])+'</option>';
         }
         if (withcats) {
           var cats = Object.keys(readcats());
@@ -130,22 +208,6 @@
           }
         }
         return s;
-      };
-      //returns a function to be assigned as onchange handler for number <input>s
-      //get number from input
-      //if chls has more than that many children, delete the extras
-      //otherwise create more with fn() and append them
-      var setchcount = function(chls, fn) {
-        return function(event) {
-          var input = event.target || event.srcElement;
-          var n = Math.max(parseInt(input.value), 0);
-          while (chls.children.length > n) {
-            chls.removeChild(chls.children[chls.children.length-1]);
-          }
-          while (chls.children.length < n) {
-            chls.appendChild(fn());
-          }
-        };
       };
       //add category
       var makecat = function(nam, val) {
@@ -168,17 +230,6 @@
         cat.children[0].children[1].value = val.length;
         cat.children[0].children[1].onchange = setchcount(cat.children[1], function() { return mkel('select', listphones(null, false)); });
         getel('cats').appendChild(cat);
-      };
-      //display a character
-      var getname = function(n) {
-        var mode = getel('charmode').value;
-        if (n[0] == 'c') {
-          var i = parseInt(n.slice(1));
-          return cgetchr(mode, i) || cgetname(i);
-        } else if (n[0] == 'v') {
-          var i = parseInt(n.slice(1));
-          return vgetchr(mode, i) || vgetname(i);
-        }
       };
       //make a category input
       var makesel = function(cls, val) {
@@ -313,6 +364,9 @@
       var validate_all = function() {
         var pass = {allophony: [], phonotactics: []};
         getel('id').value = langdata.id;
+        pass.phonemes = allphones();
+        pass['consonant features'] = getchecks('consphonefeatures');
+        pass['vowel features'] = getchecks('vowphonefeatures');
         var l = getel('rules').children;
         var cats = readcats();
         pass['allophone categories'] = cats;
@@ -345,19 +399,16 @@
       if (langdata.hasOwnProperty('allophone categories')) {
         for (k in langdata['allophone categories']) {
           makecat(k, langdata['allophone categories'][k]);
-          console.log(k);
         }
       }
       if (langdata.hasOwnProperty('phonotactics')) {
         for (var i = 0; i < langdata.phonotactics.length; i++) {
           makesyl(langdata.phonotactics[i].parts, langdata.phonotactics[i].mode);
-          console.log(i);
         }
       }
       if (langdata.hasOwnProperty('allophony')) {
         for (var i = 0; i < langdata.allophony.length; i++) {
           makerule(langdata.allophony[i]);
-          console.log(i);
         }
       }
     </script>
