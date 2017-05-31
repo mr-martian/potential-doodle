@@ -62,7 +62,13 @@
     <button onclick="makesyl(null, 'word');">Add Syllable Type</button>
     <h2>Allophonic Rules</h2>
     <ol id="rules"></ol>
-    <button onclick="makerule(null);">Add Rule</button>
+    <button onclick="makerule(null, false);">Add Rule</button>
+    <h2>Romanization</h2>
+    <ol id="romrules"></ol>
+    <button onclick="makerule(null, true);">Add Character</button>
+    <input type="checkbox" id="irreg"></input>
+    <label for="irreg">Language has irregular spellings</label>
+    <p>Phonological representations will be transformed in exactly the same manner as with allophony. Any unmodified phonemes will be displayed in IPA.</p>
     <br>
     <button onclick="validate_all();">Save</button>
     <p id="errors"></p>
@@ -252,7 +258,7 @@
           sel = document.createElement('input');
           sel.type = "text";
           sel.className = "altphone";
-          sel.value = getname(val);
+          sel.value = getname(getel('charmode').value, val) || val;
           return sel;
         }
         var sel = mkel('select', s);
@@ -309,9 +315,12 @@
         return s;
       };
       //make an allophonic rule input
-      var makerule = function(rule) {
+      var makerule = function(rule, isrom) {
         if (!rule) {
           rule = {from: [], to: [], before: [], after: []};
+          if (isrom) {
+            rule.to = [""];
+          }
         }
         var el = document.createElement('li');
         el.appendChild(mkel('span', '/'));
@@ -323,7 +332,7 @@
         el.appendChild(mkel('span', ' ___ '));
         el.appendChild(makeinput('after', rule.after));
         el.appendChild(mkdel());
-        getel('rules').appendChild(el);
+        getel(isrom ? 'romrules' : 'rules').appendChild(el);
       };
       //find any erroneous input in l, given category list cats
       var geterr = function(l, cats) {
@@ -350,19 +359,21 @@
         return [ret, err];
       }
       //get input from an allophonic rule
-      var readrule = function(li, cats) {
+      var readrule = function(li, cats, isrom) {
         var ret = {from: [], to: [], before: [], after: []};
         var err = [];
         var e;
         for (k in ret) {
           e = geterr(getvals(firstclass(firstclass(li, k), 'phones')), cats);
           ret[k] = e[0];
-          err = err.concat(e[1]);
+          if (!isrom || !(k == 'to')) {
+            err = err.concat(e[1]);
+          }
         }
         return [ret, err];
       };
       var validate_all = function() {
-        var pass = {allophony: [], phonotactics: []};
+        var pass = {allophony: [], phonotactics: [], romanization: []};
         getel('id').value = langdata.id;
         pass.phonemes = allphones();
         pass['consonant features'] = getchecks('consphonefeatures');
@@ -372,7 +383,7 @@
         pass['allophone categories'] = cats;
         var err = [];
         for (var i = 0; i < l.length; i++) {
-          var res = readrule(l[i], cats);
+          var res = readrule(l[i], cats, false);
           pass.allophony.push(res[0]);
           for (var e = 0; e < res[1].length; e++) {
             err.push('Unknown phone or category "'+res[1][e]+'" in rule '+(i+1));
@@ -389,6 +400,15 @@
             err.push('Unknown phone or category "'+e[1][r]+'" in syllable structure '+(i+1));
           }
         }
+        l = getel('romrules').children;
+        for (var i = 0; i < l.length; i++) {
+          var res = readrule(l[i], cats, true);
+          pass.romanization.push(res[0]);
+          for (var e = 0; e < res[1].length; e++) {
+            err.push('Unknown phone or category "'+res[1][e]+'" in romanization rule '+(i+1));
+          }
+        }
+        pass['has irregular spellings'] = getel('irreg').checked;
         if (err.length == 0) {
           getel('langdata').value = JSON.stringify(pass);
           getel('submit').submit();
@@ -408,7 +428,15 @@
       }
       if (langdata.hasOwnProperty('allophony')) {
         for (var i = 0; i < langdata.allophony.length; i++) {
-          makerule(langdata.allophony[i]);
+          makerule(langdata.allophony[i], false);
+        }
+      }
+      if (langdata.hasOwnProperty('has irregular spellings')) {
+        getel('irreg').checked = langdata['has irregular spellings'];
+      }
+      if (langdata.hasOwnProperty('romanization')) {
+        for (var i = 0; i < langdata.romanization.length; i++) {
+          makerule(langdata.romanization[i], true);
         }
       }
     </script>
