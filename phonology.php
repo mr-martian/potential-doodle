@@ -36,7 +36,7 @@
       <input type="text" id="langdata" name="langdata"></input>
     </form>
     <span>Display characters in: </span>
-    <select id="charmode" onchange="phoneupdate();">
+    <select id="charmode" onchange="consupdate(); vowupdate();">
       <option value="ipa">International Phonetic Alphabet (IPA)</option>
       <option value="cxs">Conlang X-Sampa (CXS)</option>
     </select>
@@ -73,24 +73,12 @@
     <button onclick="validate_all();">Save</button>
     <p id="errors"></p>
     <script>
-      var checks = getel('consphonefeatures');
-      for (var i = 0; i < modifiers.length; i++) {
-        mkchk(checks, modifiers[i], modifiers[i][0].toUpperCase()+modifiers[i].slice(1), phoneupdate, langdata['consonant features']);
-      }
-      var checks = getel('vowphonefeatures');
-      for (var i = 0; i < vmodifiers.length; i++) {
-        mkchk(checks, vmodifiers[i], vmodifiers[i][0].toUpperCase()+vmodifiers[i].slice(1), phoneupdate, langdata['vowel features']);
-      }
-      var getchecks = function(elname) {
-        var els = document.querySelectorAll('#' + elname + ' input');
-        var ch = [];
-        for (var i = 0; i < els.length; i++) {
-          if (els[i].checked) {
-            ch.push(els[i].value);
-          }
-        }
-        return ch;
-      };
+      var Consfeat = getel('consphonefeatures');
+      var Constab = getel('consonants');
+      var Vowfeat = getel('vowphonefeatures');
+      var Vowtab = getel('vowels');
+      var Mode = getel('charmode');
+      
       var modsubsets = function(ml) {
         if (ml.length == 0) {
           return [[]];
@@ -104,13 +92,10 @@
           return ret;
         }
       };
-      var phoneupdate = function() {
-        var alpha = getel('charmode').value;
-        var mods = [];
-        var mods = modsubsets(getchecks('consphonefeatures'));
-        var ctb = getel('consonants');
-        ctb.innerHTML = '<tr><td></td><td>'+places.join('</td><td>')+'</td></tr>';
-        var cons = getchecks('consonants');
+      var consupdate = function() {
+        var mods = modsubsets(getchecks(Consfeat));
+        var cons = getchecks(Constab);
+        Constab.innerHTML = '<tr><td></td><td>'+places.join('</td><td>')+'</td></tr>';
         var voices = [false, true];
         var id, s;
         for (var j = 0; j < manners.length; j++) {
@@ -123,18 +108,22 @@
               }
               for (var k = 0; k < places.length; k++) {
                 s.appendChild(mkel('td', ''));
-                mkchk(s.children[k+1], 'c'+id, cgetchr(alpha, id) || ' ', null, cons);
+                mkchk(s.children[k+1], 'c'+id, cgetchr(Mode.value, id) || ' ', null, cons);
                 id += 2;
               }
-              ctb.appendChild(s);
+              Constab.appendChild(s);
             }
           }
         }
-        
-        var mods = modsubsets(getchecks('vowphonefeatures'));
-        var vows = getchecks('vowels');
-        var vtb = getel('vowels');
-        vtb.innerHTML = '<tr><td></td><td>'+backs.join('</td><td>')+'</td></tr>';
+      };
+      for (var i = 0; i < modifiers.length; i++) {
+        mkchk(Consfeat, modifiers[i], tocap(modifiers[i]), consupdate, langdata['consonant features']);
+      }
+      consupdate();
+      var vowupdate = function() {
+        var mods = modsubsets(getchecks(Vowfeat));
+        var vows = getchecks(Vowtab);
+        Vowtab.innerHTML = '<tr><td></td><td>'+backs.join('</td><td>')+'</td></tr>';
         for (var j = 0; j < heights.length; j++) {
           for (var m = 0; m < mods.length; m++) {
             s = mkel('tr', '<td>'+mods[m].join(' ')+' '+heights[j]+'</td>');
@@ -144,14 +133,17 @@
             for (var k = 0; k < backs.length; k++) {
               s.appendChild(mkel('td', ''));
               id = getvid(backs[k], heights[j], false, mods[m]);
-              mkchk(s.children[k+1], 'v'+id, vgetchr(alpha, id)||' ', null, vows);
-              mkchk(s.children[k+1], 'v'+(id+1), vgetchr(alpha, (id+1))||' ', null, vows);
+              mkchk(s.children[k+1], 'v'+id, vgetchr(Mode.value, id)||' ', null, vows);
+              mkchk(s.children[k+1], 'v'+(id+1), vgetchr(Mode.value, (id+1))||' ', null, vows);
             }
-            vtb.appendChild(s);
+            Vowtab.appendChild(s);
           }
         }
       };
-      phoneupdate();
+      for (var i = 0; i < vmodifiers.length; i++) {
+        mkchk(Vowfeat, vmodifiers[i], tocap(vmodifiers[i]), vowupdate, langdata['vowel features']);
+      }
+      vowupdate();
       if (langdata.hasOwnProperty('phonemes')) {
         for (var i = 0; i < langdata.phonemes.length; i++) {
           getel(langdata.phonemes[i]).checked = true;
@@ -187,13 +179,12 @@
       };
       //get the ids of all checked phones
       var allphones = function() {
-        return getchecks('consonants').concat(getchecks('vowels'));
+        return getchecks(Constab).concat(getchecks(Vowtab));
       };
       //list all phonemes in langdata as source for <option>s
       //set as "selected" if id == sel
       //subsequently list all categories if withcats == true
       var listphones = function(sel, withcats) {
-        var mode = getel('charmode').value;
         var s = '';
         var phones = allphones();
         for (var i = 0; i < phones.length; i++) {
@@ -201,7 +192,7 @@
           if (phones[i] == sel) {
             s += ' selected="selected"';
           }
-          s += '>'+getname(mode, phones[i])+'</option>';
+          s += '>'+getname(Mode.value, phones[i])+'</option>';
         }
         if (withcats) {
           var cats = Object.keys(readcats());
@@ -258,7 +249,7 @@
           sel = document.createElement('input');
           sel.type = "text";
           sel.className = "altphone";
-          sel.value = getname(getel('charmode').value, val) || val;
+          sel.value = getname(Mode.value, val) || val;
           return sel;
         }
         var sel = mkel('select', s);
@@ -336,9 +327,8 @@
       };
       //find any erroneous input in l, given category list cats
       var geterr = function(l, cats) {
-        var mode = getel('charmode').value;
-        var cons = consch[mode];
-        var vows = vowch[mode];
+        var cons = consch[Mode.value];
+        var vows = vowch[Mode.value];
         var err = [];
         var ret = [];
         for (var i = 0; i < l.length; i++) {
@@ -376,8 +366,8 @@
         var pass = {allophony: [], phonotactics: [], romanization: []};
         getel('id').value = langdata.id;
         pass.phonemes = allphones();
-        pass['consonant features'] = getchecks('consphonefeatures');
-        pass['vowel features'] = getchecks('vowphonefeatures');
+        pass['consonant features'] = getchecks(Consfeat);
+        pass['vowel features'] = getchecks(Vowfeat);
         var l = getel('rules').children;
         var cats = readcats();
         pass['allophone categories'] = cats;

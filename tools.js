@@ -144,3 +144,18 @@ var mkchk = function(parent, value, label, change, among) {
   lab.innerText = label || value;
   parent.appendChild(lab);
 };
+//capitalize the first letter of a string
+var tocap = function(x) {
+  return x[0].toUpperCase() + x.slice(1);
+};
+//get values of all checked checkboxes in a <div>
+var getchecks = function(el) {
+  var ls = el.getElementsByTagName('input');
+  var ret = [];
+  for (var i = 0; i < ls.length; i++) {
+    if (ls[i].checked) {
+      ret.push(ls[i].value);
+    }
+  }
+  return ret;
+};
