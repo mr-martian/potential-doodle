@@ -114,22 +114,6 @@ var mkel = function(nam, inner) {
   r.innerHTML = inner;
   return r;
 };
-//returns a function to be assigned as onchange handler for number <input>s
-//get number from input
-//if chls has more than that many children, delete the extras
-//otherwise create more with fn() and append them
-var setchcount = function(chls, fn) {
-  return function(event) {
-    var input = event.target || event.srcElement;
-    var n = Math.max(parseInt(input.value), 0);
-    while (chls.children.length > n) {
-      chls.removeChild(chls.children[chls.children.length-1]);
-    }
-    while (chls.children.length < n) {
-      chls.appendChild(fn());
-    }
-  };
-};
 //make and label a checkbox, append as child to parent
 //will be checked if among is an array containing value or == value
 var mkchk = function(parent, value, label, change, among) {
@@ -176,27 +160,15 @@ var make_phone_select = function(val, none, phones, cats, andblank) {
   ret.appendChild(mkel('option', '---'));
   var op;
   if (none) {
-    //op = mkel('option', none);
-    //op.value = 'null';
-    //ret.appendChild(op);
     ret.appendChild(mkop(none, 'null'));
   }
   for (var i = 0; i < phones.length; i++) {
-    //op = mkel('option', getname(phones[i]));
-    //op.value = phones[i];
-    //ret.appendChild(op);
     ret.appendChild(mkop(getname(phones[i]), phones[i]));
   }
   for (var i = 0; i < cats.length; i++) {
-    //op = mkel('option', cats[i]);
-    //op.value = cats[i];
-    //ret.appendChild(op);
     ret.appendChild(mkop(cats[i], cats[i]));
   }
   if (andblank) {
-    //op = mkel('option', 'Enter Other Phone');
-    //op.value = 'new';
-    //ret.appendChild(op);
     ret.appendChild(mkop('Enter Other Phone', 'new'));
     ret.onchange = function() {
       if (ret.value == 'new') {
@@ -217,13 +189,31 @@ var make_phone_select = function(val, none, phones, cats, andblank) {
   }
   return ret;
 };
+//returns a function to be assigned as onchange handler for number <input>s
+//get number from input
+//if chls has more than that many children, delete the extras
+//otherwise create more with fn() and append them
+var setchcount = function(none, phones, cats, andblank) {
+  return function(event) {
+    console.log([none, phones, cats, andblank]);
+    var input = event.target || event.srcElement;
+    var chls = input.parentNode.children[3];
+    var n = Math.max(parseInt(input.value), 0);
+    while (chls.children.length > n) {
+      chls.removeChild(chls.children[chls.children.length-1]);
+    }
+    while (chls.children.length < n) {
+      chls.appendChild(make_phone_select(null, none, phones, cats, andblank));
+    }
+  };
+};
 //create and return a phoneme structure input
 var mkphin = function(val, none, phones, cats, withblanks) {
   val = val || [];
   var ret = mkel('div', '<span>Elements: </span><input type="number"></input><br><div class="phones"></div>');
   ret.className = 'ph-in';
   ret.children[1].value = val.length;
-  ret.children[1].onchange = setchcount(ret.children[3], function() { return make_phone_select(null, none, phones, cats, withblanks); });
+  ret.children[1].onchange = setchcount(none, phones, cats, withblanks);
   var sel;
   for (var i = 0; i < val.length; i++) {
     ret.children[3].appendChild(make_phone_select(val[i], none, phones, cats, withblanks));
