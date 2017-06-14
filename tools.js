@@ -1,3 +1,6 @@
+//
+//Any page using this file must define getmode() which returns the character display mode (currently 'ipa' or 'cxs').
+//
 ///////////IPA Tools
 var places = ['bimanual', 'faciomanual', 'bilabial', 'labiodental', 'dental', 'alveolar', 'postalveolar', 'retroflex', 'palatal', 'velar', 'uvular', 'pharyngeal', 'epiglottal', 'glottal'];
 var manners = ['stop', 'fricative', 'trill', 'tap', 'approximant', 'click'];
@@ -13,8 +16,9 @@ var getcid = function(place, voice, manner, mods) {
   return id;
 };
 //given a consonant's id (int), return registered char or false
-var cgetchr = function(mode, id) {
+var cgetchr = function(id) {
   if (consid.hasOwnProperty(id)) {
+    var mode = getmode();
     if (consid[id].hasOwnProperty(mode)) {
       return consid[id][mode];
     }
@@ -58,8 +62,9 @@ var getvid = function(back, height, rounded, mods) {
   return id;
 };
 //given a vowel's id (int), return registered char or false
-var vgetchr = function(mode, id) {
+var vgetchr = function(id) {
   if (vowid.hasOwnProperty(id)) {
+    var mode = getmode();
     if (vowid[id].hasOwnProperty(mode)) {
       return vowid[id][mode];
     }
@@ -85,13 +90,13 @@ var vgetname = function(id) {
   return l.concat(mods).join(' ') + ' vowel';
 };
 //a phone id (string) return char (if available) or name
-var getname = function(mode, n) {
+var getname = function(n) {
   if (n[0] == 'c') {
     var i = parseInt(n.slice(1));
-    return cgetchr(mode, i) || cgetname(i);
+    return cgetchr(i) || cgetname(i);
   } else if (n[0] == 'v') {
     var i = parseInt(n.slice(1));
-    return vgetchr(mode, i) || vgetname(i);
+    return vgetchr(i) || vgetname(i);
   }
 };
 /////////////General Utilities
@@ -155,6 +160,83 @@ var getchecks = function(el) {
   for (var i = 0; i < ls.length; i++) {
     if (ls[i].checked) {
       ret.push(ls[i].value);
+    }
+  }
+  return ret;
+};
+//create and return an <option>
+var mkop = function(lab, val) {
+  var ret = mkel('option', lab);
+  ret.value = val;
+  return ret;
+};
+//create a <select> for use in phoneme structure inputs
+var make_phone_select = function(val, none, phones, cats, andblank) {
+  var ret = document.createElement('select');
+  ret.appendChild(mkel('option', '---'));
+  var op;
+  if (none) {
+    //op = mkel('option', none);
+    //op.value = 'null';
+    //ret.appendChild(op);
+    ret.appendChild(mkop(none, 'null'));
+  }
+  for (var i = 0; i < phones.length; i++) {
+    //op = mkel('option', getname(phones[i]));
+    //op.value = phones[i];
+    //ret.appendChild(op);
+    ret.appendChild(mkop(getname(phones[i]), phones[i]));
+  }
+  for (var i = 0; i < cats.length; i++) {
+    //op = mkel('option', cats[i]);
+    //op.value = cats[i];
+    //ret.appendChild(op);
+    ret.appendChild(mkop(cats[i], cats[i]));
+  }
+  if (andblank) {
+    //op = mkel('option', 'Enter Other Phone');
+    //op.value = 'new';
+    //ret.appendChild(op);
+    ret.appendChild(mkop('Enter Other Phone', 'new'));
+    ret.onchange = function() {
+      if (ret.value == 'new') {
+        ret.outerHTML = '<input type="text" class="altphone"></input>';
+      }
+    };
+  }
+  if (val == null) {
+    ret.selectedIndex = -1;
+  } else if (phones.includes(val) || cats.includes(val)) {
+    ret.value = val;
+  } else {
+    var el = document.createElement('input');
+    el.type = 'text';
+    el.className = 'altphone';
+    el.value = val;
+    return el;
+  }
+  return ret;
+};
+//create and return a phoneme structure input
+var mkphin = function(val, none, phones, cats, withblanks) {
+  val = val || [];
+  var ret = mkel('div', '<span>Elements: </span><input type="number"></input><br><div class="phones"></div>');
+  ret.className = 'ph-in';
+  ret.children[1].value = val.length;
+  ret.children[1].onchange = setchcount(ret.children[3], function() { return make_phone_select(null, none, phones, cats, withblanks); });
+  var sel;
+  for (var i = 0; i < val.length; i++) {
+    ret.children[3].appendChild(make_phone_select(val[i], none, phones, cats, withblanks));
+  }
+  return ret;
+};
+//read the value of a phoneme structure input
+var readphin = function(el) {
+  var ret = [];
+  var ins = el.children[3].children;
+  for (i = 0; i < ins.length; i++) {
+    if (ins[i].value) {
+      ret.push(ins[i].value);
     }
   }
   return ret;

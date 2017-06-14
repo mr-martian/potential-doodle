@@ -37,7 +37,7 @@
       <option value="ipa">International Phonetic Alphabet (IPA)</option>
       <option value="cxs">Conlang X-Sampa (CXS)</option>
     </select>
-    <p>In all conjugational forms, <b>%</b> represents an unchanged stem.</p>
+    <p>In all conjugational forms, <b>%</b> represents an unchanged stem. It serves as a wildcard in unconjugated forms.</p>
     <h2>Nouns</h2>
     <div id="noun" class="featlist"></div>
     <table id="nouncont">
@@ -63,6 +63,7 @@
     <button onclick="validate_all();">Save</button>
     <p id="errors"></p>
     <script>
+      var getmode = function() { return getel('charmode').value; };
       var defaultcats = {
         noun: [
           ['plurality',
@@ -82,11 +83,11 @@
       //display the options for a grammatical category
       var makecat = function(div, nam, vals, checked, selected) {
         var el = document.createElement('div');
-        mkchk(el, nam, nam, function() { table(div); }, checked ? [nam] : []);
+        mkchk(el, nam, nam, function() { table(div, read_table(div)); }, checked ? [nam] : []);
         var ls = document.createElement('div');
         ls.style['margin-left'] = '15px';
         for (var i = 0; i < vals.length; i++) {
-          mkchk(ls, vals[i], null, function() { table(div); }, selected);
+          mkchk(ls, vals[i], null, function() { table(div, read_table(div)); }, selected);
           ls.appendChild(mkel('br', ''));
         }
         el.appendChild(ls);
@@ -132,6 +133,7 @@
           d.children[0].value = 'default';
         } else if (Array.isArray(pat)) {
           d.children[0].value = 'array';
+          d.appendChild(mkphin(pat, 'anything', langdata.phonemes, langdata['allophone categories'], false));
         } else {
           d.children[0].value = 'string';
           var ap = document.createElement('input');
@@ -149,7 +151,7 @@
       var readword = function(el) {
         switch (el.firstChild.value) {
           case 'default': return false;
-          case 'array': return [];
+          case 'array': return readphin(el.children[1]);
           case 'string': return el.children[1].value;
         }
       };
@@ -209,9 +211,7 @@
         return ret;
       };
       var table = function(pos, old) {
-        if (!old) {
-          old = {cats: [], ops: [], data: {}, roots: [false]};
-        }
+        old = old || {cats: [], ops: [], data: {}, roots: [false]};
         var rep = document.createElement('tbody');
         var ct = old.roots.length;
         var first = mkel('tr', '<td></td>');
@@ -261,6 +261,7 @@
         rep.id = pos+'forms';
         getel(pos+'cont').appendChild(rep);
       };
+      table('noun', null);
       var validate_all = function() {
         var pass = {allophony: [], phonotactics: []};
         getel('id').value = langdata.id;

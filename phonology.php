@@ -78,6 +78,7 @@
       var Vowfeat = getel('vowphonefeatures');
       var Vowtab = getel('vowels');
       var Mode = getel('charmode');
+      var getmode = function() { return Mode.value; };
       
       var modsubsets = function(ml) {
         if (ml.length == 0) {
@@ -108,7 +109,7 @@
               }
               for (var k = 0; k < places.length; k++) {
                 s.appendChild(mkel('td', ''));
-                mkchk(s.children[k+1], 'c'+id, cgetchr(Mode.value, id) || ' ', null, cons);
+                mkchk(s.children[k+1], 'c'+id, cgetchr(id) || ' ', null, cons);
                 id += 2;
               }
               Constab.appendChild(s);
@@ -133,8 +134,8 @@
             for (var k = 0; k < backs.length; k++) {
               s.appendChild(mkel('td', ''));
               id = getvid(backs[k], heights[j], false, mods[m]);
-              mkchk(s.children[k+1], 'v'+id, vgetchr(Mode.value, id)||' ', null, vows);
-              mkchk(s.children[k+1], 'v'+(id+1), vgetchr(Mode.value, (id+1))||' ', null, vows);
+              mkchk(s.children[k+1], 'v'+id, vgetchr(id)||' ', null, vows);
+              mkchk(s.children[k+1], 'v'+(id+1), vgetchr(id+1)||' ', null, vows);
             }
             Vowtab.appendChild(s);
           }
@@ -173,7 +174,16 @@
         var nam, phon;
         for (var i = 0; i < cats.length; i++) {
           nam = firstclass(cats[i], 'name').value;
-          ret[nam] = getvals(firstclass(cats[i], 'phones'));
+          ret[nam] = readphin(firstclass(cats[i], 'ph-in'));
+        }
+        return ret;
+      };
+      //return the names of all the categories
+      var listcats = function() {
+        var cats = getel('cats').children;
+        var ret = [];
+        for (var i = 0; i < cats.length; i++) {
+          ret.push(firstclass(cats[i], 'name').value);
         }
         return ret;
       };
@@ -181,154 +191,52 @@
       var allphones = function() {
         return getchecks(Constab).concat(getchecks(Vowtab));
       };
-      //list all phonemes in langdata as source for <option>s
-      //set as "selected" if id == sel
-      //subsequently list all categories if withcats == true
-      var listphones = function(sel, withcats) {
-        var s = '';
-        var phones = allphones();
-        for (var i = 0; i < phones.length; i++) {
-          s += '<option value="'+phones[i]+'"';
-          if (phones[i] == sel) {
-            s += ' selected="selected"';
-          }
-          s += '>'+getname(Mode.value, phones[i])+'</option>';
-        }
-        if (withcats) {
-          var cats = Object.keys(readcats());
-          for (var c = 0; c < cats.length; c++) {
-            s += '<option value="' + cats[c];
-            if (sel == cats[c]) {
-              s += '" selected="selected';
-            }
-            s += '">' + cats[c] + '</option>';
-          }
-        }
-        return s;
-      };
       //add category
       var makecat = function(nam, val) {
-        if (!nam) {
-          nam = '';
+        var cat = mkel('li', '<span>Name: </span><input type="text" class="name"></input>');
+        if (nam) {
+          cat.children[1].value = nam;
         }
-        if (!val) {
-          val = [];
-        }
-        var s = '<div><span>Elements: </span><input type="number"></input>';
-        s += '<br><span>Name: </span><input type="text" class="name"></input></div>';
-        s += '<div class="phones">';
-        for (var i = 0; i < val.length; i++) {
-          s += '<select>' + listphones(val[i], false) + '</select>';
-        }
-        s += '</div>';
-        cat = mkel('li', s);
+        cat.appendChild(mkphin(val, null, allphones(), [], false));
         cat.appendChild(mkdel());
-        cat.children[0].children[4].value = nam;
-        cat.children[0].children[1].value = val.length;
-        cat.children[0].children[1].onchange = setchcount(cat.children[1], function() { return mkel('select', listphones(null, false)); });
         getel('cats').appendChild(cat);
-      };
-      //make a category input
-      var makesel = function(cls, val) {
-        var s = '<option value="null"'
-        if (val == null) {
-          s += ' selected="selected"';
-        }
-        s += '>';
-        switch (cls) {
-          case 'from':
-          case 'to': s += 'Nothing'; break;
-          case 'before': s += 'Beginning of Word'; break;
-          case 'after': s += 'End of Word'; break;
-        }
-        s += '</option>' + listphones(val, true);
-        if (cls == 'to') {
-          s += '<option value="new">Enter Other Phone</option>';
-        }
-        if (!s.match('selected="selected"')) {
-          sel = document.createElement('input');
-          sel.type = "text";
-          sel.className = "altphone";
-          sel.value = getname(Mode.value, val) || val;
-          return sel;
-        }
-        var sel = mkel('select', s);
-        if (cls == 'to') {
-          sel.onchange = function() {
-            if (sel.value == 'new') {
-              sel.outerHTML = '<input type="text" class="altphone"></input>';
-            }
-          };
-        }
-        return sel;
       };
       //add a syllable structure input
       var makesyl = function(struct, mode) {
-        if (!struct) {
-          struct = [];
+        var el = mkel('li', '<select class="mode"></select>');
+        el.firstChild.appendChild(mkop('Whole Word', 'word'));
+        el.firstChild.appendChild(mkop('Word-Initial Syllable', 'init'));
+        el.firstChild.appendChild(mkop('Middle Syllable', 'mid'));
+        el.firstChild.appendChild(mkop('Word-Final Syllable', 'end'));
+        if (mode) {
+          el.firstChild.value = mode;
         }
-        var l = [['word', 'Whole Word'], ['init', 'Word-Initial Syllable'], ['mid', 'Middle Syllable'], ['end', 'Word-Final Syllable']];
-        var s = '<select class="mode">';
-        for (var i = 0; i < l.length; i++) {
-          s += '<option value="' + l[i][0] + '"';
-          if (l[i][0] == mode) {
-            s += ' selected="selected"';
-          }
-          s += '>' + l[i][1] + '</option>';
-        }
-        var el = mkel('li', s + '</select><span>Parts: </span>');
-        var n = document.createElement('input');
-        el.appendChild(n);
-        el.appendChild(document.createElement('br'));
-        var s = '';
-        for (var i = 0; i < struct.length; i++) {
-          s += '<select>' + listphones(struct[i], true) + '</select>';
-        }
-        var d = mkel('div', s);
-        d.className = 'parts';
-        el.appendChild(d);
-        n.type = "number";
-        n.value = struct.length;
-        n.onchange = setchcount(d, function() { return mkel('select', listphones(null, true)); });
+        el.appendChild(mkphin(struct || [], null, allphones(), listcats(), false));
         el.appendChild(mkdel());
         getel('syls').appendChild(el);
       };
-      //make a rule input
-      var makeinput = function(cls, vals) {
-        var s = mkel('div', '<span>Count: </span><input type="number" min="0"></input><br><div class="phones"></div>');
-        s.className = cls;
-        var sch = s.children;
-        for (var i = 0; i < vals.length; i++) {
-          sch[3].appendChild(makesel(cls, vals[i]));
-        }
-        sch[1].value = vals.length;
-        sch[1].onchange = setchcount(sch[3], function() { return makesel(cls, null); });
-        return s;
-      };
       //make an allophonic rule input
       var makerule = function(rule, isrom) {
-        if (!rule) {
-          rule = {from: [], to: [], before: [], after: []};
-          if (isrom) {
-            rule.to = [""];
-          }
-        }
+        rule = rule || {from: [], to: (isrom ? [""] : []), before: [], after: []};
+        var phls = allphones();
+        var cats = listcats();
         var el = document.createElement('li');
         el.appendChild(mkel('span', '/'));
-        el.appendChild(makeinput('from', rule.from));
+        el.appendChild(mkphin(rule.from, 'Nothing', phls, cats, false));
         el.appendChild(mkel('span', '/ → ['));
-        el.appendChild(makeinput('to', rule.to));
+        el.appendChild(mkphin(rule.to, 'Nothing', phls, cats, true));
         el.appendChild(mkel('span', '] / '));
-        el.appendChild(makeinput('before', rule.before));
+        el.appendChild(mkphin(rule.before, 'Beginning of Word', phls, cats, false));
         el.appendChild(mkel('span', ' ___ '));
-        el.appendChild(makeinput('after', rule.after));
+        el.appendChild(mkphin(rule.after, 'End of Word', phls, cats, false));
         el.appendChild(mkdel());
         getel(isrom ? 'romrules' : 'rules').appendChild(el);
       };
       //find any erroneous input in l, given category list cats
-      var geterr = function(l, cats) {
+      var geterr = function(l) {
         var cons = consch[Mode.value];
         var vows = vowch[Mode.value];
+        var cats = listcats();
         var err = [];
         var ret = [];
         for (var i = 0; i < l.length; i++) {
@@ -336,7 +244,7 @@
             ret.push(null);
           } else if (l[i].match(/^[vc]\d+$/)) {
             ret.push(l[i]);
-          } else if (cats.hasOwnProperty(l[i])) {
+          } else if (cats.includes(l[i])) {
             ret.push(l[i]);
           } else if (cons.hasOwnProperty(l[i])) {
             ret.push('c' + cons[l[i]]);
@@ -349,17 +257,25 @@
         return [ret, err];
       }
       //get input from an allophonic rule
-      var readrule = function(li, cats, isrom) {
-        var ret = {from: [], to: [], before: [], after: []};
+      var readrule = function(li, isrom) {
+        var ret = {};
         var err = [];
-        var e;
-        for (k in ret) {
-          e = geterr(getvals(firstclass(firstclass(li, k), 'phones')), cats);
-          ret[k] = e[0];
-          if (!isrom || !(k == 'to')) {
-            err = err.concat(e[1]);
-          }
+        var e = geterr(readphin(li.children[1]));
+        ret.from = e[0];
+        err = err.concat(e[1]);
+        if (isrom) {
+          ret.to = readphin(li.children[3]);
+        } else {
+          e = geterr(readphin(li.children[3]));
+          ret.to = e[0];
+          err = err.concat(e[1]);
         }
+        e = geterr(readphin(li.children[5]));
+        ret.before = e[0];
+        err = err.concat(e[1]);
+        e = geterr(readphin(li.children[7]));
+        ret.after = e[0];
+        err = err.concat(e[1]);
         return [ret, err];
       };
       var validate_all = function() {
@@ -373,7 +289,7 @@
         pass['allophone categories'] = cats;
         var err = [];
         for (var i = 0; i < l.length; i++) {
-          var res = readrule(l[i], cats, false);
+          var res = readrule(l[i], false);
           pass.allophony.push(res[0]);
           for (var e = 0; e < res[1].length; e++) {
             err.push('Unknown phone or category "'+res[1][e]+'" in rule '+(i+1));
@@ -383,7 +299,7 @@
         var m, e;
         for (var i = 0; i < l.length; i++) {
           m = {mode: firstclass(l[i], 'mode').value};
-          e = geterr(getvals(firstclass(l[i], 'parts')), cats);
+          e = geterr(readphin(firstclass(l[i], 'ph-in')));
           m.parts = e[0];
           pass.phonotactics.push(m);
           for (var r = 0; r < e[1].length; r++) {
@@ -392,7 +308,7 @@
         }
         l = getel('romrules').children;
         for (var i = 0; i < l.length; i++) {
-          var res = readrule(l[i], cats, true);
+          var res = readrule(l[i], true);
           pass.romanization.push(res[0]);
           for (var e = 0; e < res[1].length; e++) {
             err.push('Unknown phone or category "'+res[1][e]+'" in romanization rule '+(i+1));
