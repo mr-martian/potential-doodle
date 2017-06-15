@@ -189,10 +189,11 @@ var make_phone_select = function(val, none, phones, cats, andblank) {
   }
   return ret;
 };
-//returns a function to be assigned as onchange handler for number <input>s
+//returns a function to be assigned as onchange handler
+//for a phoneme structure input
 //get number from input
-//if chls has more than that many children, delete the extras
-//otherwise create more with fn() and append them
+//if the .phones <div> has more than that many children, delete the extras
+//otherwise create more with make_phone_select(..) and append them
 var setchcount = function(none, phones, cats, andblank) {
   return function(event) {
     console.log([none, phones, cats, andblank]);

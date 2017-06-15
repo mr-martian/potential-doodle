@@ -3,8 +3,7 @@
     1. add section for predicting word-forms
     2. add more features and values
     3. add articles, prepositions, etc.
-    4. add structure input (put in tools.js)
-    5. word order
+    4. word order
   -->
   <head>
     <meta charset="utf-8" />
@@ -38,46 +37,57 @@
       <option value="cxs">Conlang X-Sampa (CXS)</option>
     </select>
     <p>In all conjugational forms, <b>%</b> represents an unchanged stem. It serves as a wildcard in unconjugated forms.</p>
-    <h2>Nouns</h2>
-    <div id="noun" class="featlist"></div>
-    <table id="nouncont">
-      <tbody id="nounforms"></tbody>
-    </table>
-    <h2>Verbs</h2>
-    <div id="verb" class="featlist"></div>
-    <table id="verbcont">
-      <tbody id="verbforms"></tbody>
-    </table>
-    <h2>Adjectives</h2>
-    <div id="adjective" class="featlist"></div>
-    <table id="adjectivecont">
-      <tbody id="adjectiveforms"></tbody>
-    </table>
-    <h2>Adverbs</h2>
-    <div id="adverb" class="featlist"></div>
-    <table id="adverbcont">
-      <tbody id="adverbforms"></tbody>
-    </table>
+    <p>Please be aware that adding marked categories will probably erase any data that has been entered for that part of speech.</p>
+    <div id="pos"></div>
     <h2>Word Orders</h2>
     <div id="order"></h2>
     <button onclick="validate_all();">Save</button>
     <p id="errors"></p>
     <script>
       var getmode = function() { return getel('charmode').value; };
+      var pos = ['noun', 'verb', 'adjective', 'adverb', 'article', 'preposition'];
       var defaultcats = {
         noun: [
           ['plurality',
             'singular', 'plural', 'pacual', 'singulative'],
           ['case',
             'nominative', 'accusative', 'dative', 'genitive', 'ergative', 'absolutive', 'vocative', 'instrumental'],
-          ['class/gender',
-            'male', 'female', 'neuter', 'animate', 'inanimate', 'fire', 'earth', 'water', 'air'],
+          ['animacy',
+            ],
         ],
         verb: [
+          ['tense',
+            ],
+          ['aspect',
+            ],
+          ['mood/modality',
+            ],
+          ['subject person',
+            ],
+          ['subject number',
+            ],
         ],
         adjective: [
+          ['noun number',
+            'singular', 'plural', 'pacual', 'singulative'],
+          ['noun class/gender',
+            'male', 'female', 'neuter', 'animate', 'inanimate', 'fire', 'earth', 'water', 'air'],
+          ['noun case',
+            'nominative', 'accusative', 'dative', 'genitive', 'ergative', 'absolutive', 'vocative', 'instrumental'],
         ],
         adverb: [
+        ],
+        article: [
+          ['definiteness',
+            'definite', 'indefinite'],
+          ['noun number',
+            'singular', 'plural', 'pacual', 'singulative'],
+          ['noun class/gender',
+            'male', 'female', 'neuter', 'animate', 'inanimate', 'fire', 'earth', 'water', 'air'],
+          ['noun case',
+            'nominative', 'accusative', 'dative', 'genitive', 'ergative', 'absolutive', 'vocative', 'instrumental'],
+        ],
+        preposition: [
         ]
       };
       //display the options for a grammatical category
@@ -121,10 +131,6 @@
           }
         }
       };
-      alldefs('noun');
-      alldefs('verb');
-      alldefs('adjective');
-      alldefs('adverb');
       var wordtype = function(pat) {
         var d = document.createElement('div');
         d.className = 'wordpat';
@@ -261,10 +267,32 @@
         rep.id = pos+'forms';
         getel(pos+'cont').appendChild(rep);
       };
-      table('noun', null);
+      var el;
+      var posel = getel('pos');
+      for (var i = 0; i < pos.length; i++) {
+        posel.appendChild(mkel('h2', tocap(pos[i])+'s'));
+        el = document.createElement('div');
+        el.className = 'featlist';
+        el.id = pos[i];
+        posel.appendChild(el);
+        el = mkel('table', '<tbody id="'+pos[i]+'forms"></tbody>');
+        el.id = pos[i]+'cont';
+        posel.appendChild(el);
+        alldefs(pos[i]);
+        if (langdata.hasOwnProperty('morphology') && langdata.morphology.hasOwnProperty(pos[i])) {
+          table(pos[i], langdata.morphology[pos[i]]);
+        } else {
+          table(pos[i], null);
+        }
+      }
       var validate_all = function() {
-        var pass = {allophony: [], phonotactics: []};
+        var pass = {morphology: {}};
+        for (var i = 0; i < pos.length; i++) {
+          pass.morphology[pos[i]] = read_table(pos[i]);
+        }
+        getel('langdata').value = JSON.stringify(pass);
         getel('id').value = langdata.id;
+        getel('submit').submit();
       };
     </script>
   </body>
