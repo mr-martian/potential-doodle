@@ -2,8 +2,8 @@
   <!-- TODO
     1. add section for predicting word-forms
     2. add more features and values
-    3. add articles, prepositions, etc.
-    4. word order
+    3. word order
+    4. lexical property specification in table header?
   -->
   <head>
     <meta charset="utf-8" />
@@ -23,11 +23,12 @@
       table { border-collapse: collapse }
       .newgroup { border-top: 3px solid black; }
       td { border: 1px solid black; }
+      .catval { margin-left: 15px; }
     </style>
   </head>
   <body>
     <form id="submit" method="post" action="submitlang.php/">
-      <input type="text" id="mode" name="mode" value="phonology"></input>
+      <input type="text" id="mode" name="mode" value="morphosyntax"></input>
       <input type="number" id="id" name="id"></input>
       <input type="text" id="langdata" name="langdata"></input>
     </form>
@@ -37,7 +38,16 @@
       <option value="cxs">Conlang X-Sampa (CXS)</option>
     </select>
     <p>In all conjugational forms, <b>%</b> represents an unchanged stem. It serves as a wildcard in unconjugated forms.</p>
-    <p>Please be aware that adding marked categories will probably erase any data that has been entered for that part of speech.</p>
+    <div id="addtype">
+      <p>Add a category or value to be marked</p>
+      <span>Part of Speech: </span>
+      <select id="addpos"></select>
+      <span>Category: </span>
+      <input type="text" id="addcat"></input>
+      <span>Value Name: </span>
+      <input type="text" id="addval"></input>
+      <button onclick="addcat();">Add</button>
+    </div>
     <div id="pos"></div>
     <h2>Word Orders</h2>
     <div id="order"></h2>
@@ -53,7 +63,7 @@
           ['case',
             'nominative', 'accusative', 'dative', 'genitive', 'ergative', 'absolutive', 'vocative', 'instrumental'],
           ['animacy',
-            ],
+            'animate', 'inanimate'],
         ],
         verb: [
           ['tense',
@@ -90,14 +100,43 @@
         preposition: [
         ]
       };
+      //make an event listener for a category or value checkbox
+      var catlisten = function(pos) {
+        return function() { table(pos, read_table(pos)); };
+      };
+      //add more checkboxes for grammatical categories
+      var addcat = function() {
+        var p = getel('addpos').value;
+        var c = getel('addcat').value;
+        var v = getel('addval').value;
+        var el = null;
+        var chls = getel(p).children;
+        for (var i = 0; i < chls.length; i++) {
+          if (chls[i].firstChild.value == c) {
+            el = chls[i].lastChild;
+            break;
+          }
+        }
+        if (!el) {
+          var div = document.createElement('div');
+          mkchk(div, c, c, catlisten(p), c);
+          el = document.createElement('div');
+          el.className = 'catval';
+          div.appendChild(el);
+          getel(p).appendChild(div);
+        }
+        mkchk(el, v, v, catlisten(p), v);
+        el.appendChild(document.createElement('br'));
+        table(p, read_table(p));
+      };
       //display the options for a grammatical category
       var makecat = function(div, nam, vals, checked, selected) {
         var el = document.createElement('div');
-        mkchk(el, nam, nam, function() { table(div, read_table(div)); }, checked ? [nam] : []);
+        mkchk(el, nam, nam, catlisten(div), checked ? [nam] : []);
         var ls = document.createElement('div');
-        ls.style['margin-left'] = '15px';
+        ls.className = 'catval';
         for (var i = 0; i < vals.length; i++) {
-          mkchk(ls, vals[i], null, function() { table(div, read_table(div)); }, selected);
+          mkchk(ls, vals[i], null, catlisten(div), selected);
           ls.appendChild(mkel('br', ''));
         }
         el.appendChild(ls);
@@ -201,7 +240,7 @@
         var nam;
         var rowel = tab.firstChild;
         for (var i = 1; i < rowel.children.length; i++) {
-          ret.roots.push(readword(rowel.children[i]));
+          ret.roots.push(readword(rowel.children[i].firstChild));
         }
         for (var i = 0; i < rows.length; i++) {
           if (rows[i].length == 0) {
@@ -211,15 +250,19 @@
           ret.data[nam] = [];
           rowel = document.getElementById(pos + ' ' + nam);
           for (var j = 1; j < rowel.children.length; j++) {
-            ret.data[nam].push(rowel.children[j].firstChild.value);
+            ret.data[nam].push(readword(rowel.children[j].firstChild));
           }
         }
         return ret;
       };
       var table = function(pos, old) {
-        old = old || {cats: [], ops: [], data: {}, roots: [false]};
+        old = old || {cats: [], ops: [], data: {}, roots: []};
         var rep = document.createElement('tbody');
-        var ct = old.roots.length;
+        var ct = Math.max(parseInt(getel(pos + 'numroots').value), 1);
+        getel(pos+'numroots').value = ct;
+        while (old.roots.length < ct) {
+          old.roots.push(false);
+        }
         var first = mkel('tr', '<td></td>');
         var td;
         for (var i = 0; i < ct; i++) {
@@ -232,12 +275,16 @@
         var cats = [];
         var ch = getel(pos).children;
         var reset = 1;
+        var opadd;
         for (var i = 0; i < ch.length; i++) {
           if (ch[i].children[0].checked) {
-            ops.push(getchecks(ch[i]).slice(1));
-            cats.push(ch[i].children[0].value);
-            if (i > 0) {
-              reset *= ops[ops.length-1].length;
+            opadd = getchecks(ch[i]);
+            if (opadd.length > 1) {
+              ops.push(opadd.slice(1));
+              cats.push(opadd[0]);
+              if (i > 0) {
+                reset *= opadd.length-1;
+              }
             }
           }
         }
@@ -269,17 +316,26 @@
       };
       var el;
       var posel = getel('pos');
+      var psel = getel('addpos');
       for (var i = 0; i < pos.length; i++) {
+        psel.appendChild(mkop(pos[i], pos[i]));
         posel.appendChild(mkel('h2', tocap(pos[i])+'s'));
         el = document.createElement('div');
         el.className = 'featlist';
         el.id = pos[i];
         posel.appendChild(el);
+        posel.appendChild(mkel('span', 'Number of conjugational patterns: '));
+        posel.appendChild(mkel('input', ''));
+        posel.lastChild.id = pos[i]+'numroots';
+        posel.lastChild.type = 'number';
+        posel.lastChild.value = 1;
+        posel.lastChild.onchange = catlisten(pos[i]);
         el = mkel('table', '<tbody id="'+pos[i]+'forms"></tbody>');
         el.id = pos[i]+'cont';
         posel.appendChild(el);
         alldefs(pos[i]);
         if (langdata.hasOwnProperty('morphology') && langdata.morphology.hasOwnProperty(pos[i])) {
+          getel(pos[i]+'numroots').value = langdata.morphology[pos[i]].roots.length || 1;
           table(pos[i], langdata.morphology[pos[i]]);
         } else {
           table(pos[i], null);
@@ -287,8 +343,15 @@
       }
       var validate_all = function() {
         var pass = {morphology: {}};
+        var d, tab;
         for (var i = 0; i < pos.length; i++) {
-          pass.morphology[pos[i]] = read_table(pos[i]);
+          tab = read_table(pos[i]);
+          pass.morphology[pos[i]] = tab;
+          d = {};
+          for (var k = 0; k < tab.cats.length; k++) {
+            d[tab.cats[k]] = tab.ops[k];
+          }
+          pass[pos[i]+' categories'] = d;
         }
         getel('langdata').value = JSON.stringify(pass);
         getel('id').value = langdata.id;
