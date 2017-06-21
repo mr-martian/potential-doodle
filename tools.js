@@ -114,6 +114,28 @@ var mkel = function(nam, inner) {
   r.innerHTML = inner;
   return r;
 };
+//make and element, append a child, and return
+var mkelch = function(nam, ch) {
+  var r = document.createElement(nam);
+  r.appendChild(ch);
+  return r;
+};
+//create and a return an <input> with type, value, onchange, id
+var mkinput = function(type, val, id, onchange) {
+  var r = document.createElement('input');
+  r.type = type;
+  r.value = val || '';
+  r.id = id || '';
+  r.onchange = onchange || function() {};
+  return r;
+};
+//create and return an element with id and/or className set
+var mkname = function(type, id, cls) {
+  var r = document.createElement(type);
+  r.id = id || '';
+  r.className = cls || '';
+  return r;
+};
 //make and label a checkbox, append as child to parent
 //will be checked if among is an array containing value or == value
 var mkchk = function(parent, value, label, change, among) {
