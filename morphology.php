@@ -1,17 +1,10 @@
 <html>
-  <!-- TODO
-    1. add section for predicting word-forms
-    2. add more features and values (get feedback)
-    3. word order (separate page?)
-    4. lexical property specification in table header? (probably not)
-    5. should there be a way to add parts of speech other than syntax-influencing lexical properties?
-  -->
   <head>
     <meta charset="utf-8" />
     <?php
       $s = file_get_contents("langs/".$_GET["lang"]."/lang.json");
       $lang = json_decode($s, true);
-      echo "<title>Editting ".htmlspecialchars($lang["display name"])." Morphosyntax</title>";
+      echo "<title>Editting ".htmlspecialchars($lang["display name"])." Morphology</title>";
       echo "<script>var langdata = ".$s.";";
       echo "langdata.id = ".$_GET["lang"].";";
       echo file_get_contents("ipadata.js");
@@ -31,7 +24,7 @@
   </head>
   <body>
     <form id="submit" method="post" action="submitlang.php/">
-      <input type="text" id="mode" name="mode" value="morphosyntax"></input>
+      <input type="text" id="mode" name="mode" value="morphology"></input>
       <input type="number" id="id" name="id"></input>
       <input type="text" id="langdata" name="langdata"></input>
     </form>
