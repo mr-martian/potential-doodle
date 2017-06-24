@@ -1,11 +1,10 @@
 <html>
   <!-- TODO
-    1. agreement (displays checkboxes, and can read, but doesn't)
-    2. add section for predicting word-forms
-    3. add more features and values (get feedback)
-    4. word order (separate page?)
-    5. lexical property specification in table header? (probably not)
-    6. should there be a way to add parts of speech other than syntax-influencing lexical properties?
+    1. add section for predicting word-forms
+    2. add more features and values (get feedback)
+    3. word order (separate page?)
+    4. lexical property specification in table header? (probably not)
+    5. should there be a way to add parts of speech other than syntax-influencing lexical properties?
   -->
   <head>
     <meta charset="utf-8" />
@@ -43,7 +42,7 @@
     </select>
     <p>In all conjugational forms, <b>%</b> represents an unchanged stem. It serves as a wildcard in unconjugated forms.</p>
     <p>For more agglutinating languages, forms are duplicated when you add more categories. So if you have, for example, a past tense form of <i>%or</i> and you add aspect marking, every aspect will have <i>%or</i> for the past tense version.</p>
-    <p>To have agreement, the category being agreed with must be labeled as marked, even if it isn't. So if adjectives agree with the gender of the noun but gender doesn't change the form of the noun in any way, say that nouns mark gender.</p>
+    <p>To have agreement, the category being agreed with must be labeled as marked, even if it isn't. So if adjectives agree with the gender of the noun but gender doesn't change the form of the noun in any way, say that nouns mark gender. Incidentally, you have to select the thing being agreed with before the category, so in this instance clicking on "gender" doesn't work until you click on "noun".</p>
     <div id="addtype">
       <p>Add a category or value to be marked</p>
       <span>Part of Speech: </span>
@@ -61,7 +60,7 @@
     <p id="errors"></p>
     <script>
       var getmode = function() { return getel('charmode').value; };
-      var Pos = ['noun', 'verb', 'adjective', 'adverb', 'article', 'adposition', 'pronoun', 'conjunction'];
+      var Pos = ['noun', 'verb', 'adjective', 'adverb', 'article', 'adposition', 'pronoun', 'conjunction', 'auxilliary'];
       var defaultcats = {
         noun: [
           ['plurality',
@@ -108,11 +107,16 @@
       ];
       //make an event listener for a category or value checkbox
       var catlisten = function(pos) {
-        return function() { table(pos, read_table(pos)); };
+        return function() {
+          table(pos, read_table(pos), update_agree());
+          //should see if there's a more efficient way of updating agreement
+          //maybe check if the checkbox changed was a category?
+          //-D.S. 02017-06-24
+        };
       };
       //read grammatical category checkboxes
       var readcats = function(pos) {
-        var ret = {cats: [], ops: [], reset: 1};
+        var ret = {cats: [], ops: []};
         var ch = getel(pos).children;
         var opadd;
         for (var i = 0; i < ch.length; i++) {
@@ -121,9 +125,6 @@
             if (opadd.length > 1) {
               ret.ops.push(opadd.slice(1));
               ret.cats.push(opadd[0]);
-              if (i > 0) {
-                ret.reset *= opadd.length-1;
-              }
             }
           }
         }
@@ -172,23 +173,25 @@
         for (var i = 0; i < ls.length; i++) {
           namls.push(ls[i][0]);
         }
-        var ch = langdata[type+' categories'] || {};
-        for (var k in ch) {
-          if (!namls.includes(k)) {
-            ls.push([k].concat(ch[k]));
+        var ch = langdata[type+' categories'] || {cats: [], ops: []};
+        for (var i = 0; i < ch.cats.length; i++) {
+          if (!namls.includes(ch.cats[i])) {
+            ls.push([ch.cats[i]].concat(ch.ops[i]));
           }
         }
         var div = getel(type);
+        var n, r, x;
         for (var i = 0; i < ls.length; i++) {
-          var n = ls[i][0]; // category name
-          var r = ls[i].slice(1); // options
-          if (ch.hasOwnProperty(n)) {
-            for (var j = 0; j < ch[n].length; j++) {
-              if (!r.includes(ch[n][j])) {
-                r.push(ch[n][j]);
+          n = ls[i][0]; // category name
+          r = ls[i].slice(1); // options
+          x = ch.cats.indexOf(n);
+          if (x != -1) {
+            for (var j = 0; j < ch.ops[x].length; j++) {
+              if (!r.includes(ch.ops[x][j])) {
+                r.push(ch.ops[x][j]);
               }
             }
-            div.appendChild(makecat(type, n, r, true, ch[n]));
+            div.appendChild(makecat(type, n, r, true, ch.ops[x]));
           } else {
             div.appendChild(makecat(type, n, r, false, []))
           }
@@ -238,18 +241,31 @@
       var readagree = function(pos) {
         var ret = {};
         var ch = getel(pos+'agree').children;
-        var opadd;
+        var opadd, nam;
+        var found = false;
         for (var i = 0; i < ch.length; i++) {
+          opadd = getchecks(ch[i]);
+          found = true;
+          nam = ch[i].children[0].value;
           if (ch[i].children[0].checked) {
-            opadd = getchecks(ch[i]);
-            if (opadd.length > 1) {
-              ret[opadd[0]] = opadd.slice(1);
-            }
+            ret[nam] = {
+              checked: true,
+              cats: opadd.slice(1)
+            };
+          } else {
+            ret[nam] = {
+              checked: false,
+              cats: opadd
+            };
           }
+        }
+        if (!found) {
+          return langdata[pos+' agreement'];
         }
         return ret;
       };
       //update agreement options
+      //return the data to be passed to table()
       var update_agree = function() {
         var cats = {};
         var agg = {};
@@ -257,12 +273,45 @@
           cats[Pos[i]] = readcats(Pos[i]);
           agg[Pos[i]] = readagree(Pos[i]);
         }
-        //makecat = function(div, nam, vals, checked, selected)
-        var a;
+        for (var i = 0; i < Pos.length; i++) {
+          getel(Pos[i]+'agree').innerHTML = '';
+        }
+        var a, h, l;
         for (var i = 0; i < agree.length; i++) {
           a = agree[i];
-          getel(a[0]+'agree').appendChild(makecat(a[0], a[1], cats[a[2]].cats, agg[a[0]][a[1]] && true, agg[a[0]][a[1]] || []));
+          if (agg[a[0]].hasOwnProperty(a[1])) {
+            h = agg[a[0]][a[1]].checked;
+            l = agg[a[0]][a[1]].cats;
+            agg[a[0]][a[1]].pos = a[2];
+          } else {
+            h = false;
+            l = [];
+          }
+          getel(a[0]+'agree').appendChild(makecat(a[0], a[1], cats[a[2]].cats, h, l));
         }
+        return [cats, agg];
+      };
+      //transform the return value of update_agree() into something usable by table()
+      var extract_agree = function(data, pos) {
+        var ret = {cats: [], ops: []};
+        var obj = data[1][pos];
+        var cat, ls, key, ind;
+        for (var k in obj) {
+          if (obj[k].checked) {
+            cat = data[0][obj[k].pos];
+            for (var i = 0; i < obj[k].cats.length; i++) {
+              key = obj[k].cats[i];
+              ind = cat.cats.indexOf(key);
+              ret.cats.push(k+' '+cat.cats[ind]);
+              ls = [];
+              for (var s = 0; s < cat.ops[ind].length; s++) {
+                ls.push(cat.ops[ind][s]+' '+k);
+              }
+              ret.ops.push(ls);
+            }
+          }
+        }
+        return ret;
       };
       //forms = return value from read_table()
       //cats = list of categories
@@ -303,8 +352,10 @@
         return ret;
       };
       //(re)build a part of speech's table of morphemes
-      var table = function(pos, old) {
+      var table = function(pos, old, agree) {
         old = old || {cats: [], ops: [], data: {}, roots: []};
+        agree = extract_agree(agree || [{}, {}], pos);
+        var cats = readcats(pos);
         var rep = mkel('tbody', '<tr></tr>');
         var nmroots = getel(pos+'numroots');
         if (nmroots) {
@@ -319,17 +370,24 @@
         for (var i = 0; i < ct; i++) {
           rep.firstChild.appendChild(mkelch('td', wordtype(old.roots[i])));
         }
-        var cats = readcats(pos);
+        cats.cats = cats.cats.concat(agree.cats);
+        cats.ops = cats.ops.concat(agree.ops);
         rep.setAttribute('data-cats', JSON.stringify(cats.cats));
         rep.setAttribute('data-ops', JSON.stringify(cats.ops));
+        rep.setAttribute('data-agree', JSON.stringify(agree));
         var rowlabs = iterls(cats.ops);
+        if (cats.ops.length > 0) {
+          var reset = rowlabs.length / cats.ops[0].length;
+        } else {
+          var reset = 1;
+        }
         var lab, row, ls;
         for (var i = 0; i < rowlabs.length; i++) {
           lab = rowlabs[i].join(' ');
           row = mkel('tr', '<td>'+lab+'</td>');
           row.id = pos + ' ' + lab;
           row.setAttribute('data-key', JSON.stringify(rowlabs[i]));
-          if (i % cats.reset == 0) {
+          if (i % reset == 0) {
             row.className = 'newgroup';
           }
           ls = findform(old, cats.cats, rowlabs[i]);
@@ -356,13 +414,15 @@
         posel.appendChild(mkelch('table', mkname('tbody', Pos[i]+'forms', null)));
         posel.lastChild.id = Pos[i]+'cont';
         alldefs(Pos[i]);
-        if (langdata.hasOwnProperty('morphology') && langdata.morphology.hasOwnProperty(Pos[i])) {
-          table(Pos[i], langdata.morphology[Pos[i]]);
-        } else {
-          table(Pos[i], null);
-        }
       }
       update_agree();
+      for (var i = 0; i < Pos.length; i++) {
+        if (langdata.hasOwnProperty('morphology') && langdata.morphology.hasOwnProperty(Pos[i])) {
+          table(Pos[i], langdata.morphology[Pos[i]], update_agree());
+        } else {
+          table(Pos[i], null, update_agree());
+        }
+      }
       var validate_all = function() {
         var pass = {morphology: {}};
         var d, tab;
@@ -373,7 +433,8 @@
           for (var k = 0; k < tab.cats.length; k++) {
             d[tab.cats[k]] = tab.ops[k];
           }
-          pass[Pos[i]+' categories'] = d;
+          pass[Pos[i]+' categories'] = readcats(Pos[i]);//d;
+          pass[Pos[i]+' agreement'] = readagree(Pos[i]);
         }
         getel('langdata').value = JSON.stringify(pass);
         getel('id').value = langdata.id;
