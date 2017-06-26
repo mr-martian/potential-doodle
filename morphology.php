@@ -47,10 +47,7 @@
       <button onclick="addcat();">Add</button>
     </div>
     <div id="pos"></div>
-    <h2>Word Orders</h2>
-    <div id="order"></div>
     <button onclick="validate_all();">Save</button>
-    <p id="errors"></p>
     <script>
       var getmode = function() { return getel('charmode').value; };
       var Pos = ['noun', 'verb', 'adjective', 'adverb', 'article', 'adposition', 'pronoun', 'conjunction', 'auxilliary'];
@@ -82,10 +79,10 @@
         adposition: [
         ],
         pronoun: [
+          ['person',
+            'first', 'second', 'third'],
         ],
         conjunction: [
-        ],
-        auxilliary: [
         ]
       };
       defaultcats.pronoun = defaultcats.pronoun.concat(defaultcats.noun);
