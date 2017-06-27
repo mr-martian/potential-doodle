@@ -83,6 +83,7 @@
             'first', 'second', 'third'],
         ],
         conjunction: [
+          ['part of speech'].concat(Pos)
         ]
       };
       defaultcats.pronoun = defaultcats.pronoun.concat(defaultcats.noun);
@@ -110,12 +111,10 @@
         var ch = getel(pos).children;
         var opadd;
         for (var i = 0; i < ch.length; i++) {
-          if (ch[i].children[0].checked) {
-            opadd = getchecks(ch[i]);
-            if (opadd.length > 1) {
-              ret.ops.push(opadd.slice(1));
-              ret.cats.push(opadd[0]);
-            }
+          opadd = readlist(ch[i]);
+          if (opadd.checked && opadd.vals.length > 0) {
+            ret.cats.push(opadd.cat);
+            ret.ops.push(opadd.vals);
           }
         }
         return ret;
@@ -125,36 +124,16 @@
         var p = getel('addpos').value;
         var c = getel('addcat').value;
         var v = getel('addval').value;
-        var el = null;
         var chls = getel(p).children;
         for (var i = 0; i < chls.length; i++) {
           if (chls[i].firstChild.value == c) {
-            el = chls[i].lastChild;
-            break;
+            addlist(chls[i], v, true);
+            table(p, read_table(p));
+            return;
           }
         }
-        if (!el) {
-          var div = document.createElement('div');
-          mkchk(div, c, c, catlisten(p), c);
-          el = mkname('div', null, 'catval');
-          div.appendChild(el);
-          getel(p).appendChild(div);
-        }
-        mkchk(el, v, v, catlisten(p), v);
-        el.appendChild(document.createElement('br'));
+        getel(p).appendChild(mklist(c, true, [v], [v], catlisten(p)));
         table(p, read_table(p));
-      };
-      //display the options for a grammatical category
-      var makecat = function(div, nam, vals, checked, selected) {
-        var el = document.createElement('div');
-        mkchk(el, nam, nam, catlisten(div), checked ? [nam] : []);
-        var ls = mkname('div', null, 'catval');
-        for (var i = 0; i < vals.length; i++) {
-          mkchk(ls, vals[i], null, catlisten(div), selected);
-          ls.appendChild(mkel('br', ''));
-        }
-        el.appendChild(ls);
-        return el;
       };
       //load all the defaults and the contents of langdata
       var alldefs = function(type) {
@@ -181,9 +160,9 @@
                 r.push(ch.ops[x][j]);
               }
             }
-            div.appendChild(makecat(type, n, r, true, ch.ops[x]));
+            div.appendChild(mklist(n, true, r, ch.ops[x], catlisten(type)));
           } else {
-            div.appendChild(makecat(type, n, r, false, []))
+            div.appendChild(mklist(n, false, r, [], catlisten(type)));
           }
         }
       };
@@ -194,7 +173,7 @@
           d.children[0].value = 'default';
         } else if (Array.isArray(pat)) {
           d.children[0].value = 'array';
-          d.appendChild(mkphin(pat, 'anything', langdata.phonemes, langdata['allophone categories'], false));
+          d.appendChild(mkphin(pat, 'anything', langdata.phonemes, Object.keys(langdata['allophone categories']), false));
         } else {
           d.children[0].value = 'string';
           d.appendChild(mkinput('text', pat, null, null));
@@ -231,26 +210,13 @@
       var readagree = function(pos) {
         var ret = {};
         var ch = getel(pos+'agree').children;
-        var opadd, nam;
-        var found = false;
-        for (var i = 0; i < ch.length; i++) {
-          opadd = getchecks(ch[i]);
-          found = true;
-          nam = ch[i].children[0].value;
-          if (ch[i].children[0].checked) {
-            ret[nam] = {
-              checked: true,
-              cats: opadd.slice(1)
-            };
-          } else {
-            ret[nam] = {
-              checked: false,
-              cats: opadd
-            };
-          }
-        }
-        if (!found) {
+        if (ch.length == 0) {
           return langdata[pos+' agreement'];
+        }
+        var opadd, nam;
+        for (var i = 0; i < ch.length; i++) {
+          opadd = readlist(ch[i]);
+          ret[opadd.cat] = opadd;
         }
         return ret;
       };
@@ -271,13 +237,13 @@
           a = agree[i];
           if (agg[a[0]].hasOwnProperty(a[1])) {
             h = agg[a[0]][a[1]].checked;
-            l = agg[a[0]][a[1]].cats;
+            l = agg[a[0]][a[1]].vals;
             agg[a[0]][a[1]].pos = a[2];
           } else {
             h = false;
             l = [];
           }
-          getel(a[0]+'agree').appendChild(makecat(a[0], a[1], cats[a[2]].cats, h, l));
+          getel(a[0]+'agree').appendChild(mklist(a[1], h, cats[a[2]].cats, l, catlisten(a[0])));
         }
         return [cats, agg];
       };
@@ -289,8 +255,8 @@
         for (var k in obj) {
           if (obj[k].checked) {
             cat = data[0][obj[k].pos];
-            for (var i = 0; i < obj[k].cats.length; i++) {
-              key = obj[k].cats[i];
+            for (var i = 0; i < obj[k].vals.length; i++) {
+              key = obj[k].vals[i];
               ind = cat.cats.indexOf(key);
               ret.cats.push(k+' '+cat.cats[ind]);
               ls = [];
@@ -396,9 +362,11 @@
       //build the page
       var posel = getel('pos');
       var psel = getel('addpos');
+      var nullstr = langdata['display name']+' does not have ';
       for (var i = 0; i < Pos.length; i++) {
         psel.appendChild(mkop(Pos[i], Pos[i]));
         posel.appendChild(mkel('h2', tocap(Pos[i])+'s'));
+        mkchk(posel, Pos[i]+'null', nullstr+Pos[i]+'s', null, langdata[Pos[i]+' is null'] ? nullstr+Pos[i]+'s' : null);
         posel.appendChild(mkname('div', Pos[i], 'featlist'));
         posel.appendChild(mkname('div', Pos[i]+'agree', 'featlist'));
         posel.appendChild(mkelch('table', mkname('tbody', Pos[i]+'forms', null)));
@@ -417,14 +385,10 @@
         var pass = {morphology: {}};
         var d, tab;
         for (var i = 0; i < Pos.length; i++) {
-          tab = read_table(Pos[i]);
-          pass.morphology[Pos[i]] = tab;
-          d = {};
-          for (var k = 0; k < tab.cats.length; k++) {
-            d[tab.cats[k]] = tab.ops[k];
-          }
-          pass[Pos[i]+' categories'] = readcats(Pos[i]);//d;
+          pass.morphology[Pos[i]] = read_table(Pos[i]);
+          pass[Pos[i]+' categories'] = readcats(Pos[i]);
           pass[Pos[i]+' agreement'] = readagree(Pos[i]);
+          pass[Pos[i]+' is null'] = getel(Pos[i]+'null').checked;
         }
         getel('langdata').value = JSON.stringify(pass);
         getel('id').value = langdata.id;

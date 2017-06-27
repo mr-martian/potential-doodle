@@ -13,6 +13,7 @@
     ?>
     <style type="text/css">
       #submit { display: none; }
+      .catval { margin-left: 15px; }
     </style>
   </head>
   <body>
@@ -26,10 +27,29 @@
       <option value="ipa">International Phonetic Alphabet (IPA)</option>
       <option value="cxs">Conlang X-Sampa (CXS)</option>
     </select>
+    <div id="syntax"></div>
     <button onclick="validate_all();">Save</button>
     <script>
       var getmode = function() { return getel('charmode').value; };
       var Pos = ['noun', 'verb', 'adjective', 'adverb', 'article', 'adposition', 'pronoun', 'conjunction', 'auxilliary'];
+      var display_pos = function(parent, pos, settings) {
+        settings = settings || {};
+        var cats = langdata[pos+' categories'];
+        var ret = mkel('div', '<span>'+pos+'</span>');
+        var check, valcheck;
+        for (var i = 0; i < cats.cats.length; i++) {
+          if (settings.hasOwnProperty(cats.cats[i])) {
+            check = true;
+            valcheck = settings[cats.cats[i]];
+          } else {
+            check = false;
+            valcheck = [];
+          }
+          ret.appendChild(mklist(cats.cats[i], check, cats.ops[i], valcheck, function() {}));
+        }
+        parent.appendChild(ret);
+      };
+      display_pos(getel('syntax'), 'noun', null);
       var validate_all = function() {
         var pass = {syntax: {}};
         getel('langdata').value = JSON.stringify(pass);

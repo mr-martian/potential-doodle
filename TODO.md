@@ -10,3 +10,17 @@
   - [ ] contractions?
 - [ ] [Syntax](syntax.php)
   - [ ] determine input structure
+- [ ] [generator](gentext.py)
+  - [ ] rewrite to handle Syntax output
+- [ ] practice
+  - [ ] make interface
+  - [ ] store data
+  - [ ] create users
+- metrics and comparisons
+  - includes things that are interesting even if of no real theoretical value
+  - [ ] autofill CALS
+    - consider trying to import
+  - [ ] "density"
+    - relative length of test data in various languages
+  - [ ] prevalence of phon(em)es and letters
+- [ ] switch to using Github issue tracker?

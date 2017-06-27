@@ -198,8 +198,10 @@ var make_phone_select = function(val, none, phones, cats, andblank) {
       }
     };
   }
-  if (val == null) {
-    ret.selectedIndex = -1;
+  if (val == -1) {
+    ret.selectedIndex = 0;
+  } else if (val == null) {
+    ret.value = 'null';
   } else if (phones.includes(val) || cats.includes(val)) {
     ret.value = val;
   } else {
@@ -226,7 +228,7 @@ var setchcount = function(none, phones, cats, andblank) {
       chls.removeChild(chls.children[chls.children.length-1]);
     }
     while (chls.children.length < n) {
-      chls.appendChild(make_phone_select(null, none, phones, cats, andblank));
+      chls.appendChild(make_phone_select(-1, none, phones, cats, andblank));
     }
   };
 };
@@ -248,8 +250,45 @@ var readphin = function(el) {
   var ret = [];
   var ins = el.children[3].children;
   for (i = 0; i < ins.length; i++) {
-    if (ins[i].value) {
+    if (ins[i].value == 'null') {
+      ret.push(null);
+    } else if (ins[i].value) {
       ret.push(ins[i].value);
+    }
+  }
+  return ret;
+};
+//create and return a category and value checklist
+var mklist = function(cat, catcheck, vals, valcheck, update) {
+  var ret = document.createElement('div');
+  mkchk(ret, cat, cat, update, catcheck ? cat : []);
+  ret.appendChild(mkname('div', null, 'catval'));
+  for (var i = 0; i < vals.length; i++) {
+    mkchk(ret.lastChild, vals[i], vals[i], update, valcheck);
+    ret.lastChild.appendChild(document.createElement('br'));
+  }
+  return ret;
+};
+//add a value to an already created category
+var addlist = function(list, val, checked) {
+  mkchk(list.lastChild, val, val, list.firstChild.onchange, checked ? val : []);
+  list.lastChild.appendChild(document.createElement('br'));
+};
+//read the values from a list
+//return values as {cat: str, checked: bool, vals: [str], allvals: [str]}
+var readlist = function(list) {
+  var ret = {
+    cat: list.firstChild.value,
+    checked: list.firstChild.checked,
+    vals: [],
+    allvals: []
+  };
+  var box;
+  for (var i = 0; i < list.lastChild.children.length; i+=3) {
+    box = list.lastChild.children[i];
+    ret.allvals.push(box.value);
+    if (box.checked) {
+      ret.vals.push(box.value);
     }
   }
   return ret;
