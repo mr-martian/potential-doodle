@@ -9,7 +9,11 @@
   - [x] ~~should there be a way to add parts of speech other than syntax-influencing lexical properties? (also affects Syntax)~~
   - [ ] contractions?
 - [ ] [Syntax](syntax.php)
-  - [ ] determine input structure
+  - [x] determine input structure
+  - [ ] error checking
+    - [ ] are all the parts of speech defined by morphology actually used?
+    - [ ] are all the category options used?
+    - [ ] are they all used in places the translator can grok?
 - [ ] [generator](gentext.py)
   - [ ] rewrite to handle Syntax output
 - [ ] practice

@@ -13,7 +13,7 @@
     ?>
     <style type="text/css">
       #submit { display: none; }
-      .featlist > div { display: inline-block; vertical-align: top; }
+      .catls { display: inline-block; vertical-align: top; }
       .featlist { border: 1px dashed grey; }
       table { border-collapse: collapse }
       .newgroup { border-top: 3px solid black; }

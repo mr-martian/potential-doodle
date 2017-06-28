@@ -176,6 +176,20 @@ var mkop = function(lab, val) {
   ret.value = val;
   return ret;
 };
+//create and return a <select> with options ops labeled with labs or ops
+var mksel = function(ops, labs, id, val, change) {
+  var ret = document.createElement('select');
+  if (change) {
+    ret.onchange = change;
+  }
+  labs = labs || ops;
+  for (var i = 0; i < ops.length; i++) {
+    ret.appendChild(mkop(labs[i], ops[i]));
+  }
+  ret.id = id || '';
+  ret.value = val || '';
+  return ret;
+};
 //create a <select> for use in phoneme structure inputs
 var make_phone_select = function(val, none, phones, cats, andblank) {
   var ret = document.createElement('select');
@@ -220,12 +234,11 @@ var make_phone_select = function(val, none, phones, cats, andblank) {
 //otherwise create more with make_phone_select(..) and append them
 var setchcount = function(none, phones, cats, andblank) {
   return function(event) {
-    console.log([none, phones, cats, andblank]);
     var input = event.target || event.srcElement;
     var chls = input.parentNode.children[3];
     var n = Math.max(parseInt(input.value), 0);
     while (chls.children.length > n) {
-      chls.removeChild(chls.children[chls.children.length-1]);
+      chls.removeChild(chls.lastChild);
     }
     while (chls.children.length < n) {
       chls.appendChild(make_phone_select(-1, none, phones, cats, andblank));
@@ -259,12 +272,19 @@ var readphin = function(el) {
   return ret;
 };
 //create and return a category and value checklist
+var _lstid = 0; //to avoid overlapping label ids
 var mklist = function(cat, catcheck, vals, valcheck, update) {
-  var ret = document.createElement('div');
-  mkchk(ret, cat, cat, update, catcheck ? cat : []);
+  var ret = mkname('div', null, 'catls');
+  ret.appendChild(mkinput('checkbox', cat, 'chk'+_lstid, update));
+  ret.lastChild.checked = catcheck;
+  ret.appendChild(mkel('label', cat));
+  ret.lastChild.setAttribute('for', 'chk'+(_lstid++));
   ret.appendChild(mkname('div', null, 'catval'));
   for (var i = 0; i < vals.length; i++) {
-    mkchk(ret.lastChild, vals[i], vals[i], update, valcheck);
+    ret.lastChild.appendChild(mkinput('checkbox', vals[i], 'chk'+_lstid, update));
+    ret.lastChild.lastChild.checked = valcheck.includes(vals[i]);
+    ret.lastChild.appendChild(mkel('label', vals[i]));
+    ret.lastChild.lastChild.setAttribute('for', 'chk'+(_lstid++));
     ret.lastChild.appendChild(document.createElement('br'));
   }
   return ret;
