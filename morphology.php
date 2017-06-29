@@ -50,7 +50,7 @@
     <button onclick="validate_all();">Save</button>
     <script>
       var getmode = function() { return getel('charmode').value; };
-      var Pos = ['noun', 'verb', 'adjective', 'adverb', 'article', 'adposition', 'pronoun', 'conjunction', 'auxilliary'];
+      var Pos = ['noun', 'verb', 'adjective', 'adverb', 'article', 'adposition', 'pronoun', 'conjunction', 'auxilliary', 'particle', 'clitic'];
       var defaultcats = {
         noun: [
           ['plurality',
@@ -84,7 +84,9 @@
         ],
         conjunction: [
           ['part of speech'].concat(Pos)
-        ]
+        ],
+        particle: [],
+        clitic: []
       };
       defaultcats.pronoun = defaultcats.pronoun.concat(defaultcats.noun);
       defaultcats.auxilliary = defaultcats.verb;

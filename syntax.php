@@ -15,6 +15,9 @@
       #submit { display: none; }
       .catval { margin-left: 15px; }
       .catls, .phrasepart { display: inline-block; vertical-align: top; }
+      .node { border: 1px solid black; display: inline-block; }
+      .invis { display: none; }
+      #syntax { width: 500%; }
     </style>
   </head>
   <body>
@@ -28,128 +31,85 @@
       <option value="ipa">International Phonetic Alphabet (IPA)</option>
       <option value="cxs">Conlang X-Sampa (CXS)</option>
     </select>
+    <div id="props"></div>
     <div id="syntax"></div>
     <button onclick="validate_all();">Save</button>
     <script>
       var getmode = function() { return getel('charmode').value; };
-      var Pos = ['noun', 'verb', 'adjective', 'adverb', 'article', 'adposition', 'pronoun', 'conjunction', 'auxilliary'];
-      var r = [];
-      for (var i = 0; i < Pos.length; i++) {
-        if (!(langdata.hasOwnProperty(Pos[i]+' is null') && langdata[Pos[i]+' is null'])) {
-          r.push(Pos[i]);
-        }
-      }
-      Pos = r;
-      var Phrases = ['Adjective Phrase', 'Adpositional Phrase', 'Clause', 'Conjunction', 'Noun Phrase', 'Verb Phrase'];
-      var phrase_parts = {
-        'Adjective Phrase': ['adjective', 'adverb'],
-        'Adpositional Phrase': ['adposition', 'Noun Phrase'],
-        'Clause': ['Noun Phrase', 'Verb Phrase', 'auxilliary']
+      var nodels = {
+        CP: ['Complementizer Phrase', 'CPspec', 'Cbar'],
+        Cbar: ['Complementizer Bar Phrase', 'C', 'IP'],
+        IP: ['Inflection Phrase', 'IPspec', 'Ibar'],
+        Ibar: ['Inflection Bar Phrase', 'auxilliary', 'VP'],
+        VP: ['Verb Phrase', 'subject', 'Vmod1'],
+        Vmod1: ['Verb Phrase Locative', 'Vmod2', 'PP'],
+        Vmod2: ['Verb Phrase Adverb', 'Vbar', 'adverb'],
+        Vbar: ['Verb Bar Phrase', 'verb', 'object', 'indirect object'],
+        subject: 'NPp',
+        object: 'NP',
+        'indirect object': 'NP',
+        NPp: ['Noun Phrase with possessor', 'NP', 'Nmod1'],
+        NP: ['Noun Phrase', 'determiner', 'Nmod1'],
+        Nmod1: ['Noun Phrase Relative Clause', 'Nmod2', 'clause'],
+        Nmod2: ['Noun Phrase Locative', 'Nmod3', 'PP'],
+        Nmod3: ['Noun Phrase Adjective', 'noun', 'AP'],
+        NPs: ['Noun Phrase (abbreviated)', 'noun', 'AP'],
+        PP: ['Adpositional Phrase', 'degree', 'Pbar'],
+        Pbar: ['Adpositional Bar Phrase', 'adposition', 'NPs'],
+        AP: ['Adjective Phrase', 'degree', 'Abar'],
+        Abar: ['Adjective Bar Phrase', 'adjective', 'PPs'],
+        PPs: ['Adpositional Phrase (abbreviated)', 'adposition', 'noun']
       };
-      //display the checkboxes for a phrase_element
-      var display_pos = function(parent, pos, settings) {
-        settings = settings || {};
-        var ret = mkel('div', '');
-        if (!pos) {
-        } else if (Pos.includes(pos)) {
-          var cats = langdata[pos+' categories'];
-          var check, valcheck;
-          for (var i = 0; i < cats.cats.length; i++) {
-            if (settings.hasOwnProperty(cats.cats[i])) {
-              check = true;
-              valcheck = settings[cats.cats[i]];
-            } else {
-              check = false;
-              valcheck = [];
-            }
-            ret.appendChild(mklist(cats.cats[i], check, cats.ops[i], valcheck, function() {}));
+      var mknodeobj = function(key) {
+        if (nodels.hasOwnProperty(key)) {
+          var ls = nodels[key];
+          if (typeof ls == 'string') {
+            var ret = mknodeobj(ls);
+            ret.nam = key;
+            return ret;
           }
+          return {type: 'node', id: key, nam: ls[0], left: mknodeobj(ls[1]), right: mknodeobj(ls[2])};
         } else {
-          var phls = read_phrases(pos);
-          var ls;
-          for (var i = 0; i < phls.length; i++) {
-            ls = [];
-            for (var p = 0; p < phls[i].parts.length; p++) {
-              ls.push(phls[i].parts[p].pos);
-            }
-            ret.appendChild(mklist(phls[i].opname || pos+' '+(i+1), true, ls, ls, null));
-          }
+          return {type: 'leaf', nam: key};
         }
-        parent.appendChild(ret);
       };
-      //create an item in a phrase
-      var phrase_element = function(phrase, data) {
-        data = data || {pos: null, cats: {}};
-        var ret = mkname('div', null, 'phrasepart');
-        ret.appendChild(mksel(Pos.concat(Phrases), null, null, data.pos,
-                              function() {
-                                ret.removeChild(ret.lastChild);
-                                display_pos(ret, ret.firstChild.value, null);
-                              }));
-        display_pos(ret, data.pos, data);
-        return ret;
+      var nodes = mknodeobj('CP');
+      var swap_children = function(node) {
+        var div = node.lastChild;
+        div.insertBefore(div.lastChild, div.firstChild);
       };
-      //create a phrase
-      var make_phrase = function(type, data) {
-        data = data || {nam: '', els: []};
-        var ret = mkname('div', null, 'phrase');
-        ret.appendChild(mkel('span', 'Name: '));
-        ret.appendChild(mkinput('text', data.nam, null, null));
-        ret.appendChild(mkel('span', 'Count: '));
-        ret.appendChild(mkinput('number', data.els.length, null,
-                                function() {
-                                  var n = Math.max(parseInt(ret.children[3].value), 0);
-                                  while (ret.lastChild.children.length > n) {
-                                    ret.lastChild.removeChild(ret.lastChild.lastChild);
-                                  }
-                                  while (ret.lastChild.children.length < n) {
-                                    ret.lastChild.appendChild(phrase_element(type, null));
-                                  }
-                                }));
+      //update the page
+      var swap = function() {
+      };
+      var make_leaf = function(data) {
+        return mkel('span', data.nam);
+      };
+      //create and return a syntax node <div>
+      checkbox_id = 0;
+      var make_node = function(data) {
+        var ret = mkname('div', null, 'node');
+        ret.appendChild(mkel('span', data.nam+' (<b>'+data.id+'</b>)'));
+        ret.appendChild(mkinput('checkbox', '', 'chk'+checkbox_id, swap));
+        ret.lastChild.className = 'invis';
+        if (data.swapped) {
+          ret.lastChild.checked = true;
+        }
+        ret.appendChild(mkel('label', 'switch order'));
+        ret.lastChild.setAttribute('for', 'chk'+(checkbox_id++));
         ret.appendChild(mkel('div', ''));
-        for (var i = 0; i < data.els.length; i++) {
-          ret.lastChild.appendChild(phrase_element(type, data.els[i]));
+        if (data.left.type == 'node') {
+          ret.lastChild.appendChild(make_node(data.left));
+        } else {
+          ret.lastChild.appendChild(make_leaf(data.left));
         }
-        getel(type).appendChild(ret);
-      };
-      //read the data for all the options of a particular phrase
-      var read_phrases = function(phrase) {
-        var ret = [];
-        var ls = getel(phrase).children;
-        var parts;
-        for (var i = 0; i < ls.length; i++) {
-          ret.push({opname: ls[i].children[1].value, parts: []});
-          parts = ls[i].lastChild.children;
-          for (var p = 0; p < parts.length; p++) {
-            ret[i].parts.push({pos: parts[p].firstChild.value, ops: []});
-            if (parts[p].children.length == 2) { //handle the issue of a phrase trying to read itself
-              for (var o = 0; o < parts[p].lastChild.children.length; o++) {
-                ret[i].parts[p].ops.push(readlist(parts[p].lastChild.children[o]));
-              }
-            }
-          }
+        if (data.right.type == 'node') {
+          ret.lastChild.appendChild(make_node(data.right));
+        } else {
+          ret.lastChild.appendChild(make_leaf(data.right));
         }
         return ret;
       };
-      //create an event listener that can be set on the buttons that add phrases
-      var make_add_button_listener = function(ph) {
-        return function() { make_phrase(ph, null); };
-      };
-      //build the page
-      var synel = getel('syntax');
-      for (var i = 0; i < Phrases.length; i++) {
-        synel.appendChild(mkel('h2', Phrases[i]));
-        synel.appendChild(mkname('div', Phrases[i], null));
-        if (langdata.hasOwnProperty('syntax') && langdata.syntax.hasOwnProperty(Phrases[i])) {
-          for (var p = 0; p < langdata.syntax[Phrases[i]]; p++) {
-            make_phrase(Phrases[i], langdata.syntax[Phrases[i]][p]);
-          }
-        } else {
-          make_phrase(Phrases[i], null);
-        }
-        synel.appendChild(mkel('button', 'Add '+Phrases[i]));
-        synel.lastChild.onclick = make_add_button_listener(Phrases[i]);
-      }
+      getel('syntax').appendChild(make_node(nodes));
       var validate_all = function() {
         var pass = {syntax: {}};
         for (var i = 0; i < Phrases.length; i++) {

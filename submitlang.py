@@ -1,5 +1,6 @@
 from sys import argv
 import json
+print(argv)
 mode = argv[1]
 lang = argv[2]
 langdata = json.load(open(argv[3], encoding='utf-8'))
