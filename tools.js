@@ -180,7 +180,7 @@ var mkop = function(lab, val) {
 var mksel = function(ops, labs, id, val, change) {
   var ret = document.createElement('select');
   if (change) {
-    ret.onchange = change;
+    ret.onchange = change || function() {};
   }
   labs = labs || ops;
   for (var i = 0; i < ops.length; i++) {
@@ -312,4 +312,16 @@ var readlist = function(list) {
     }
   }
   return ret;
+};
+//given an object and a chain of properties, try to find that element in the object
+//else return null
+//e.g. seek({a:{b:[1,2]}}, ['a', 'b', 1]) => 2
+var seek = function(obj, path) {
+  if (path.length == 0) {
+    return obj;
+  } else if (obj.hasOwnProperty(path[0])) {
+    return seek(obj[path[0]], path.slice(1));
+  } else {
+    return null;
+  }
 };

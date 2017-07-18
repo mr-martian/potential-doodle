@@ -11,12 +11,21 @@
   - [ ] simpler input for more agglutinative langs
 - [ ] [Syntax](syntax.php)
   - [x] determine input structure
-  - [ ] error checking
-    - [ ] are all the parts of speech defined by morphology actually used?
-    - [ ] are all the category options used?
-    - [ ] are they all used in places the translator can grok?
-  - [ ] mark elements as optional or required
-    - or would this be handled mostly automatically by the translator?
+  - [x] interface for movement
+  - [ ] alternate tree structures
+  - [ ] loading data
+    - [x] movement & swap
+    - [ ] alternatives
+  - [ ] more readable formatting
+  - [ ] movement onto a trace
+  - [ ] elements with parts in multiple nodes
+  - [ ] undo button
+  - [ ] ~~error checking~~
+    - [ ] ~~are all the parts of speech defined by morphology actually used?~~
+    - [ ] ~~are all the category options used?~~
+    - [ ] ~~are they all used in places the translator can grok?~~
+  - [ ] ~~mark elements as optional or required~~
+    - ~~or would this be handled mostly automatically by the translator?~~
 - [ ] [generator](gentext.py)
   - [ ] rewrite to handle Syntax output
 - [ ] practice
