@@ -37,7 +37,7 @@
       var getmode = function() { return getel('charmode').value; };
       var nodels = {
         NP: ['NP', 'Noun Phrase',
-          ['Determiner'],
+          'Determiner',
           ['Nmod1', '',
             ['Nmod2', '',
               ['Nmod3', '', 'noun', 'adjective'],
@@ -111,7 +111,7 @@
       var node_id = 0;
       var make_leaf = function(data, store) {
         var ret = mkel('span', data.nam);
-        ret.className = data.nam;
+        ret.className = data.nam.replace(' ', '-');
         ret.id = 'node'+(node_id++);
         ret.setAttribute('data-store', store);
         ret.setAttribute('data-id', data.nam);
@@ -163,7 +163,40 @@
           }
         };
       };
-      var load_tree = function(type) {
+      //construct and return a tree in default arrangement
+      var build_tree = function(type) {
+        var div = document.createElement('div');
+        var ndls = make_node(nodes[type]);
+        var ops = [];
+        for (var i = 0; i < ndls[1].length; i++) {
+          ops.push(ndls[1][i].replace(' ', '-'));
+        }
+        div.appendChild(ndls[0]);
+        div.appendChild(mkel('br', ''));
+        div.appendChild(mkel('span', 'Move '));
+        div.appendChild(mksel(ops, ndls[1], null, null, null));
+        div.appendChild(mkel('span', ' to '));
+        div.appendChild(mksel(ops, ndls[1], null, null, null));
+        var but = mkel('button', 'move');
+        but.onclick = move_button(div);
+        div.appendChild(but);
+        return div;
+      };
+      //apply a list of movements and rotations to a tree
+      var setup_tree = function(tree, data) {
+        var mov;
+        for (var m = 0; m < data.move.length; m++) {
+          mov = data.move[m];
+          if (Array.isArray(mov)) {
+            movement(tree, mov[0].replace(' ', '-'), mov[1].replace(' ', '-'));
+          } else {
+            swap_children(firstclass(tree, mov.replace(' ', '-')));
+          }
+        }
+      };
+      var trees = {};
+      var load_pos = function(type, label) {
+        getel('syntax').appendChild(mkel('h2', label));
         var ret = document.createElement('div');
         getel('syntax').appendChild(ret);
         var ls = seek(langdata, ['syntax', type]) || [];
@@ -172,45 +205,16 @@
         }
         var div, ndls, but, mov;
         for (var i = 0; i < ls.length; i++) {
-          div = document.createElement('div');
-          ndls = make_node(nodes[type]);
-          div.appendChild(ndls[0]);
-          div.appendChild(mkel('br', ''));
-          div.appendChild(mkel('span', 'Move '));
-          div.appendChild(mksel(ndls[1], null, null, null, null));
-          div.appendChild(mkel('span', ' to '));
-          div.appendChild(mksel(ndls[1], null, null, null, null));
-          but = mkel('button', 'move');
-          but.onclick = move_button(div);
-          div.appendChild(but);
-          ret.appendChild(div);
-          for (var m = 0; m < ls[i].move.length; m++) {
-            mov = ls[i].move[m];
-            if (Array.isArray(mov)) {
-              movement(div, mov[0], mov[1]);
-            } else {
-              swap_children(firstclass(div, mov));
-            }
-          }
+          ret.appendChild(build_tree(type));
+          setup_tree(ret.lastChild, ls[i]);
         }
+        trees[type] = ret;
       };
-      var syn = getel('syntax');
-      var trees = {};
-      syn.appendChild(mkel('h2', 'Noun Phrase'));
-      load_tree('NP');
-      trees.NP = syn.lastChild;
-      syn.appendChild(mkel('h2', 'Sentence/Clause'));
-      load_tree('clause');
-      trees.clause = syn.lastChild;
-      syn.appendChild(mkel('h2', 'Adjective Phrase'));
-      load_tree('AP');
-      trees.AP = syn.lastChild;
-      syn.appendChild(mkel('h2', 'Adpositional Phrase'));
-      load_tree('PP');
-      trees.PP = syn.lastChild;
-      syn.appendChild(mkel('h2', 'Conjunction Phrase'));
-      load_tree('conj');
-      trees.conj = syn.lastChild;
+      load_pos('NP', 'Noun Phrase');
+      load_pos('clause', 'Sentence/Clause');
+      load_pos('AP', 'Adjective Phrase');
+      load_pos('PP', 'Adpositional Phrase');
+      load_pos('conj', 'Conjunction Phrase');
       var validate_all = function() {
         var pass = {syntax: {}};
         var treels;

@@ -20,6 +20,7 @@
   - [ ] movement onto a trace
   - [ ] elements with parts in multiple nodes
   - [ ] undo button
+  - [ ] moving nodes, not just leaves
   - [ ] ~~error checking~~
     - [ ] ~~are all the parts of speech defined by morphology actually used?~~
     - [ ] ~~are all the category options used?~~
