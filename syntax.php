@@ -90,13 +90,37 @@
         var ls = JSON.parse(par.getAttribute('data-path'));
         ls.push(op);
         par.setAttribute('data-path', JSON.stringify(ls));
+        var div = par.parentNode;
+        div.lastChild.appendChild(showstep(op, div));
+        if (Array.isArray(op)) {
+          var fsel = div.getElementsByClassName('select-from')[0];
+          var tsel = div.getElementsByClassName('select-to')[0];
+          var fi, ti;
+          for (var i = 0; i < fsel.children.length; i++) {
+            fi = fsel.children[i]; //should be identical
+            ti = tsel.children[i]; //unless someone manually adjusts the page
+            if (fi.innerText == op[0]) {
+              fi.innerText = 'Formerly '+fi.innerText;
+              ti.innerText = 'Formerly '+ti.innerText;
+              fi.value += '-was';
+              ti.value += '-was';
+            } else if (fi.innerText == op[1]) {
+              fi.innerText = op[0];
+              ti.innerText = op[0];
+              fi.value = op[0].replace(' ', '-');
+              ti.value = op[0].replace(' ', '-');
+            }
+          }
+        }
       };
       //apply movement to a tree
       var movement = function(tree, src_cls, dest_cls) {
         var src = firstclass(tree, src_cls);
         var dest = firstclass(tree, dest_cls);
         if (!src || !dest) { return; }
-        var t = mkel('span', '(moved away)');
+        var t = mkel('span', 'Formerly '+src.innerText);
+        t.className = src.className + '-was';
+        t.setAttribute('data-id', 'Formerly '+src.innerText);
         src.parentNode.replaceChild(t, src);
         dest.parentNode.replaceChild(src, dest);
         log_move(src, [src.getAttribute('data-id'), dest.getAttribute('data-id')]);
@@ -166,6 +190,7 @@
       //construct and return a tree in default arrangement
       var build_tree = function(type) {
         var div = document.createElement('div');
+        div.setAttribute('data-type', type);
         var ndls = make_node(nodes[type]);
         var ops = [];
         for (var i = 0; i < ndls[1].length; i++) {
@@ -175,18 +200,39 @@
         div.appendChild(mkel('br', ''));
         div.appendChild(mkel('span', 'Move '));
         div.appendChild(mksel(ops, ndls[1], null, null, null));
+        div.lastChild.className = 'select-from';
         div.appendChild(mkel('span', ' to '));
         div.appendChild(mksel(ops, ndls[1], null, null, null));
+        div.lastChild.className = 'select-to';
         var but = mkel('button', 'move');
         but.onclick = move_button(div);
         div.appendChild(but);
+        div.appendChild(mkname('ol', '', 'movelist'));
         return div;
+      };
+      //return an <li> for an action/undo list
+      //tree is the <div> containing the highest node
+      var showstep = function(step, tree) {
+        var ret = document.createElement('li');
+        ret.setAttribute('data-op', JSON.stringify(step));
+        if (Array.isArray(step)) {
+          ret.appendChild(mkel('span', 'moved '+step[0]+' onto '+step[1]+' '));
+        } else {
+          ret.appendChild(mkel('span', 'rotated '+step+' '));
+        }
+        var x = mkel('button', 'undo');
+        x.onclick = function() {
+          ret.parentNode.removeChild(ret);
+          rebuild_tree(tree);
+        };
+        ret.appendChild(x);
+        return ret;
       };
       //apply a list of movements and rotations to a tree
       var setup_tree = function(tree, data) {
         var mov;
-        for (var m = 0; m < data.move.length; m++) {
-          mov = data.move[m];
+        for (var m = 0; m < data.length; m++) {
+          mov = data[m];
           if (Array.isArray(mov)) {
             movement(tree, mov[0].replace(' ', '-'), mov[1].replace(' ', '-'));
           } else {
@@ -194,11 +240,27 @@
           }
         }
       };
+      var rebuild_tree = function(tree) {
+        var path = [];
+        var pathls = tree.getElementsByClassName('movelist')[0].children;
+        for (var i = 0; i < pathls.length; i++) {
+          path.push(JSON.parse(pathls[i].getAttribute('data-op')));
+        }
+        var newtree = build_tree(tree.getAttribute('data-type'));
+        tree.parentNode.replaceChild(newtree, tree);
+        setup_tree(newtree, path);
+      };
       var trees = {};
       var load_pos = function(type, label) {
-        getel('syntax').appendChild(mkel('h2', label));
-        var ret = document.createElement('div');
-        getel('syntax').appendChild(ret);
+        var syn = getel('syntax');
+        syn.appendChild(mkel('h2', label));
+        //var ret = document.createElement('div');
+        var ret = mkname('div', label, 'treels');
+        syn.appendChild(ret);
+        syn.appendChild(mkel('button', 'Add Tree'));
+        syn.lastChild.onclick = function() {
+          ret.appendChild(build_tree(type));
+        };
         var ls = seek(langdata, ['syntax', type]) || [];
         if (ls.length == 0) {
           ls.push({move: []});
@@ -206,7 +268,7 @@
         var div, ndls, but, mov;
         for (var i = 0; i < ls.length; i++) {
           ret.appendChild(build_tree(type));
-          setup_tree(ret.lastChild, ls[i]);
+          setup_tree(ret.lastChild, ls[i].move);
         }
         trees[type] = ret;
       };

@@ -13,13 +13,15 @@
   - [x] determine input structure
   - [x] interface for movement
   - [ ] alternate tree structures
-  - [ ] loading data
+    - [x] having alternatives
+    - [ ] conditions for alternatives
+  - [x] loading data
     - [x] movement & swap
-    - [ ] alternatives
+    - [x] alternatives
   - [ ] more readable formatting
-  - [ ] movement onto a trace
+  - [x] movement onto a trace
   - [ ] elements with parts in multiple nodes
-  - [ ] undo button
+  - [x] undo button
   - [ ] moving nodes, not just leaves
   - [ ] ~~error checking~~
     - [ ] ~~are all the parts of speech defined by morphology actually used?~~
