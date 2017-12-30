@@ -38,26 +38,6 @@ def gen(pats, tree, depth, setvars):
         except: print("error with generating tree %s at depth %s" % (tree, depth))
     else:
         return tree
-def transform(tree, pats, dropdup=False):
-    if len(pats) > 0 and isinstance(tree, Node):
-        chs = [transform(c, pats, dropdup) for c in tree.children]
-        nodes = [tree.swapchildren(list(cl)) for cl in itertools.product(*chs)]
-        ret = []
-        retstr = ['[]']
-        for n in nodes:
-            added = False
-            for i, p in enumerate(pats):
-                x = n.trans(p)
-                s = str(x)
-                if s not in retstr:
-                    ret.append(x)
-                    retstr.append(s)
-                added |= bool(x)
-            if not added and not dropdup:
-                ret.append(n)
-        return ret
-    else:
-        return [tree]
 def make(lang):
     l = loadlang(lang)
     p = l.getpats()
@@ -92,7 +72,7 @@ def translate(sen, tolang):
         if isinstance(ch, str):
             roots.append(ch)
     pats = list(Translation.find(sen.lang, tolang, roots))
-    for tr in transform(sen, pats):
+    for tr in sen.transform(pats):
         for m in movement(tr):
             yield m
 def movement(sen):
@@ -101,21 +81,11 @@ def movement(sen):
         if isinstance(ch, str):
             roots.append(ch)
     pats = list(Translation.find(sen.lang, sen.lang, roots))
-    return transform(sen, pats, True) or [sen]
+    return sen.transform(pats, True) or [sen]
 def filterlang(sens, lang):
     for s in sens:
-        y = True
-        for n in s.iternest():
-            if isinstance(n, Node) and n.lang != lang:
-                y = False
-                break
-        if y:
+        if s.alllang(lang):
             yield s
-def filter1(s, l):
-    for n in s.iternest():
-        if isinstance(n, Node) and n.lang != l:
-            return False
-    return True
 if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
@@ -123,7 +93,9 @@ if __name__ == '__main__':
     loadlang(tl)
 
     sen = make(fl)
-    print(movement(sen)[0].display())
+    ls = movement(sen)[0]
+    print(ls.display())
+    print(ls)
     #for tr in translate(sen, tl):
-    #    if filter1(tr, tl):
+    #    if tr.alllang(tl):
     #        print(tr.display())

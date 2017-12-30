@@ -114,19 +114,41 @@ class Node:
             return []
         vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
         return copy.deepcopy(tr.context).putvars(vrs)
+    def transform(self, pats, dropdup=False):
+        if len(pats) > 0:
+            chs = []
+            for c in self.children:
+                if isinstance(c, Node):
+                    chs.append(c.transform(pats, dropdup))
+                else:
+                    chs.append([c])
+            #chs = [c.transform(pats, dropdup) for c in self.children]
+            nodes = [self.swapchildren(list(cl)) for cl in itertools.product(*chs)]
+            ret = []
+            retstr = ['[]']
+            for n in nodes:
+                added = False
+                for i, p in enumerate(pats):
+                    x = n.trans(p)
+                    s = str(x)
+                    if s not in retstr:
+                        ret.append(x)
+                        retstr.append(s)
+                    added |= bool(x)
+                if not added and not dropdup:
+                    ret.append(n)
+            return ret
+        else:
+            return [self]
     def __str__(self):
         if isinstance(self.children, list):
-            s = ' '.join([str(x) for x in self.children])
+            s = '[' + ' '.join([str(x) for x in self.children]) + ']'
         else:
             s = str(self.children)
-        return '%s(%s)[%s %s]' % (self.__class__.__name__, self.lang, self.ntype, s)
+        #return '%s(%s)[%s %s]' % (self.__class__.__name__, self.lang, self.ntype, s)
+        return '%s(%s)%s' % (self.ntype, self.lang, s)
     def __repr__(self):
         return self.__str__()
-    __modes = defaultdict(lambda: None, {
-        'prefix': ['^', '(.*)', '\\1'],
-        'suffix': ['$', '(.*)', '\\1'],
-        'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
-    })
     def addmode(name, pats):
         Node.__modes[name] = pats
     def display(self):
@@ -154,6 +176,11 @@ class Node:
             if isinstance(ch, Node):
                 for c in ch.iternest():
                     yield c
+    def alllang(self, lang):
+        for n in self.iternest():
+            if isinstance(n, Node) and n.lang != lang:
+                return False
+        return True
 def match(a, b):
     if isinstance(a, Unknown) or isinstance(b, Unknown):
         return True
