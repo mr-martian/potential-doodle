@@ -171,7 +171,7 @@ class ParseLine:
         depth = 0
         with open(fname) as f:
             for i, l in enumerate(f):
-                if l.isspace():
+                if l.isspace() or l[0] == '#':
                     continue
                 while not l.startswith('  '*depth):
                     depth -= 1
@@ -255,6 +255,23 @@ def loadlang(lang):
                             conds.append([toobj(x, lang) for x in op.args])
                             ops.append(node)
                         ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs)
+                elif ch.label == 'xbar':
+                    for ty in ch.children:
+                        def xbararg(name, section):
+                            line = section.first(name)
+                            if line:
+                                return ['$'+name+':'+line.val, '$'+name]
+                            else:
+                                return ['~', '~']
+                        spec = xbararg('spec', ty)
+                        head = xbararg('head', ty)
+                        comp = xbararg('comp', ty)
+                        tree = toobj('[%sP %s [%sbar %s %s]]' % (ty.label, spec[0], ty.label, head[0], comp[0]), lang)
+                        trans = '[%sP %s [%sbar %s %s]]' % (ty.label, spec[1], ty.label, head[1], comp[1])
+                        translangs = ty.vals('translang')
+                        ret.syntax[ty.label+'P'] = SyntaxPat(ty.label+'P', [[]], [tree], [])
+                        for l in translangs:
+                            Translation(tree, toobj(trans, int(l)), 'syntax')
         if th.label == 'morphology':
             for ch in th.children:
                 Node.addmode(ch.label, list(ch.vals('re')))

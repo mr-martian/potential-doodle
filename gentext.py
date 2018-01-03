@@ -72,6 +72,7 @@ def translate(sen, tolang):
         if isinstance(ch, str):
             roots.append(ch)
     pats = list(Translation.find(sen.lang, tolang, roots))
+    print("%s rules found" % len(pats))
     for tr in sen.transform(pats):
         for m in movement(tr):
             yield m
@@ -96,6 +97,9 @@ if __name__ == '__main__':
     ls = movement(sen)[0]
     print(ls.display())
     print(ls)
-    #for tr in translate(sen, tl):
-    #    if tr.alllang(tl):
-    #        print(tr.display())
+    print('\n')
+    for tr in translate(sen, tl):
+        #print(tr)
+        #print('\n')
+        if tr.alllang(tl):
+            print(tr.display())

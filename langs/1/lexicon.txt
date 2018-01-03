@@ -6,6 +6,14 @@ gen (noun-inflection)
   form
     structure: @
     form: 's
+comp (complementizer)
+present (tense)
+future (tense)
+not (mood)
+durative (aspect)
+a (determiner)
+the (determiner)
+s (determiner)
 
 and (conjunction)
 at (preposition)

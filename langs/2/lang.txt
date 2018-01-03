@@ -7,26 +7,43 @@ metadata
       option: Common Honey
   creator: Common Honey Tribe
 syntax
-  start-with: IP
+  start-with: CP
+  xbar
+    A
+      head: describer
+      translang: 1
+    C
+      head: complementizer
+      comp: IP
+      translang: 1
+    I
+      head: I
+      comp: VP
+      translang: 1
+    N
+#      spec: PP
+      head: noun
+      comp: describer
+      translang: 1
+    P
+      head: postposition
+      comp: DP
+      translang: 1
   node-types
-    AP
-      structure: [AP $head:describer]
-      translation (1): [AP ~ [Abar $head ~]]
-    IP
-      structure: [IP [Ibar $verb:VP $aux:Mauxilliary] $subj:NP]
-      translation (1): [CP ~ [Cbar ~ [IP $subj [Ibar $aux $verb]]]]
-    NP
-      variable: $spec:NP?
-      option ($spec)
-        structure: [NP $spec [Nmod $post:PP? $rel:IP? $adj:AP? $head:Mnoun]]
-        translation (1): [NP $spec [Nmod $adj [Nbar $head $post $rel]]]
-      option ($spec!)
-        structure: [NP ~ [Nmod $post:PP? $rel:IP? $adj:AP? $head:Mnoun]]
-        translation (1): [NP article=a [Nmod $adj [Nbar $head $post $rel]]]
-        translation (1): [NP article=the [Nmod $adj [Nbar $head $post $rel]]]
-    PP
-      structure: [PP $comp:NP $head:postposition]
-      translation (1): [PP ~ [Pbar $head $comp]]
+    I
+      variable: $t:tense
+      variable: $a:aspect
+      variable: $m:mood
+      structure: [I $t $a $m]
+      translation (1): [I $t $a $m]
+    DP
+      variable: $head:determiner
+      option ($head(hasspec=true))
+        structure: [DP $spec:NP [Dbar $head $comp:NP]]
+        translation (1): [DP $spec [Dbar $head $comp]]
+      option ($head(hasspec=false))
+        structure: [DP ~ [Dbar $head $comp:NP]]
+        translation (1): [DP ~ [Dbar $head $comp]]
     VP
       structure: [VP $post:PP? $adjunct:NP? $adv:describer? $bar:Vbar]
       translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
@@ -38,30 +55,30 @@ syntax
       option ($head(transitive=false))
         structure: [Vbar ~ $head]
         translation (1): [Vbar $head ~]
-    -IP
-      structure: [-IP $a:IP $head:conjunction $b:IP]
-      translation (1): [-IP $a $head $b]
-    -NP
-      structure: [-NP $a:NP $head:conjunction(clause-only=false) $b:NP]
-      translation (1): [-NP $a $head $b]
-    -VP
-      structure: [-VP $a:VP $head:conjunction $b:VP]
-      translation (1): [-VP $a $head $b]
-    Mauxilliary
-      variable: $aux:auxilliary
-      option ($aux!)
-        structure: [I $a:aspect ~]
-      option ($aux(vowel=i))
-        structure: [I $a:aspect <aux $aux $t:i-tense>]
-      option ($aux(vowel=ol))
-        structure: [I $a:aspect <aux $aux $t:ol-tense>]
-    Mnoun
-      option
-        structure: $n:noun
-        translation (1): $n
-      option
-        structure: <suffix $n:noun $s:noun/noun>
-        translation (1): <suffix $n $s>
+#    -IP
+#      structure: [-IP $a:IP $head:conjunction $b:IP]
+#      translation (1): [-IP $a $head $b]
+#    -NP
+#      structure: [-NP $a:NP $head:conjunction(clause-only=false) $b:NP]
+#      translation (1): [-NP $a $head $b]
+#    -VP
+#      structure: [-VP $a:VP $head:conjunction $b:VP]
+#      translation (1): [-VP $a $head $b]
+#    Mauxilliary
+#      variable: $aux:auxilliary
+#      option ($aux!)
+#        structure: [I $a:aspect ~]
+#      option ($aux(vowel=i))
+#        structure: [I $a:aspect <aux $aux $t:i-tense>]
+#      option ($aux(vowel=ol))
+#        structure: [I $a:aspect <aux $aux $t:ol-tense>]
+#    Mnoun
+#      option
+#        structure: $n:noun
+#        translation (1): $n
+#      option
+#        structure: <suffix $n:noun $s:noun/noun>
+#        translation (1): <suffix $n $s>
 morphology
   aux
     re: _
@@ -76,3 +93,11 @@ transform
     context: [Nmod $post @ $adj $head]
     form: [IP $ibar $subj]
     result: [IPmark rel=mu [IP $ibar $subj] rel=om]
+  rule
+    context: [PP ~ @]
+    form: [Pbar $head $comp]
+    result: [Pbar $comp $head]
+  rule
+    context: [NP $spec @]
+    form: [Nbar $head $comp]
+    result: [Nbar $comp $head]

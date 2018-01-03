@@ -1,3 +1,19 @@
+article (determiner)
+  form
+    structure: @
+    form: ~
+comp (complementizer)
+  gloss (1): complementizer=comp
+nonpast (tense)
+  gloss (1): tense=present; tense=future
+m_t (mood)
+  gloss (1): mood=not
+null (determiner)
+  gloss (1): determiner=a; determiner=the
+  hasspec: false
+vmeh (determiner)
+  gloss (1): determiner=s
+  hasspec: true
 mu (rel)
   form
     structure: @
@@ -26,6 +42,7 @@ zho (pronoun)
 ah (noun/noun)
   gloss (1): noun-inflection=s
 feh (aspect)
+  gloss (1): aspect=durative
 vmeh (case)
   gloss (1): noun-inflection=gen
 danec (verb)

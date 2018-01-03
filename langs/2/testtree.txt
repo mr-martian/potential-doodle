@@ -1,1 +1,3 @@
 IP[~ Ibar[TAM[tense=present aspect=continuous auxilliary=molt] VP[NP[~ Nbar[noun=thefam ~]] Vbar[verb=thek NP[~ Nbar[noun=duhden ~]]]]]]
+
+CP[~ Cbar[c=sentence IP[~ Ibar[I[tense=present aspect=continuous mood=negative] VP[NP[~ Nbar[noun=thefam ~]] Vbar[verb=thek NP[~ Nbar[noun=duhden ~]]]]]]]]

@@ -1,44 +1,34 @@
 # TODO
 
-- [x] done
-- [x] ~~no longer planned~~
 - [ ] [Morphology](morphology.php)
-  - [x] ~~add section for predicting word-forms~~ (maybe later)
   - [ ] add more features and values (get feedback)
-  - [x] ~~lexical property specification in table header?~~
-  - [x] ~~should there be a way to add parts of speech other than syntax-influencing lexical properties? (also affects Syntax)~~
   - [ ] contractions?
   - [ ] simpler input for more agglutinative langs
+  - [ ] convert output and pass to [compilelang.py](compilelang.py)
 - [ ] [Syntax](syntax.php)
-  - [x] determine input structure
-  - [x] interface for movement
-  - [ ] alternate tree structures
-    - [x] having alternatives
-    - [ ] conditions for alternatives
-  - [x] loading data
-    - [x] movement & swap
-    - [x] alternatives
-  - [ ] more readable formatting
-  - [x] movement onto a trace
-  - [ ] elements with parts in multiple nodes
-  - [x] undo button
-  - [ ] moving nodes, not just leaves
-  - [ ] ~~error checking~~
-    - [ ] ~~are all the parts of speech defined by morphology actually used?~~
-    - [ ] ~~are all the category options used?~~
-    - [ ] ~~are they all used in places the translator can grok?~~
-  - [ ] ~~mark elements as optional or required~~
-    - ~~or would this be handled mostly automatically by the translator?~~
-- [ ] [generator](gentext.py)
-  - [ ] rewrite to handle Syntax output
+  - [ ] restandardize tree structure
+  - [ ] convert output and pass to [compilelang.py](compilelang.py)
+- [ ] [WALS](walsfeatures.php)
+  - [ ] determine which features are helpful and which can be ignored
+  - [ ] create more questions to cover further relevant data
+  - [ ] import from WALS
+  - [ ] import from CALS
+  - [ ] export to CALS?
+  - [ ] convert output and pass to [compilelang.py](compilelang.py)
+- [ ] [Compilation](compilelang.py)
+  - [ ] document format
+  - [ ] more compact notation for common operations
+- [ ] [Translation](gentext.py)
+  - [ ] separate from generation
+  - [ ] speed up
+    - port to compiled language?
+- [x] [Generation](gentext.py)
 - [ ] practice
   - [ ] make interface
   - [ ] store data
   - [ ] create users
 - metrics and comparisons
   - includes things that are interesting even if of no real theoretical value
-  - [ ] autofill CALS
-    - consider trying to import
   - [ ] "density"
     - relative length of test data in various languages
   - [ ] prevalence of phon(em)es and letters
