@@ -72,7 +72,6 @@ def translate(sen, tolang):
         if isinstance(ch, str):
             roots.append(ch)
     pats = list(Translation.find(sen.lang, tolang, roots))
-    print("%s rules found" % len(pats))
     for tr in sen.transform(pats):
         for m in movement(tr):
             yield m
@@ -82,24 +81,26 @@ def movement(sen):
         if isinstance(ch, str):
             roots.append(ch)
     pats = list(Translation.find(sen.lang, sen.lang, roots))
-    return sen.transform(pats, True) or [sen]
+    return sen.transform(pats) or [sen]
 def filterlang(sens, lang):
     for s in sens:
         if s.alllang(lang):
             yield s
+def gen_and_trans(flang, tlang):
+    loadlang(flang)
+    loadlang(tlang)
+    sen = make(flang)
+    ret = []
+    for tr in translate(sen, tlang):
+        if tr.alllang(tlang):
+            ret.append(tr)
+    return sen, ret
 if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
     tl = int(sys.argv[2])
-    loadlang(tl)
 
-    sen = make(fl)
-    ls = movement(sen)[0]
-    print(ls.display())
-    print(ls)
-    print('\n')
-    for tr in translate(sen, tl):
-        #print(tr)
-        #print('\n')
-        if tr.alllang(tl):
-            print(tr.display())
+    sen, tr = gen_and_trans(fl, tl)
+    print(movement(sen)[0].display())
+    for t in tr:
+        print(t.display())

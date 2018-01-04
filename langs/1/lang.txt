@@ -49,3 +49,7 @@ transform
     context: [NP [NP $spec [Nmod $ap [Nbar @ $pp $rel]]] $nmod]
     form: $head
     result: <suffix $head noun-inflection=gen>
+  rule
+    context: @
+    form: [Nbar $head $comp]
+    result: [Nbar $comp $head]

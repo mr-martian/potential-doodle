@@ -114,15 +114,14 @@ class Node:
             return []
         vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
         return copy.deepcopy(tr.context).putvars(vrs)
-    def transform(self, pats, dropdup=False):
+    def transform(self, pats):
         if len(pats) > 0:
             chs = []
             for c in self.children:
                 if isinstance(c, Node):
-                    chs.append(c.transform(pats, dropdup))
+                    chs.append(c.transform(pats))
                 else:
                     chs.append([c])
-            #chs = [c.transform(pats, dropdup) for c in self.children]
             nodes = [self.swapchildren(list(cl)) for cl in itertools.product(*chs)]
             ret = []
             retstr = ['[]']
@@ -135,7 +134,7 @@ class Node:
                         ret.append(x)
                         retstr.append(s)
                     added |= bool(x)
-                if not added and not dropdup:
+                if not added:
                     ret.append(n)
             return ret
         else:
