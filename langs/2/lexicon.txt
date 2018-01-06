@@ -3,16 +3,11 @@ article (determiner)
     structure: @
     form: ~
 comp (complementizer)
-  gloss (1): complementizer=comp
 nonpast (tense)
-  gloss (1): tense=present; tense=future
 m_t (mood)
-  gloss (1): mood=not
 null (determiner)
-  gloss (1): determiner=a; determiner=the
   hasspec: false
 vmeh (determiner)
-  gloss (1): determiner=s
   hasspec: true
 mu (rel)
   form
@@ -40,562 +35,282 @@ ul (i-tense)
   tense: remote-past
 zho (pronoun)
 ah (noun/noun)
-  gloss (1): noun-inflection=s
 feh (aspect)
-  gloss (1): aspect=durative
 vmeh (case)
-  gloss (1): noun-inflection=gen
 danec (verb)
   transitive: true
-  gloss (1): verb=borrow; verb=copy; verb=imitate
 dasnan (describer)
-  gloss (1): adjective=cosmic
 dyfnyn (verb--)
-  gloss (1): verb=measure
   transitive: true
 g_m (auxilliary)
-  gloss (1): auxilliary=must
   vowel: ol
 jeltan (verb--)
   transitive: false
-  gloss (1): verb=hide; verb=cower
 jezlan (verb--)
   transitive: true
-  translate
-    lang: 1
-    comment: this will have to change once I figure out how to translate aspects generally
-    from: [Vbar $comp <(1) ~ @ ~>]
-    to: [Vbar verb=excell [PP ~ [Pbar preposition=at $comp]]]
-  translate
-    lang: 1
-    comment: this will have to change once I figure out how to translate aspects generally
-    from: [Vbar $comp <(1) * @ *>]
-    to: [Vbar verb=excell [PP ~ [Pbar preposition=at $comp]]]
 keh (conjunction)
-  gloss (1): conjunction=and
   clause-only: false
 m_t (auxilliary)
-  gloss (1): auxilliary=doesnt
   vowel: ol
 seln (postposition)
-  gloss (1): preposition=to; preposition=towards
 tyk (conjunction)
-  gloss (1): conjunction=so
   clause-only: true
 
 cadelgyn (noun)
-  gloss (1): noun=astronaut; noun=cosmonaut
 cadelk (noun)
-  gloss (1): noun=planet
 cajik (noun)
-  gloss (1): noun=tea
 canolc (noun)
-  gloss (1): noun=month
 cejanym (noun)
-  gloss (1): noun=telephone
 cejym (noun)
-  gloss (1): noun=OCD
 cejyn (noun)
-  gloss (1): noun=sound
 celkcejyn (noun)
-  gloss (1): noun=vowel
 celteln (noun)
-  gloss (1): noun=servant
 celzan (noun)
-  gloss (1): noun=tongue
 cesik (noun)
-  gloss (1): noun=word
 cesyt (noun)
-  gloss (1): noun=particle
 cic (noun)
-  gloss (1): noun=cheese
 cifnolvnin (noun)
-  gloss (1): noun=leader
 colsek (noun)
-  gloss (1): noun=apple
 cuhc (noun)
-  gloss (1): noun=foot
 culjim (noun)
-  gloss (1): noun=ant
 culjimdin (noun)
-  gloss (1): noun=anthill
 dacolk (noun)
-  gloss (1): noun=cudgel; noun=club
 dazlelfim (noun)
-  gloss (1): noun=child; noun=kid
 decek (noun)
-  gloss (1): noun=chicken
 dejizoln (noun)
-  gloss (1): noun=wood
 delgemzhum (noun)
-  gloss (1): noun=Pokemon
 din (noun)
-  gloss (1): noun=home; noun=hive
 divolm (noun)
-  gloss (1): noun=thunder; noun=phonology
 dolkat (noun)
-  gloss (1): noun=picture
 dolkatmahk (noun)
-  gloss (1): noun=Photoshop
 dolmik (noun)
-  gloss (1): noun=compassion
 duhdem (noun)
-  gloss (1): noun=dam; noun=swamp
 duhdenthuhfam (noun)
-  gloss (1): noun=Gold
 duhgan (noun)
-  gloss (1): noun=circle
 duhk (noun)
-  gloss (1): noun=spear
 famat (noun)
-  gloss (1): noun=farm
 fic (noun)
-  gloss (1): noun=here; noun=now
 fijyc (noun)
-  gloss (1): noun=rainbow
 fithnelm (noun)
-  gloss (1): noun=lighthouse; noun=beacon
 fmat (noun)
-  gloss (1): noun=seed
 fmolxem (noun)
-  gloss (1): noun=destiny; noun=fate
 fmulzhik (noun)
-  gloss (1): noun=year
 fnadyc (noun)
-  gloss (1): noun=death
 fnecolm (noun)
-  gloss (1): noun=noun
 fyzuln (noun)
-  gloss (1): noun=sibling
 gafuht (noun)
-  gloss (1): noun=brick
 gamyk (noun)
-  gloss (1): noun=tree; noun=producer
 gasnoln (noun)
-  gloss (1): noun=effort; noun=attempt; noun=pain
 geshik (noun)
-  gloss (1): noun=clock; noun=sundial; noun=timekeeper
 gigim (noun)
-  gloss (1): noun=flipper; noun=fin
 gizlethnyt (noun)
-  gloss (1): noun=shoe
 golslim (noun)
-  gloss (1): noun=photograph
 guhngolduhn (noun)
-  gloss (1): noun=nonahedron
 gygik (noun)
-  gloss (1): noun=food
 gyn (noun)
-  gloss (1): noun=worker
 gyznyt (noun)
-  gloss (1): noun=nose
 jafin (noun)
-  gloss (1): noun=melodrama
 jegen (noun)
-  gloss (1): noun=hook
 jidolk (noun)
-  gloss (1): noun=flower
 jizlet (noun)
-  gloss (1): noun=Quizlet
 juhcen (noun)
-  gloss (1): noun=fire
 kacfic (noun)
-  gloss (1): noun=past
 kakcejyn (noun)
-  gloss (1): noun=consonant
 kanolt (noun)
-  gloss (1): noun=door
 kecycjin (noun)
-  gloss (1): noun=meme
 kecycthuhfam (noun)
-  gloss (1): noun=Silicon
 kelshik (noun)
-  gloss (1): noun=suffix
 kemen (noun)
-  gloss (1): noun=cow; noun=bovine
 kemenzamin (noun)
-  gloss (1): noun=milk
 kemenzaminthuhfam (noun)
-  gloss (1): noun=Calcium
 kexek (noun)
-  gloss (1): noun=emotion
 kexekdolkat (noun)
-  gloss (1): noun=emoji
 kidek (noun)
-  gloss (1): noun=face
 kizhult (noun)
-  gloss (1): noun=bee; noun=harvester; noun=storyteller
 kizhultdin (noun)
-  gloss (1): noun=beehive
 kizik (noun)
-  gloss (1): noun=grass
 kuhc (noun)
-  gloss (1): noun=letter
 kuhctheknoc (noun)
-  gloss (1): noun=alphabet
 kyfik (noun)
-  gloss (1): noun=arm
 kyguhk (noun)
-  gloss (1): noun=chopstick
 kygykkolxak (noun)
-  gloss (1): noun=pedalpub
 kyvydyc (noun)
-  gloss (1): noun=crack; noun=tear; noun=hole
 madam (noun)
-  gloss (1): noun=history
 magolt (noun)
-  gloss (1): noun=value; noun=worth
 mam (noun)
-  gloss (1): noun=mom; noun=female
 mazuhn (noun)
-  gloss (1): noun=insect
 melsulntelzlnoln (noun)
-  gloss (1): noun=snow
 mesolk (noun)
-  gloss (1): noun=victory
 mislek (noun)
-  gloss (1): noun=fern; noun=mathematics
 mizizlat (noun)
-  gloss (1): noun=wheelbarrow; noun=cart; noun=trolley; noun=pram
 molduhm (noun)
-  gloss (1): noun=mace
 molm (noun)
-  gloss (1): noun=tribe
 molmelc (noun)
-  gloss (1): noun=roof; noun=shelter
 molshnem (noun)
-  gloss (1): noun=tribemember
 nasham (noun)
-  gloss (1): noun=wave
 nashelt (noun)
-  gloss (1): noun=love
 nesit (noun)
-  gloss (1): noun=fruit
 nic (noun)
-  gloss (1): noun=hand
 nuln (noun)
-  gloss (1): noun=friend
 nulvmic (noun)
-  gloss (1): noun=charcoal
 nyzlan (noun)
-  gloss (1): noun=snail
 saznolt (noun)
-  gloss (1): noun=mud
 sekelt (noun)
-  gloss (1): noun=valley
 shelsheln (noun)
-  gloss (1): noun=river; noun=pragmatics
 shisek (noun)
-  gloss (1): noun=orchard
 shnuhk (noun)
-  gloss (1): noun=lips
 shuhzhik (noun)
-  gloss (1): noun=tear; noun=drop
 slelceln (noun)
-  gloss (1): noun=lemon
 slin (noun)
-  gloss (1): noun=fight
 slingyn (noun)
-  gloss (1): noun=warrior; noun=Klingon
 slnagen (noun)
-  gloss (1): noun=night
 slolm (noun)
-  gloss (1): noun=axe
 sluhtgolduhn (noun)
-  gloss (1): noun=tetrahedron
 slysyc (noun)
-  gloss (1): noun=snake
 snedelm (noun)
-  gloss (1): noun=secret
 snijat (noun)
-  gloss (1): noun=mountain
 snolzem (noun)
-  gloss (1): noun=knot
 snym (noun)
-  gloss (1): noun=cloud
 snymsoljemthuhfam (noun)
-  gloss (1): noun=Silver
 soldyccesik (noun)
-  gloss (1): noun=adjective; noun=adverb
 soljem (noun)
-  gloss (1): noun=color
 soljesolm (noun)
-  gloss (1): noun=chromesthesia
 sulfekaslifazhislitikesixasloldolshyc (noun)
-  gloss (1): noun=cookie
 sulslem (noun)
-  gloss (1): noun=nectar
 tak (noun)
-  gloss (1): noun=game; noun=amusement; noun=recreation
 tamatthuhfam (noun)
-  gloss (1): noun=Tin
 tan (noun)
-  gloss (1): noun=honey; noun=vomit; noun=language
 tanik (noun)
-  gloss (1): noun=saxophone
 tat (noun)
-  gloss (1): noun=dad; noun=male
 telzlnoln (noun)
-  gloss (1): noun=rain
 tethnym (noun)
-  gloss (1): noun=birth; noun=pregnancy
 tevolk (noun)
-  gloss (1): noun=drum
 tezet (noun)
-  gloss (1): noun=lightning
 tezetfun (noun)
-  gloss (1): noun=electricity
 thazan (noun)
-  gloss (1): noun=dusk
 thefam (noun)
-  gloss (1): noun=stone; noun=writing; noun=orthography
 thefnolm (noun)
-  gloss (1): noun=bear
 themult (noun)
-  gloss (1): noun=information
 thethat (noun)
-  gloss (1): noun=wind; noun=breeze
 thezat (noun)
-  gloss (1): noun=storm; noun=hurricane
 thigyk (noun)
-  gloss (1): noun=fashion
 thikit (noun)
-  gloss (1): noun=strength
 thikitmahk (noun)
-  gloss (1): noun=steroids
 thisyn (noun)
-  gloss (1): noun=leaf
 thnadyc (noun)
-  gloss (1): noun=inspiration; noun=Death
 thnak (noun)
-  gloss (1): noun=root
 thnamolk (noun)
-  gloss (1): noun=pizza
 thnelk (noun)
-  gloss (1): noun=room
 thnuhduhk (noun)
-  gloss (1): noun=elephant
 thuhfam (noun)
-  gloss (1): noun=metal; noun=Copper
 thuhnenolgem (noun)
-  gloss (1): noun=fort; noun=fortress
 thulvmythat (noun)
-  gloss (1): noun=flag
 tivuht (noun)
-  gloss (1): noun=dinosaur
 tizholn (noun)
-  gloss (1): noun=ocean
 tizlnin (noun)
-  gloss (1): noun=hail
 tolcuhkek (noun)
-  gloss (1): noun=forcefield
 tolmolm (noun)
-  gloss (1): noun=slope
 tolzen (noun)
-  gloss (1): noun=mist; noun=fog
 tolzlneln (noun)
-  gloss (1): noun=water
 tolzlnelnzazit (noun)
-  gloss (1): noun=mud
 tolzlnelnzhutduht (noun)
-  gloss (1): noun=Oxygen
 tolzlnelnzhutduhtuk (noun)
-  gloss (1): noun=Hydrogen
 tolzlnoln (noun)
-  gloss (1): noun=flood; noun=deluge
 tolzlolt (noun)
-  gloss (1): noun=ice
 tolzolt (noun)
-  gloss (1): noun=blizzard
 tuln (noun)
-  gloss (1): noun=eye; noun=camera; noun=telescope
 tult (noun)
-  gloss (1): noun=object; noun=thing
 tultxeht (noun)
-  gloss (1): noun=nothing
 tulvmyzam (noun)
-  gloss (1): noun=cloth; noun=fabric
 tyslit (noun)
-  gloss (1): noun=trumpet
 tytyt (noun)
-  gloss (1): noun=clover
 tyzyshyk (noun)
-  gloss (1): noun=custom; noun=praxis; noun=way
 vavmyn (noun)
-  gloss (1): noun=anarchy
 vazolt (noun)
-  gloss (1): noun=cat
 vesnennoc (noun)
-  gloss (1): noun=communism
 vithit (noun)
-  gloss (1): noun=bird; noun=overseer
 vmadan (noun)
-  gloss (1): noun=bacon
 vmadanso (noun)
-  gloss (1): noun=pig
 vman (noun)
-  gloss (1): noun=bow
 vmedyt (noun)
-  gloss (1): noun=projectile
 vmelfelc (noun)
-  gloss (1): noun=wisdom; noun=silliness
 vmyn (noun)
-  gloss (1): noun=mouth
 vnejyn (noun)
-  gloss (1): noun=mirror
 vnevnec (noun)
-  gloss (1): noun=echo
 vnisyt (noun)
-  gloss (1): noun=moon
 voljam (noun)
-  gloss (1): noun=ear
 volt (noun)
-  gloss (1): noun=plant
 vykic (noun)
-  gloss (1): noun=afternoon
 xanan (noun)
-  gloss (1): noun=life
 xananzmet (noun)
-  gloss (1): noun=house
 xatat (noun)
-  gloss (1): noun=magnet
 xatatthuhfam (noun)
-  gloss (1): noun=Iron
 xataxym (noun)
-  gloss (1): noun=hole; noun=pit; noun=ditch
 xecult (noun)
-  gloss (1): noun=lie; noun=untruth
 xelteln (noun)
-  gloss (1): noun=cliff
 xexen (noun)
-  gloss (1): noun=problem
 xolgak (noun)
-  gloss (1): noun=courage; noun=bravery; noun=valor
 xulkatsazyc (noun)
-  gloss (1): noun=adventure
 xyduht (noun)
-  gloss (1): noun=monkey
 xykuhk (noun)
-  gloss (1): noun=shield
 zac (noun)
-  gloss (1): noun=tuba
 zadit (noun)
-  gloss (1): noun=glass
 zaditkanolt (noun)
-  gloss (1): noun=window
 zamin (noun)
-  gloss (1): noun=juice
 zatenym (noun)
-  gloss (1): noun=troop; noun=group; noun=platoon
 zatheln (noun)
-  gloss (1): noun=spider; noun=silkworm; noun=syntax
 zazit (noun)
-  gloss (1): noun=dirt
 zelvetzyzlolk (noun)
-  gloss (1): noun=Helium
 zevulc (noun)
-  gloss (1): noun=mistranslation
 zhasikzhuhzhuhmzanso (noun)
-  gloss (1): noun=spaceship
 zhazhuhn (noun)
-  gloss (1): noun=chaos
 zhetam (noun)
-  gloss (1): noun=pollen; noun=semen
 zhizlik (noun)
-  gloss (1): noun=fish
 zhnazym (noun)
-  gloss (1): noun=table
 zhnicoln (noun)
-  gloss (1): noun=dog
 zhyshyn (noun)
-  gloss (1): noun=bread
 zic (noun)
-  gloss (1): noun=liquid
 zizulm (noun)
-  gloss (1): noun=library
 zlantak (noun)
-  gloss (1): noun=domino
 zlislym (noun)
-  gloss (1): noun=skeleton
 zlisoln (noun)
-  gloss (1): noun=fear; noun=panic; noun=paralysis
 zlnanic (noun)
-  gloss (1): noun=chameleon
 zlolfit (noun)
-  gloss (1): noun=wing
 zlolzhit (noun)
-  gloss (1): noun=poop
 zlolzhitthnelk (noun)
-  gloss (1): noun=bathroom
 zluhznyk (noun)
-  gloss (1): noun=dignity; noun=honor
 zmet (noun)
-  gloss (1): noun=buliding
 znenan (noun)
-  gloss (1): noun=tale; noun=story
 znimkolxak (noun)
-  gloss (1): noun=unicycle
 znolk (noun)
-  gloss (1): noun=day
 zuhzuhmelt (noun)
-  gloss (1): noun=ladle; noun=dipper
 zyzlolk (noun)
-  gloss (1): noun=gas
 cagyn (noun)
-  gloss (1): noun=underachiever; noun=couch-potato
 cigym (noun)
-  gloss (1): noun=rubber-duckie
 dasnan (noun)
-  gloss (1): noun=nature; noun=outer-space
 dasnankixikolm (noun)
-  gloss (1): noun=space-helicopter
 duhkim (noun)
-  gloss (1): noun=staff; noun=walking-stick; noun=cane
 dyculm (noun)
-  gloss (1): noun=movie-theater
 femek (noun)
-  gloss (1): noun=mind; noun=thought; noun=Sherlock-Holmes
 golt (noun)
-  gloss (1): noun=limit; noun=boundary; noun=termination-point; noun=end
 jelkelmtuc (noun)
-  gloss (1): noun=page; noun=book-cover; noun=binding
 jikin (noun)
-  gloss (1): noun=wiki; noun=notebook; noun=bulletin-board
 jivyt (noun)
-  gloss (1): noun=music-box
 kagan (noun)
-  gloss (1): noun=hula-hoop; noun=donut; noun=doughnut
 kecyctatulk (noun)
-  gloss (1): noun=Google-Glass
 kicat (noun)
-  gloss (1): noun=french-horn
 melsuln (noun)
-  gloss (1): noun=ice-cream; noun=gelato; noun=cold
 muhc (noun)
-  gloss (1): noun=community
 nenyk (noun)
-  gloss (1): noun=playing-card
 nenyktak (noun)
-  gloss (1): noun=card-game
 shikolk (noun)
-  gloss (1): noun=sugar-glider
 slik (noun)
-  gloss (1): noun=thumbs-up
 tatulk (noun)
-  gloss (1): noun=glasses; noun=spectacles; noun=contact-lens; noun=monocle; noun=eyewear
 theknoc (noun)
-  gloss (1): noun=writing-system
 thnamolkmahk (noun)
-  gloss (1): noun=marinara-sauce
 thnamolksoljemmahk (noun)
-  gloss (1): noun=olive-oil
 tolzlnelnkolxak (noun)
-  gloss (1): noun=pedal-boat
 tulceslitvolt (noun)
-  gloss (1): noun=vegetable-oil
 xaslan (noun)
-  gloss (1): noun=sign-language
 xen (noun)
-  gloss (1): noun=thumbs-down
 zlaslolk (noun)
-  gloss (1): noun=laser; noun=phaser; noun=ray-gun; noun=energy-beam

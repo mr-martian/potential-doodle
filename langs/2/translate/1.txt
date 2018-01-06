@@ -1,0 +1,280 @@
+complementizer=comp: complementizer=comp
+tense=nonpast: tense=present; tense=future
+mood=m_t: mood=not
+determiner=null: determiner=a; determiner=the
+determiner=vmeh: determiner=s
+noun/noun=ah: noun-inflection=s
+aspect=feh: aspect=durative
+case=vmeh: noun-inflection=gen
+verb=danec: verb=borrow; verb=copy; verb=imitate
+describer=dasnan: adjective=cosmic
+verb--=dyfnyn: verb=measure
+auxilliary=g_m: auxilliary=must
+verb--=jeltan: verb=hide; verb=cower
+verb--=jezlan
+  translate
+    from: [Vbar @ $comp]
+    to: [Vbar verb=excell [PP ~ [Pbar preposition=at $comp]]]
+conjunction=keh: conjunction=and
+auxilliary=m_t: auxilliary=doesnt
+postposition=seln: preposition=to; preposition=towards
+conjunction=tyk: conjunction=so
+
+noun=cadelgyn: noun=astronaut; noun=cosmonaut
+noun=cadelk: noun=planet
+noun=cajik: noun=tea
+noun=canolc: noun=month
+noun=cejanym: noun=telephone
+noun=cejym: noun=OCD
+noun=cejyn: noun=sound
+noun=celkcejyn: noun=vowel
+noun=celteln: noun=servant
+noun=celzan: noun=tongue
+noun=cesik: noun=word
+noun=cesyt: noun=particle
+noun=cic: noun=cheese
+noun=cifnolvnin: noun=leader
+noun=colsek: noun=apple
+noun=cuhc: noun=foot
+noun=culjim: noun=ant
+noun=culjimdin: noun=anthill
+noun=dacolk: noun=cudgel; noun=club
+noun=dazlelfim: noun=child; noun=kid
+noun=decek: noun=chicken
+noun=dejizoln: noun=wood
+noun=delgemzhum: noun=Pokemon
+noun=din: noun=home; noun=hive
+noun=divolm: noun=thunder; noun=phonology
+noun=dolkat: noun=picture
+noun=dolkatmahk: noun=Photoshop
+noun=dolmik: noun=compassion
+noun=duhdem: noun=dam; noun=swamp
+noun=duhdenthuhfam: noun=Gold
+noun=duhgan: noun=circle
+noun=duhk: noun=spear
+noun=famat: noun=farm
+noun=fic: noun=here; noun=now
+noun=fijyc: noun=rainbow
+noun=fithnelm: noun=lighthouse; noun=beacon
+noun=fmat: noun=seed
+noun=fmolxem: noun=destiny; noun=fate
+noun=fmulzhik: noun=year
+noun=fnadyc: noun=death
+noun=fnecolm: noun=noun
+noun=fyzuln: noun=sibling
+noun=gafuht: noun=brick
+noun=gamyk: noun=tree; noun=producer
+noun=gasnoln: noun=effort; noun=attempt; noun=pain
+noun=geshik: noun=clock; noun=sundial; noun=timekeeper
+noun=gigim: noun=flipper; noun=fin
+noun=gizlethnyt: noun=shoe
+noun=golslim: noun=photograph
+noun=guhngolduhn: noun=nonahedron
+noun=gygik: noun=food
+noun=gyn: noun=worker
+noun=gyznyt: noun=nose
+noun=jafin: noun=melodrama
+noun=jegen: noun=hook
+noun=jidolk: noun=flower
+noun=jizlet: noun=Quizlet
+noun=juhcen: noun=fire
+noun=kacfic: noun=past
+noun=kakcejyn: noun=consonant
+noun=kanolt: noun=door
+noun=kecycjin: noun=meme
+noun=kecycthuhfam: noun=Silicon
+noun=kelshik: noun=suffix
+noun=kemen: noun=cow; noun=bovine
+noun=kemenzamin: noun=milk
+noun=kemenzaminthuhfam: noun=Calcium
+noun=kexek: noun=emotion
+noun=kexekdolkat: noun=emoji
+noun=kidek: noun=face
+noun=kizhult: noun=bee; noun=harvester; noun=storyteller
+noun=kizhultdin: noun=beehive
+noun=kizik: noun=grass
+noun=kuhc: noun=letter
+noun=kuhctheknoc: noun=alphabet
+noun=kyfik: noun=arm
+noun=kyguhk: noun=chopstick
+noun=kygykkolxak: noun=pedalpub
+noun=kyvydyc: noun=crack; noun=tear; noun=hole
+noun=madam: noun=history
+noun=magolt: noun=value; noun=worth
+noun=mam: noun=mom; noun=female
+noun=mazuhn: noun=insect
+noun=melsulntelzlnoln: noun=snow
+noun=mesolk: noun=victory
+noun=mislek: noun=fern; noun=mathematics
+noun=mizizlat: noun=wheelbarrow; noun=cart; noun=trolley; noun=pram
+noun=molduhm: noun=mace
+noun=molm: noun=tribe
+noun=molmelc: noun=roof; noun=shelter
+noun=molshnem: noun=tribemember
+noun=nasham: noun=wave
+noun=nashelt: noun=love
+noun=nesit: noun=fruit
+noun=nic: noun=hand
+noun=nuln: noun=friend
+noun=nulvmic: noun=charcoal
+noun=nyzlan: noun=snail
+noun=saznolt: noun=mud
+noun=sekelt: noun=valley
+noun=shelsheln: noun=river; noun=pragmatics
+noun=shisek: noun=orchard
+noun=shnuhk: noun=lips
+noun=shuhzhik: noun=tear; noun=drop
+noun=slelceln: noun=lemon
+noun=slin: noun=fight
+noun=slingyn: noun=warrior; noun=Klingon
+noun=slnagen: noun=night
+noun=slolm: noun=axe
+noun=sluhtgolduhn: noun=tetrahedron
+noun=slysyc: noun=snake
+noun=snedelm: noun=secret
+noun=snijat: noun=mountain
+noun=snolzem: noun=knot
+noun=snym: noun=cloud
+noun=snymsoljemthuhfam: noun=Silver
+noun=soldyccesik: noun=adjective; noun=adverb
+noun=soljem: noun=color
+noun=soljesolm: noun=chromesthesia
+noun=sulfekaslifazhislitikesixasloldolshyc: noun=cookie
+noun=sulslem: noun=nectar
+noun=tak: noun=game; noun=amusement; noun=recreation
+noun=tamatthuhfam: noun=Tin
+noun=tan: noun=honey; noun=vomit; noun=language
+noun=tanik: noun=saxophone
+noun=tat: noun=dad; noun=male
+noun=telzlnoln: noun=rain
+noun=tethnym: noun=birth; noun=pregnancy
+noun=tevolk: noun=drum
+noun=tezet: noun=lightning
+noun=tezetfun: noun=electricity
+noun=thazan: noun=dusk
+noun=thefam: noun=stone; noun=writing; noun=orthography
+noun=thefnolm: noun=bear
+noun=themult: noun=information
+noun=thethat: noun=wind; noun=breeze
+noun=thezat: noun=storm; noun=hurricane
+noun=thigyk: noun=fashion
+noun=thikit: noun=strength
+noun=thikitmahk: noun=steroids
+noun=thisyn: noun=leaf
+noun=thnadyc: noun=inspiration; noun=Death
+noun=thnak: noun=root
+noun=thnamolk: noun=pizza
+noun=thnelk: noun=room
+noun=thnuhduhk: noun=elephant
+noun=thuhfam: noun=metal; noun=Copper
+noun=thuhnenolgem: noun=fort; noun=fortress
+noun=thulvmythat: noun=flag
+noun=tivuht: noun=dinosaur
+noun=tizholn: noun=ocean
+noun=tizlnin: noun=hail
+noun=tolcuhkek: noun=forcefield
+noun=tolmolm: noun=slope
+noun=tolzen: noun=mist; noun=fog
+noun=tolzlneln: noun=water
+noun=tolzlnelnzazit: noun=mud
+noun=tolzlnelnzhutduht: noun=Oxygen
+noun=tolzlnelnzhutduhtuk: noun=Hydrogen
+noun=tolzlnoln: noun=flood; noun=deluge
+noun=tolzlolt: noun=ice
+noun=tolzolt: noun=blizzard
+noun=tuln: noun=eye; noun=camera; noun=telescope
+noun=tult: noun=object; noun=thing
+noun=tultxeht: noun=nothing
+noun=tulvmyzam: noun=cloth; noun=fabric
+noun=tyslit: noun=trumpet
+noun=tytyt: noun=clover
+noun=tyzyshyk: noun=custom; noun=praxis; noun=way
+noun=vavmyn: noun=anarchy
+noun=vazolt: noun=cat
+noun=vesnennoc: noun=communism
+noun=vithit: noun=bird; noun=overseer
+noun=vmadan: noun=bacon
+noun=vmadanso: noun=pig
+noun=vman: noun=bow
+noun=vmedyt: noun=projectile
+noun=vmelfelc: noun=wisdom; noun=silliness
+noun=vmyn: noun=mouth
+noun=vnejyn: noun=mirror
+noun=vnevnec: noun=echo
+noun=vnisyt: noun=moon
+noun=voljam: noun=ear
+noun=volt: noun=plant
+noun=vykic: noun=afternoon
+noun=xanan: noun=life
+noun=xananzmet: noun=house
+noun=xatat: noun=magnet
+noun=xatatthuhfam: noun=Iron
+noun=xataxym: noun=hole; noun=pit; noun=ditch
+noun=xecult: noun=lie; noun=untruth
+noun=xelteln: noun=cliff
+noun=xexen: noun=problem
+noun=xolgak: noun=courage; noun=bravery; noun=valor
+noun=xulkatsazyc: noun=adventure
+noun=xyduht: noun=monkey
+noun=xykuhk: noun=shield
+noun=zac: noun=tuba
+noun=zadit: noun=glass
+noun=zaditkanolt: noun=window
+noun=zamin: noun=juice
+noun=zatenym: noun=troop; noun=group; noun=platoon
+noun=zatheln: noun=spider; noun=silkworm; noun=syntax
+noun=zazit: noun=dirt
+noun=zelvetzyzlolk: noun=Helium
+noun=zevulc: noun=mistranslation
+noun=zhasikzhuhzhuhmzanso: noun=spaceship
+noun=zhazhuhn: noun=chaos
+noun=zhetam: noun=pollen; noun=semen
+noun=zhizlik: noun=fish
+noun=zhnazym: noun=table
+noun=zhnicoln: noun=dog
+noun=zhyshyn: noun=bread
+noun=zic: noun=liquid
+noun=zizulm: noun=library
+noun=zlantak: noun=domino
+noun=zlislym: noun=skeleton
+noun=zlisoln: noun=fear; noun=panic; noun=paralysis
+noun=zlnanic: noun=chameleon
+noun=zlolfit: noun=wing
+noun=zlolzhit: noun=poop
+noun=zlolzhitthnelk: noun=bathroom
+noun=zluhznyk: noun=dignity; noun=honor
+noun=zmet: noun=buliding
+noun=znenan: noun=tale; noun=story
+noun=znimkolxak: noun=unicycle
+noun=znolk: noun=day
+noun=zuhzuhmelt: noun=ladle; noun=dipper
+noun=zyzlolk: noun=gas
+noun=cagyn: noun=underachiever; noun=couch-potato
+noun=cigym: noun=rubber-duckie
+noun=dasnan: noun=nature; noun=outer-space
+noun=dasnankixikolm: noun=space-helicopter
+noun=duhkim: noun=staff; noun=walking-stick; noun=cane
+noun=dyculm: noun=movie-theater
+noun=femek: noun=mind; noun=thought; noun=Sherlock-Holmes
+noun=golt: noun=limit; noun=boundary; noun=termination-point; noun=end
+noun=jelkelmtuc: noun=page; noun=book-cover; noun=binding
+noun=jikin: noun=wiki; noun=notebook; noun=bulletin-board
+noun=jivyt: noun=music-box
+noun=kagan: noun=hula-hoop; noun=donut; noun=doughnut
+noun=kecyctatulk: noun=Google-Glass
+noun=kicat: noun=french-horn
+noun=melsuln: noun=ice-cream; noun=gelato; noun=cold
+noun=muhc: noun=community
+noun=nenyk: noun=playing-card
+noun=nenyktak: noun=card-game
+noun=shikolk: noun=sugar-glider
+noun=slik: noun=thumbs-up
+noun=tatulk: noun=glasses; noun=spectacles; noun=contact-lens; noun=monocle; noun=eyewear
+noun=theknoc: noun=writing-system
+noun=thnamolkmahk: noun=marinara-sauce
+noun=thnamolksoljemmahk: noun=olive-oil
+noun=tolzlnelnkolxak: noun=pedal-boat
+noun=tulceslitvolt: noun=vegetable-oil
+noun=xaslan: noun=sign-language
+noun=xen: noun=thumbs-down
+noun=zlaslolk: noun=laser; noun=phaser; noun=ray-gun; noun=energy-beam

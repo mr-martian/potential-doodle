@@ -1,5 +1,6 @@
 from datatypes import *
 from collections import defaultdict
+from os.path import isfile
 ###PARSING
 def tokenize(s):
     ret = []
@@ -212,17 +213,7 @@ def loadlexicon(lang):
     for root in rootslist:
         m = Node(lang, root.arg, [root.label])
         for p in root.children:
-            if p.label == 'gloss':
-                for g in p.val.split(';'):
-                    d = toobj(g.strip(), int(p.arg), m)
-                    Translation(m, d, root.label)
-            elif p.label == 'translate':
-                l = int(p.firstval('lang'))
-                f = p.fvo('from', lang, m)
-                c = p.fvo('context', lang, blank(lang), '@')
-                for t in p.vals('to'):
-                    Translation(f, toobj(t, l, m), root.label, context=c)
-            elif p.label == 'form':
+            if p.label == 'form':
                 c = p.fvo('context', lang, blank(lang), '@')
                 form = p.fvo('structure', lang, m)
                 for f in p['form']:
@@ -282,10 +273,33 @@ def loadlang(lang):
                 tr = ch.fvo('result', lang, None)
                 ret.transform.append(Translation(tf, tr, 'transform', tc))
     return ret
+def loadtrans(lfrom, lto):
+    fname = 'langs/%s/translate/%s.txt' % (lfrom, lto)
+    if isfile(fname):
+        trans = ParseLine.fromfile(fname)
+        for lex in trans:
+            m = toobj(lex.label, lfrom, None)
+            if lex.val:
+                for g in lex.val.split(';'):
+                    d = toobj(g.strip(), lto, m)
+                    Translation(m, d, m.children[0])
+            for tr in lex.children:
+                if tr.label == 'translate':
+                    f = tr.fvo('from', lfrom, m)
+                    c = tr.fvo('context', lfrom, blank(lfrom), '@')
+                    for t in tr.vals('to'):
+                        Translation(f, toobj(t, lto, m), m.children[0], context=c)
+def loadlangset(langs):
+    for l in langs:
+        loadlang(l)
+    for lf in langs:
+        for lt in langs:
+            loadtrans(lf, lt)
 if __name__ == '__main__':
-    loadlexicon(2)
-    l = loadlang(2)
+    #loadlexicon(2)
+    #l = loadlang(2)
     #print([x[0].label for x in l.syntax['NP'].conds])
     #print(destring('$head(<* {transitive=true} *>)', 7, None))
     #print(l)
-    print(toobj('<(3) ~ ~ ~>', 7, None))
+    #print(toobj('<(3) ~ ~ ~>', 7, None))
+    loadlangset([2,1])

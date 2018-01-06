@@ -1,5 +1,5 @@
 import random, itertools, copy
-from compilelang import loadlang
+from compilelang import loadlang, loadlangset
 from datatypes import *
 def gen(pats, tree, depth, setvars):
     #print('gen(pats, %s, %s, %s)' % (tree, depth, setvars))
@@ -87,8 +87,7 @@ def filterlang(sens, lang):
         if s.alllang(lang):
             yield s
 def gen_and_trans(flang, tlang):
-    loadlang(flang)
-    loadlang(tlang)
+    loadlangset([flang, tlang])
     sen = make(flang)
     ret = []
     for tr in translate(sen, tlang):
