@@ -8,28 +8,17 @@ metadata
   creator: Common Honey Tribe
 syntax
   start-with: CP
-  xbar
-    A
-      head: describer
-      translang: 1
-    C
-      head: complementizer
-      comp: IP
-      translang: 1
-    I
-      head: I
-      comp: VP
-      translang: 1
-    N
-#      spec: PP
-      head: noun
-      comp: describer
-      translang: 1
-    P
-      head: postposition
-      comp: DP
-      translang: 1
   node-types
+    AP
+      xbar (1): ~; describer; ~
+    CP
+      xbar (1): ~; complementizer; IP
+    IP
+      xbar (1): ~; I; VP
+    NP
+      xbar (1): AP; noun; ~
+    PP
+      xbar (1): ~; postposition; DP
     I
       variable: $t:tense
       variable: $a:aspect
@@ -39,22 +28,15 @@ syntax
     DP
       variable: $head:determiner
       option ($head(hasspec=true))
-        structure: [DP $spec:NP [Dbar $head $comp:NP]]
-        translation (1): [DP $spec [Dbar $head $comp]]
+        xbar (1): NP; $head; NP
       option ($head(hasspec=false))
-        structure: [DP ~ [Dbar $head $comp:NP]]
-        translation (1): [DP ~ [Dbar $head $comp]]
+        xbar (1): ~; $head; NP
     VP
-      structure: [VP $post:PP? $adjunct:NP? $adv:describer? $bar:Vbar]
-      translation (1): [VP ~ [Vmod $adv $bar $adjunct $post]]
-    Vbar
       variable: $head:verb
       option ($head(transitive=true))
-        structure: [Vbar $comp:NP $head]
-        translation (1): [Vbar $head $comp]
+        xbar (1): NP; $head; NP
       option ($head(transitive=false))
-        structure: [Vbar ~ $head]
-        translation (1): [Vbar $head ~]
+        xbar (1): NP; $head; ~
 #    -IP
 #      structure: [-IP $a:IP $head:conjunction $b:IP]
 #      translation (1): [-IP $a $head $b]

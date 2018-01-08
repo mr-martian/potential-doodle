@@ -22,7 +22,11 @@
   - [ ] separate from generation
   - [ ] speed up
     - port to compiled language?
+  - [ ] translation distance
 - [x] [Generation](gentext.py)
+- [ ] Language data
+  - [ ] traces
+  - [ ] theta roles
 - [ ] practice
   - [ ] make interface
   - [ ] store data

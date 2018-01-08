@@ -53,3 +53,7 @@ transform
     context: @
     form: [Nbar $head $comp]
     result: [Nbar $comp $head]
+  rule
+    context: @
+    form: [IP ~ [Ibar $i [VP $subj $vbar]]]
+    result: [IP $subj [Ibar $i [VP ~ $vbar]]]

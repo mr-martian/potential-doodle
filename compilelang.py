@@ -189,6 +189,11 @@ class ParseLine:
         for ch in self.children:
             if ch.label == key:
                 yield ch
+    def __contains__(self, key):
+        for ch in self.children:
+            if ch.label == key:
+                return True
+        return False
     def vals(self, key):
         for ch in self[key]:
             yield ch.val
@@ -219,6 +224,9 @@ def loadlexicon(lang):
                 for f in p['form']:
                     fm = Node(lang, root.arg, [f.val], defaultdict(list, {'form of': m}))
                     Translation(form, fm, root.label, context=c)
+            elif p.label == 'inaudible':
+                fm = Node(lang, root.arg, [None], defaultdict(list, {'form of': m}))
+                Translation(m, fm, root.label, context=None)
             else:
                 m.props[p.label] = p.val
         register(m)
@@ -235,34 +243,37 @@ def loadlang(lang):
                     for ty in ch.children:
                         vrs = [toobj(s, lang) for s in ty.vals('variable')]
                         if not list(ty['option']):
-                            ty.children.append(ParseLine(-1, 'option', [], '', list(ty['structure']) + list(ty['translation'])))
+                            ty.children = [ParseLine(-1, 'option', [], '', ty.children)]
                         conds = []
                         ops = []
                         for op in ty['option']:
-                            node = toobj(op.firstval('structure'), lang)
-                            for tr in op['translation']:
-                                res = toobj(tr.val, int(tr.arg))
+                            if 'xbar' in op:
+                                line = op.first('xbar')
+                                nodes = line.val.split(';')
+                                if len(nodes) != 3:
+                                    ParseError('Wrong number of nodes given to xbar on line %s, expected 3, got %s' % (line.num, len(nodes)))
+                                xargs = []
+                                for s_, arg in zip(nodes, ['spec', 'head', 'comp']):
+                                    s = s_.strip()
+                                    if s[0] == '$':
+                                        xargs.append([s, s])
+                                    elif s == '~':
+                                        xargs.append(['~', '~'])
+                                    else:
+                                        xargs.append(['$%s:%s'%(arg,s), '$'+arg])
+                                spec, head, comp = xargs
+                                name = ty.label[:-1] #drop P
+                                node = toobj('[%sP %s [%sbar %s %s]]' % (name, spec[0], name, head[0], comp[0]), lang)
+                                res = toobj('[%sP %s [%sbar %s %s]]' % (name, spec[1], name, head[1], comp[1]), int(line.arg))
                                 Translation(node, res, 'syntax')
+                            else:
+                                node = toobj(op.firstval('structure'), lang)
+                                for tr in op['translation']:
+                                    res = toobj(tr.val, int(tr.arg))
+                                    Translation(node, res, 'syntax')
                             conds.append([toobj(x, lang) for x in op.args])
                             ops.append(node)
                         ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs)
-                elif ch.label == 'xbar':
-                    for ty in ch.children:
-                        def xbararg(name, section):
-                            line = section.first(name)
-                            if line:
-                                return ['$'+name+':'+line.val, '$'+name]
-                            else:
-                                return ['~', '~']
-                        spec = xbararg('spec', ty)
-                        head = xbararg('head', ty)
-                        comp = xbararg('comp', ty)
-                        tree = toobj('[%sP %s [%sbar %s %s]]' % (ty.label, spec[0], ty.label, head[0], comp[0]), lang)
-                        trans = '[%sP %s [%sbar %s %s]]' % (ty.label, spec[1], ty.label, head[1], comp[1])
-                        translangs = ty.vals('translang')
-                        ret.syntax[ty.label+'P'] = SyntaxPat(ty.label+'P', [[]], [tree], [])
-                        for l in translangs:
-                            Translation(tree, toobj(trans, int(l)), 'syntax')
         if th.label == 'morphology':
             for ch in th.children:
                 Node.addmode(ch.label, list(ch.vals('re')))

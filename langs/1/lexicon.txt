@@ -7,6 +7,7 @@ gen (noun-inflection)
     structure: @
     form: 's
 comp (complementizer)
+  inaudible
 present (tense)
 future (tense)
 not (mood)

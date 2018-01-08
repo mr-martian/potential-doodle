@@ -1,11 +1,8 @@
-article (determiner)
-  form
-    structure: @
-    form: ~
 comp (complementizer)
 nonpast (tense)
 m_t (mood)
 null (determiner)
+  inaudible
   hasspec: false
 vmeh (determiner)
   hasspec: true
