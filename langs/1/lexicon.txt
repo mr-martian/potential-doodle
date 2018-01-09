@@ -76,6 +76,8 @@ understand (verb)
   object1: NP
 unproductive (adjective)
 you (noun)
+sweet (adjective)
+chocolate (adjective)
 
 Calcium (noun)
 Copper (noun)

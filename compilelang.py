@@ -56,7 +56,7 @@ def destring(s, lang, at):
                 cond = rest.pop(0)
                 rest.pop(0)
             elif len(rest) >= 4 and ok(rest[0]) and rest[1] == '=' and ok(rest[2]) and rest[3] == ')':
-                cond = [rest[0], rest[3]]
+                cond = [rest[0], rest[2]]
                 rest = rest[4:]
             else:
                 cond, rest = destring(rest, lang, at)
@@ -256,16 +256,16 @@ def loadlang(lang):
                                 for s_, arg in zip(nodes, ['spec', 'head', 'comp']):
                                     s = s_.strip()
                                     if s[0] == '$':
-                                        xargs.append([s, s])
+                                        xargs.append(s)
                                     elif s == '~':
-                                        xargs.append(['~', '~'])
+                                        xargs.append('~')
                                     else:
-                                        xargs.append(['$%s:%s'%(arg,s), '$'+arg])
-                                spec, head, comp = xargs
+                                        xargs.append('$%s:%s'%(arg,s))
                                 name = ty.label[:-1] #drop P
-                                node = toobj('[%sP %s [%sbar %s %s]]' % (name, spec[0], name, head[0], comp[0]), lang)
-                                res = toobj('[%sP %s [%sbar %s %s]]' % (name, spec[1], name, head[1], comp[1]), int(line.arg))
-                                Translation(node, res, 'syntax')
+                                node = toobj('[%sP %s [%sbar %s %s]]' % (name, xargs[0], name, xargs[1], xargs[2]), lang)
+                                tolang = int(line.arg)
+                                Translation(toobj('[%sP * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
+                                Translation(toobj('[%sbar * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
                             else:
                                 node = toobj(op.firstval('structure'), lang)
                                 for tr in op['translation']:
@@ -283,6 +283,8 @@ def loadlang(lang):
                 tf = ch.fvo('form', lang, None)
                 tr = ch.fvo('result', lang, None)
                 ret.transform.append(Translation(tf, tr, 'transform', tc))
+            for ch in th['rotate']:
+                ret.transform.append(Translation(toobj('[%s * *]' % ch.val, lang), 'rotate', 'transform', resultlang=lang))
     return ret
 def loadtrans(lfrom, lto):
     fname = 'langs/%s/translate/%s.txt' % (lfrom, lto)

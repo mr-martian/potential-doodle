@@ -37,13 +37,13 @@ vmeh (case)
 danec (verb)
   transitive: true
 dasnan (describer)
-dyfnyn (verb--)
+dyfnyn (verb)
   transitive: true
 g_m (auxilliary)
   vowel: ol
-jeltan (verb--)
+jeltan (verb)
   transitive: false
-jezlan (verb--)
+jezlan (verb)
   transitive: true
 keh (conjunction)
   clause-only: false
@@ -52,6 +52,8 @@ m_t (auxilliary)
 seln (postposition)
 tyk (conjunction)
   clause-only: true
+nuhtit (describer)
+zlulzit (describer)
 
 cadelgyn (noun)
 cadelk (noun)

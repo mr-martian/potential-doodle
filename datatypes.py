@@ -28,7 +28,7 @@ class Variable:
         if self.blankcond:
             return vrs[self.label] != None
         else:
-            return match(self.cond, vrs[self.label])
+            return match(vrs[self.label], self.cond)
     def putvars(self, vrs):
         return vrs[self.label]
     def __str__(self):
@@ -51,11 +51,13 @@ class Node:
         'suffix': ['$', '(.*)', '\\1'],
         'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
     })
-    def __init__(self, lang, ntype, children, props=defaultdict(list)):
+    def __init__(self, lang, ntype, children, props=None):
         self.lang = lang
         self.ntype = ntype
         self.children = children
         self.props = props
+        if not props:
+            self.props = defaultdict(list)
     def swapchildren(self, ls):
         return Node(self.lang, self.ntype, ls, copy.deepcopy(self.props))
         r = copy.deepcopy(self)
@@ -112,8 +114,20 @@ class Node:
         if subvrs[' failed']:
             #print('failed on form')
             return []
-        vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
-        return copy.deepcopy(tr.context).putvars(vrs)
+        if isinstance(tr.result, Node):
+            vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
+            return copy.deepcopy(tr.context).putvars(vrs)
+        elif tr.result == 'rotate':
+            return self.swapchildren(list(reversed(self.children)))
+        elif isinstance(tr.result, list):
+            if tr.result[0] == 'setlang':
+                ret = copy.deepcopy(self)
+                ret.lang = tr.result[1]
+                return ret
+            else:
+                return []
+        else:
+            return []
     def transform(self, pats):
         if len(pats) > 0:
             chs = []
@@ -145,7 +159,7 @@ class Node:
         else:
             s = str(self.children)
         #return '%s(%s)[%s %s]' % (self.__class__.__name__, self.lang, self.ntype, s)
-        return '%s(%s)%s' % (self.ntype, self.lang, s)
+        return '%s(%s)%s%s' % (self.ntype, self.lang, s, str(self.props))
     def __repr__(self):
         return self.__str__()
     def addmode(name, pats):
@@ -181,6 +195,9 @@ class Node:
                 return False
         return True
 def match(a, b):
+    #a is thing, b is pattern
+    #only matters for nodes, where b's properties must be a subset of a's
+    #otherwise match(b, a) should be identical
     if isinstance(a, Unknown) or isinstance(b, Unknown):
         return True
     elif isinstance(a, Option):
@@ -199,20 +216,15 @@ def match(a, b):
         if not match(a.ntype, b.ntype):
             return False
         if isinstance(a.children, Unknown) or isinstance(b.children, Unknown):
-            return True
-        if len(a.children) != len(b.children):
+            pass
+        elif len(a.children) != len(b.children):
             return False
-        if isinstance(a.children, list) and isinstance(b.children, list):
+        elif isinstance(a.children, list) and isinstance(b.children, list):
             for ac, bc in zip(a.children, b.children):
                 if not match(ac, bc):
                     return False
-        ka = set(a.props.keys()) - set(['translations', 'forms'])
-        kb = set(b.props.keys()) - set(['translations', 'forms'])
-        ks = ka.intersection(kb)
-        if len(ks) != len(ka) and len(ks) != len(kb):
-            return False
-        for k in ks:
-            if not match(a.props[k], b.props[k]):
+        for k in b.props:
+            if k not in a.props or not match(a.props[k], b.props[k]):
                 return False
         return True
     elif isinstance(a, Translation) and isinstance(b, Translation):
@@ -227,10 +239,13 @@ def register(morph):
 ###TRANSFORMATIONS
 class Translation:
     __alltrans = []
-    def __init__(self, form, result, category, context=None):
+    def __init__(self, form, result, category, context=None, resultlang=None):
         self.form = form
         self.result = result
-        self.langs = [form.lang, result.lang]
+        if resultlang:
+            self.langs = [form.lang, resultlang]
+        else:
+            self.langs = [form.lang, result.lang]
         self.category = category
         self.roots = [] #roots of all morphemes in result
         if isinstance(result, Node):

@@ -92,14 +92,19 @@ def gen_and_trans(flang, tlang):
     ret = []
     for tr in translate(sen, tlang):
         if tr.alllang(tlang):
-            ret.append(tr)
-    return sen, ret
+            for m in movement(tr):
+                ret.append(m)
+            #ret.append(tr)
+    return movement(sen)[0], ret
 if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
     tl = int(sys.argv[2])
 
     sen, tr = gen_and_trans(fl, tl)
-    print(movement(sen)[0].display())
+    #mv = movement(sen)
+    #print(movement(sen)[0].display())
+    #print(sen)
+    print(sen.display())
     for t in tr:
         print(t.display())

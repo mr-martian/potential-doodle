@@ -8,10 +8,10 @@ aspect=feh: aspect=durative
 case=vmeh: noun-inflection=gen
 verb=danec: verb=borrow; verb=copy; verb=imitate
 describer=dasnan: adjective=cosmic
-verb--=dyfnyn: verb=measure
+verb=dyfnyn: verb=measure
 auxilliary=g_m: auxilliary=must
-verb--=jeltan: verb=hide; verb=cower
-verb--=jezlan
+verb=jeltan: verb=hide; verb=cower
+verb=jezlan
   translate
     from: [Vbar @ $comp]
     to: [Vbar verb=excell [PP ~ [Pbar preposition=at $comp]]]
@@ -19,6 +19,8 @@ conjunction=keh: conjunction=and
 auxilliary=m_t: auxilliary=doesnt
 postposition=seln: preposition=to; preposition=towards
 conjunction=tyk: conjunction=so
+describer=nuhtit: adjective=sweet
+describer=zlulzit: adjective=chocolate
 
 noun=cadelgyn: noun=astronaut; noun=cosmonaut
 noun=cadelk: noun=planet

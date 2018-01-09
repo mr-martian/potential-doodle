@@ -34,9 +34,9 @@ syntax
     VP
       variable: $head:verb
       option ($head(transitive=true))
-        xbar (1): NP; $head; NP
+        xbar (1): DP; $head; DP
       option ($head(transitive=false))
-        xbar (1): NP; $head; ~
+        xbar (1): DP; $head; ~
 #    -IP
 #      structure: [-IP $a:IP $head:conjunction $b:IP]
 #      translation (1): [-IP $a $head $b]
@@ -68,18 +68,9 @@ morphology
     re: .*
 transform
   rule
-    context: [NP [NP $spec [Nmod $post $rel $adj @]] $nmod]
-    form: $head
-    result: <suffix $head case=vmeh>
-  rule
     context: [Nmod $post @ $adj $head]
     form: [IP $ibar $subj]
     result: [IPmark rel=mu [IP $ibar $subj] rel=om]
-  rule
-    context: [PP ~ @]
-    form: [Pbar $head $comp]
-    result: [Pbar $comp $head]
-  rule
-    context: [NP $spec @]
-    form: [Nbar $head $comp]
-    result: [Nbar $comp $head]
+  rotate: Pbar
+  rotate: VP
+  rotate: Vbar
