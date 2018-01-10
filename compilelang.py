@@ -5,10 +5,18 @@ from os.path import isfile
 def tokenize(s):
     ret = []
     add = False
+    digraph = False
     for c in s:
         if c in '[]<>$:(){}=@':
-            ret.append(c)
+            if digraph:
+                ret[-1] += c
+                digraph = False
+            else:
+                ret.append(c)
             add = False
+        elif c == '|':
+            ret.append(c)
+            digraph = True
         elif c == '~':
             ret.append(None)
             add = False
@@ -72,6 +80,19 @@ def destring(s, lang, at):
             t, rest = destring(rest, lang, at)
             ch.append(t)
         return Node(lang, ntype, ch), rest[1:]
+    elif s[0] == '|[': #xbar Sytnax
+        ntype = s[1]
+        rest = s[2:]
+        ch = []
+        while rest[0] != ']':
+            t, rest = destring(rest, lang, at)
+            ch.append(t)
+        if len(ch) == 3:
+            ch.insert(1, None)
+        name = ntype[:-1]
+        bar = Node(lang, name+'bar', ch[2:])
+        mod = Node(lang, name+'mod', [ch[1], bar])
+        return Node(lang, ntype, [ch[0], mod]), rest[1:]
     elif s[0] == '<': #Morphology
         rest = s[1:]
         l = None
@@ -224,6 +245,10 @@ def loadlexicon(lang):
                 for f in p['form']:
                     fm = Node(lang, root.arg, [f.val], defaultdict(list, {'form of': m}))
                     Translation(form, fm, root.label, context=c)
+            elif p.label == 'display':
+                c = p.fvo('context', lang, blank(lang), '@')
+                f = p.firstval('form')
+                Translation(m, m.swapchildren([f]), root.label, context=c)
             elif p.label == 'inaudible':
                 fm = Node(lang, root.arg, [None], defaultdict(list, {'form of': m}))
                 Translation(m, fm, root.label, context=None)
@@ -251,9 +276,9 @@ def loadlang(lang):
                                 line = op.first('xbar')
                                 nodes = line.val.split(';')
                                 if len(nodes) != 3:
-                                    ParseError('Wrong number of nodes given to xbar on line %s, expected 3, got %s' % (line.num, len(nodes)))
+                                    ParseError('Wrong number of nodes given to xbar on line %s, expected 4, got %s' % (line.num, len(nodes)))
                                 xargs = []
-                                for s_, arg in zip(nodes, ['spec', 'head', 'comp']):
+                                for s_, arg in zip(nodes, ['spec', 'mod', 'head', 'comp']):
                                     s = s_.strip()
                                     if s[0] == '$':
                                         xargs.append(s)
@@ -262,9 +287,12 @@ def loadlang(lang):
                                     else:
                                         xargs.append('$%s:%s'%(arg,s))
                                 name = ty.label[:-1] #drop P
-                                node = toobj('[%sP %s [%sbar %s %s]]' % (name, xargs[0], name, xargs[1], xargs[2]), lang)
+                                #node = toobj('[%sP %s [%sbar %s %s]]' % (name, xargs[0], name, xargs[1], xargs[2]), lang)
+                                node = toobj('|[%sP %s]' % (name, ' '.join(xargs)), lang)
                                 tolang = int(line.arg)
+                                #Translation(Variable('P', name+'P', None, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
                                 Translation(toobj('[%sP * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
+                                Translation(toobj('[%smod * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
                                 Translation(toobj('[%sbar * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
                             else:
                                 node = toobj(op.firstval('structure'), lang)
@@ -284,7 +312,8 @@ def loadlang(lang):
                 tr = ch.fvo('result', lang, None)
                 ret.transform.append(Translation(tf, tr, 'transform', tc))
             for ch in th['rotate']:
-                ret.transform.append(Translation(toobj('[%s * *]' % ch.val, lang), 'rotate', 'transform', resultlang=lang))
+                ret.rotate.append(ch.val)
+                #ret.transform.append(Translation(toobj('[%s * *]' % ch.val, lang), 'rotate', 'transform', resultlang=lang))
     return ret
 def loadtrans(lfrom, lto):
     fname = 'langs/%s/translate/%s.txt' % (lfrom, lto)

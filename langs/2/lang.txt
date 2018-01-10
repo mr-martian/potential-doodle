@@ -10,15 +10,15 @@ syntax
   start-with: CP
   node-types
     AP
-      xbar (1): ~; describer; ~
+      xbar (1): ~; ~; describer; ~
     CP
-      xbar (1): ~; complementizer; IP
+      xbar (1): ~; ~; complementizer; IP
     IP
-      xbar (1): ~; I; VP
+      xbar (1): ~; ~; I; VP
     NP
-      xbar (1): AP; noun; ~
+      xbar (1): ~; AP; noun; ~
     PP
-      xbar (1): ~; postposition; DP
+      xbar (1): ~; ~; postposition; DP
     I
       variable: $t:tense
       variable: $a:aspect
@@ -28,49 +28,50 @@ syntax
     DP
       variable: $head:determiner
       option ($head(hasspec=true))
-        xbar (1): NP; $head; NP
+        xbar (1): DP; ~; $head; NP
       option ($head(hasspec=false))
-        xbar (1): ~; $head; NP
+        xbar (1): ~; ~; $head; NP
     VP
       variable: $head:verb
       option ($head(transitive=true))
-        xbar (1): DP; $head; DP
+        xbar (1): DP; ~; $head; DP
       option ($head(transitive=false))
-        xbar (1): DP; $head; ~
-#    -IP
-#      structure: [-IP $a:IP $head:conjunction $b:IP]
-#      translation (1): [-IP $a $head $b]
-#    -NP
-#      structure: [-NP $a:NP $head:conjunction(clause-only=false) $b:NP]
-#      translation (1): [-NP $a $head $b]
-#    -VP
-#      structure: [-VP $a:VP $head:conjunction $b:VP]
-#      translation (1): [-VP $a $head $b]
-#    Mauxilliary
-#      variable: $aux:auxilliary
-#      option ($aux!)
-#        structure: [I $a:aspect ~]
-#      option ($aux(vowel=i))
-#        structure: [I $a:aspect <aux $aux $t:i-tense>]
-#      option ($aux(vowel=ol))
-#        structure: [I $a:aspect <aux $aux $t:ol-tense>]
-#    Mnoun
-#      option
-#        structure: $n:noun
-#        translation (1): $n
-#      option
-#        structure: <suffix $n:noun $s:noun/noun>
-#        translation (1): <suffix $n $s>
+        xbar (1): DP; ~; $head; ~
 morphology
   aux
     re: _
     re: \\1
     re: .*
 transform
+#possessives
   rule
-    context: [Nmod $post @ $adj $head]
-    form: [IP $ibar $subj]
-    result: [IPmark rel=mu [IP $ibar $subj] rel=om]
+    context: @
+    form: |[DP $spec $mod determiner=vmeh $comp]
+    result: |[DP <suffix $spec determiner=vmeh> $mod ~ $comp]
+  rule
+    context: @
+    form: <suffix |[DP $spec $mod $head $comp] determiner=vmeh>
+    result: |[DP $spec $mod $head <suffix $comp determiner=vmeh>]
+  rule
+    context: @
+    form: <suffix |[NP $spec $mod $head $comp] determiner=vmeh>
+    result: |[NP $spec $mod <suffix $head determiner=vmeh> $comp]
+#aspect
+  rule
+    context: @
+    form: [Ibar [I $tense $aspect $mood] |[VP $spec $mod $head $comp]]
+    result: [Ibar [I $tense ~ $mood] |[VP $spec $mod <suffix $head $aspect> $comp]]
+#tense + mood
+  rule
+    context: @
+    form: [I tense=nonpast ~ mood=d_c]
+    result: [I]
+  rule
+    context: @
+    form: [I $tense ~ $mood]
+    result: <aux $mood $tense>
+#rotations
   rotate: Pbar
   rotate: VP
   rotate: Vbar
+  rotate: Ibar

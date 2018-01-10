@@ -15,6 +15,9 @@ class Variable:
             self.cond = None
             self.label = self.label[:-1]
             self.blankcond = False
+        if self.label and self.label[-1] == '?':
+            self.opt = True
+            self.label = self.label[:-1]
         elif isinstance(cond, list):
             self.cond = Node(Unknown(), Unknown(), Unknown(), {})
             if cond[0]:
@@ -24,11 +27,21 @@ class Variable:
             self.cond = cond
             if cond:
                 self.blankcond = False
+        if self.value and not self.cond:
+            self.cond = Node(Unknown(), self.value, Unknown)
+            self.blankcond = False
     def check(self, vrs):
-        if self.blankcond:
-            return vrs[self.label] != None
+        v = vrs[self.label]
+        if self.opt:
+            if self.blankcond: return True
+            else: return v == None or match(v, self.cond)
         else:
-            return match(vrs[self.label], self.cond)
+            if self.blankcond: return v != None
+            else: return match(v, self.cond)
+        #if self.blankcond:
+        #    return vrs[self.label] != None
+        #else:
+        #    return match(vrs[self.label], self.cond)
     def putvars(self, vrs):
         return vrs[self.label]
     def __str__(self):
@@ -159,7 +172,7 @@ class Node:
         else:
             s = str(self.children)
         #return '%s(%s)[%s %s]' % (self.__class__.__name__, self.lang, self.ntype, s)
-        return '%s(%s)%s%s' % (self.ntype, self.lang, s, str(self.props))
+        return '%s(%s)%s' % (self.ntype, self.lang, s)
     def __repr__(self):
         return self.__str__()
     def addmode(name, pats):
@@ -175,6 +188,8 @@ class Node:
                 l.append(str(c))
         mode = Node.__modes[self.ntype]
         if not mode or len(l) != (len(mode) - 1):
+            if self.ntype in Language.get(self.lang).rotate:
+                l.reverse()
             return ' '.join(l)
         i = len(l) - 1
         s = re.sub(mode[i], mode[i+1], l[i])
@@ -285,12 +300,15 @@ class Language:
         self.syntax = {}
         self.morphology = defaultdict(list)
         self.transform = []
+        self.rotate = []
         self.syntaxstart = None
         Language.__alllangs[lang] = self
     def addmorphopt(self, ntype, struct):
         self.morphology[ntype].append(struct)
     def isloaded(lang):
         return lang in Language.__alllangs
+    def get(lang):
+        return Language.__alllangs[lang]
     def getpats(self):
         r = {}
         for k in self.syntax:

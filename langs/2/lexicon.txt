@@ -1,6 +1,20 @@
 comp (complementizer)
 nonpast (tense)
-m_t (mood)
+  display
+#    context: <aux $a(vowel=ol) @>
+    context: [I @ * $a(vowel=ol)]
+    form: ol
+  display
+    context: [I @ * $a(vowel=i)]
+    form: i
+#  form
+#    context: <aux $a(vowel=ol) @>
+#    structure: @
+#    form: ol
+#  form
+#    context: <aux $a(vowel=i) @>
+#    structure: @
+#    form: i
 null (determiner)
   inaudible
   hasspec: false
@@ -39,7 +53,7 @@ danec (verb)
 dasnan (describer)
 dyfnyn (verb)
   transitive: true
-g_m (auxilliary)
+g_m (mood)
   vowel: ol
 jeltan (verb)
   transitive: false
@@ -47,8 +61,10 @@ jezlan (verb)
   transitive: true
 keh (conjunction)
   clause-only: false
-m_t (auxilliary)
+m_t (mood)
   vowel: ol
+d_c (mood)
+  vowel: i
 seln (postposition)
 tyk (conjunction)
   clause-only: true

@@ -25,8 +25,11 @@
   - [ ] translation distance
 - [x] [Generation](gentext.py)
 - [ ] Language data
+  - [ ] fix display/form
   - [ ] traces
   - [ ] theta roles
+  - [ ] conjunctions
+  - [ ] modifiers
 - [ ] practice
   - [ ] make interface
   - [ ] store data

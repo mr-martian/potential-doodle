@@ -73,15 +73,21 @@ def translate(sen, tolang):
             roots.append(ch)
     pats = list(Translation.find(sen.lang, tolang, roots))
     for tr in sen.transform(pats):
-        for m in movement(tr):
-            yield m
+        #for m in movement(tr):
+        #    yield m
+        yield tr
 def movement(sen):
-    roots = ['transform']
+    #roots = ['transform']
+    roots = []
     for ch in sen.iternest():
         if isinstance(ch, str):
             roots.append(ch)
     pats = list(Translation.find(sen.lang, sen.lang, roots))
-    return sen.transform(pats) or [sen]
+    #return sen.transform(pats) or [sen]
+    lexsen = sen.transform(pats)[0] or sen
+    for p in Translation.find(sen.lang, sen.lang, ['transform']):
+        lexsen = lexsen.transform([p])[0] or lexsen
+    return lexsen
 def filterlang(sens, lang):
     for s in sens:
         if s.alllang(lang):
@@ -92,19 +98,22 @@ def gen_and_trans(flang, tlang):
     ret = []
     for tr in translate(sen, tlang):
         if tr.alllang(tlang):
-            for m in movement(tr):
-                ret.append(m)
+            #for m in movement(tr):
+            #    ret.append(m)
+            ret.append(movement(tr))
             #ret.append(tr)
-    return movement(sen)[0], ret
+    return movement(sen), ret
 if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
     tl = int(sys.argv[2])
 
-    sen, tr = gen_and_trans(fl, tl)
+    #sen, tr = gen_and_trans(fl, tl)
     #mv = movement(sen)
     #print(movement(sen)[0].display())
-    #print(sen)
+    loadlang(fl)
+    sen = movement(make(fl))
+    print(sen)
     print(sen.display())
-    for t in tr:
-        print(t.display())
+    #for t in tr:
+    #    print(t.display())
