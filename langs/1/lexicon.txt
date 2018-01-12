@@ -1,23 +1,73 @@
 a (article)
   definite: false
-Q (complement-specifier)
 s (noun-inflection)
-gen (noun-inflection)
-  form
-    structure: @
-    form: 's
-comp (complementizer)
-  inaudible
+-Q (complementizer)
+  audible: false
++Q (complementizer)
+  audible: false
+
 past (tense)
-present (tense)
-future (tense)
-not (mood)
-must (mood)
-do (mood)
+  display: ed
+nonpast (tense)
+  audible: false
 durative (aspect)
+  audible: false
+perfect (aspect)
+continuous (aspect)
+perfect-continuous (aspect)
+could (mood)
+couldn't (mood)
+can (mood)
+  form
+    structure: [I tense=past $aspect @]
+    result: [I tense=past $aspect mood=could]
+can't (mood)
+  form
+    structure: [I tense=past $aspect @]
+    result: [I tense=past $aspect mood=couldn't]
+not (mood)
+do (aux)
+does (aux)
+did (aux)
+
+PL (v-num)
+SG (v-num)
+1 (v-pers)
+2 (v-pers)
+3 (v-pers)
+ed (participle)
+ing (participle)
+have (aux)
+be (aux)
+
 a (determiner)
+  hasspec: false
+  person: 3
+  plural: false
 the (determiner)
-s (determiner)
+  hasspec: false
+  person: 3
+  plural: false
+as (determiner)
+  hasspec: false
+  person: 3
+  plural: true
+  display: a
+thes (determiner)
+  hasspec: false
+  person: 3
+  plural: true
+  display: the
+'s (determiner)
+  plural: false
+  hasspec: true
+  person: 3
+'ss (determiner)
+  plural: true
+  hasspec: true
+  person: 3
+  display: 's
+s (plural)
 
 and (conjunction)
 at (preposition)
@@ -35,7 +85,6 @@ cower (verb)
   objects: 0
 die (verb)
   objects: 0
-doesnt (auxilliary)
 excell (verb)
   objects: 1
   object1: PP
@@ -65,8 +114,6 @@ O (preposition)
 optimism (noun)
 sandwich (noun)
 so (conjunction)
-that (complementizer)
-that (determiner)
 the (article)
   definite: true
 thing (noun)

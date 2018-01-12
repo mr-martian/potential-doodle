@@ -7,7 +7,7 @@ class Variable:
         self.value = value
         self.opt = False
         self.lang = lang
-        self.blankcond = True
+        #self.blankcond = True
         if self.value and self.value[-1] == '?':
             self.opt = True
             self.value = self.value[:-1]
@@ -18,26 +18,25 @@ class Variable:
         if self.label and self.label[-1] == '?':
             self.opt = True
             self.label = self.label[:-1]
-        elif isinstance(cond, list):
-            self.cond = Node(Unknown(), Unknown(), Unknown(), {})
-            if cond[0]:
-                self.cond.props[cond[0]] = cond[1] or Unknown()
-            self.blankcond = False
-        else:
-            self.cond = cond
-            if cond:
-                self.blankcond = False
-        if self.value and not self.cond:
-            self.cond = Node(Unknown(), self.value, Unknown)
-            self.blankcond = False
+        self.cond = cond
     def check(self, vrs):
         v = vrs[self.label]
-        if self.opt:
-            if self.blankcond: return True
-            else: return v == None or match(v, self.cond)
+        valmatch = (not self.value) or (isinstance(v, Node) and v.ntype == self.value)
+        if v == None:
+            return self.opt
+        elif not isinstance(v, Node):
+            return False
+        elif isinstance(self.cond, Unknown):
+            return valmatch
+        elif isinstance(self.cond, list):
+            if self.cond[0] not in v.props:
+                return False
+            elif len(self.cond) > 1 and v.props[self.cond[0]] != self.cond[1]:
+                return False
+            else:
+                return valmatch
         else:
-            if self.blankcond: return v != None
-            else: return match(v, self.cond)
+            return valmatch and match(v, self.cond)
     def putvars(self, vrs):
         return vrs[self.label]
     def __str__(self):
@@ -97,6 +96,8 @@ class Node:
                     s.getvars(f, vrs)
                 elif isinstance(f, Variable):
                     vrs[f.label] = s
+                    if not f.check(vrs):
+                        vrs[' failed'] = 'variable condition on child'
                 elif match(s, f):
                     pass
                 else:
@@ -168,22 +169,32 @@ class Node:
             return ret
         else:
             return [self]
-    def __str__(self):
+    def v__str__(self):
         if isinstance(self.children, list):
             s = '[' + ' '.join([str(x) for x in self.children]) + ']'
         else:
             s = str(self.children)
         #return '%s(%s)[%s %s]' % (self.__class__.__name__, self.lang, self.ntype, s)
         return '%s(%s)%s' % (self.ntype, self.lang, s)
+    def __str__(self):
+        b = '%s(%s)' % (self.ntype, self.lang)
+        l = '\n'.join([str(x) for x in self.children]).split('\n')
+        s = '\n  '.join(l)
+        return b + '[\n  ' + s + '\n]' + str(dict(self.props))
     def __repr__(self):
         return self.__str__()
     def addmode(name, pats):
         Node.__modes[name] = pats
     def display(self):
+        if 'audible' in self.props and self.props['audible'] == 'false':
+            return ''
+        if 'display' in self.props:
+            return self.props['display']
         l = []
         for c in self.children:
             if isinstance(c, Node):
-                l.append(c.display())
+                d = c.display()
+                if d: l.append(d)
             elif not c:
                 pass
             else:

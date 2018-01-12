@@ -6,54 +6,119 @@ syntax
   start-with: CP
   node-types
     AP
-      structure: [AP degree? [Abar adjective PP?]]
+      xbar (2): ~; ~; adjective; ~
     CP
-      structure: [CP ~ [Cbar complementizer IP]]
+      xbar (2): ~; ~; complementizer; IP
     IP
-      structure: [IP NP [Ibar auxilliary VP]]
+      xbar (2): ~; ~; I; VP
     NP
-      option
-        structure: [NP determiner Nmod]
-      option
-        structure: [NP NP? Nmod]
-    Nmod
-      structure: [Nmod AP? [Nbar noun PP? CP?]]
-    VP
-      structure: [VP adverb [Vmod Vbar PP?]]
-    Vbar
-      variable: $head:verb
-      option ($head(objects=0))
-        structure: [Vbar $head]
-      option ($head(objects=1), $head(object1=NP))
-        structure: [Vbar $head NP]
-      option ($head(objects=1), $head(object1=PP))
-        structure: [Vbar $head PP]
-      option ($head(objects=1), $head(object1=CP))
-        structure: [Vbar $head CP]
-      option ($head(objects=1), $head(object1=AP))
-        structure: [Vbar $head AP]
-      option ($head(objects=2), $head(object1=NP), $head(object2=NP))
-        structure: [Vbar $head NP NP]
-      option ($head(objects=2), $head(object1=NP), $head(object2=PP))
-        structure: [Vbar $head NP PP]
-      option ($head(objects=2), $head(object1=PP), $head(object2=PP))
-        structure: [Vbar $head PP PP]
+      xbar (2): ~; AP; noun; ~
     PP
-      structure: [PP [Pbar preposition NP]]
-  coordination
-    nodes: AP, Abar, adjective, CP, Cbar, IP, Ibar, NP, Nmod, Nbar, noun, VP, Vmod, Vbar
-    count: 2
-    order: 1 conjunction 2
+      xbar (2): ~; ~; preposition; DP
+    I
+      variable: $t:tense
+      variable: $a:aspect
+      variable: $m:mood?
+      structure: [I $t $a $m]
+      translation (2): [I $t $a $m]
+    DP
+      variable: $head:determiner
+      option ($head(hasspec=true))
+        xbar (2): DP; ~; $head; NP
+      option ($head(hasspec=false))
+        xbar (2): ~; ~; $head; NP
+    VP
+      variable: $head:verb
+      option ($head(objects=1), $head(object1=NP))
+        xbar (2): DP; ~; $head; DP
+      option ($head(objects=1), $head(object1=PP))
+        xbar (2): DP; ~; $head; PP
+      option ($head(objects=1), $head(object1=AP))
+        xbar (2): DP; ~; $head; AP
+      option ($head(objects=0))
+        xbar (2): DP; ~; $head; ~
+#    AP
+#      structure: [AP degree? [Abar adjective PP?]]
+#    NP
+#      option
+#        structure: [NP determiner Nmod]
+#      option
+#        structure: [NP NP? Nmod]
+#    Nmod
+#      structure: [Nmod AP? [Nbar noun PP? CP?]]
+#    VP
+#      structure: [VP adverb [Vmod Vbar PP?]]
+#    Vbar
+#      variable: $head:verb
+#      option ($head(objects=0))
+#        structure: [Vbar $head]
+#      option ($head(objects=1), $head(object1=NP))
+#        structure: [Vbar $head NP]
+#      option ($head(objects=1), $head(object1=PP))
+#        structure: [Vbar $head PP]
+#      option ($head(objects=1), $head(object1=CP))
+#        structure: [Vbar $head CP]
+#      option ($head(objects=1), $head(object1=AP))
+#        structure: [Vbar $head AP]
+#      option ($head(objects=2), $head(object1=NP), $head(object2=NP))
+#        structure: [Vbar $head NP NP]
+#      option ($head(objects=2), $head(object1=NP), $head(object2=PP))
+#        structure: [Vbar $head NP PP]
+#      option ($head(objects=2), $head(object1=PP), $head(object2=PP))
+#        structure: [Vbar $head PP PP]
+#  coordination
+#    nodes: AP, Abar, adjective, CP, Cbar, IP, Ibar, NP, Nmod, Nbar, noun, VP, Vmod, Vbar
+#    count: 2
+#    order: 1 conjunction 2
 transform
+#TAM + agreement
   rule
-    context: [NP [NP $spec [Nmod $ap [Nbar @ $pp $rel]]] $nmod]
-    form: $head
-    result: <suffix $head noun-inflection=gen>
+    form: [Ibar [I $tense aspect=perfect-continuous $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ ~ <suffix aux=be participle=ed> |[VP ~ $mod <suffix $head participle=ing> $comp]]]]
   rule
-    context: @
-    form: [Nbar $head $comp]
-    result: [Nbar $comp $head]
+    form: [Ibar [I $tense aspect=continuous $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=be |[VP ~ $mod <suffix $head participle=ing> $comp]]]
   rule
-    context: @
-    form: [IP ~ [Ibar $i [VP $subj $vbar]]]
-    result: [IP $subj [Ibar $i [VP ~ $vbar]]]
+    form: [Ibar [I $tense aspect=perfect $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ $mod <suffix $head participle=ed> $comp]]]
+  rule
+    context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
+    form: [Ibar [I $tense aspect=durative ~] |[VP $subj $mod $head:verb $comp]]
+    result: [Ibar [I $tense aspect=durative ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
+  rule
+    form: [Ibar [I $tense $aspect? ~] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I ~ $aspect ~] |[VP $subj $mod <suffix $head $tense> $comp]]
+  rule
+    form: [I $tense $aspect? $mood?]
+    result: [I ~ $aspect $mood]
+  rule
+    form: |[VP |[DP $ds? $dm? $dh(plural=true) $dc?] $vm? $vh $vc?]
+    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-num=PL> $vc]
+  rule
+    form: |[VP |[DP $ds? $dm? $dh(plural=false) $dc?] $vm? $vh $vc?]
+    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-num=SG> $vc]
+  rule
+    form: |[VP |[DP $ds? $dm? $dh(person=1) $dc?] $vm? $vh $vc?]
+    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-pers=1> $vc]
+  rule
+    form: |[VP |[DP $ds? $dm? $dh(person=2) $dc?] $vm? $vh $vc?]
+    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-pers=2> $vc]
+  rule
+    form: |[VP |[DP $ds? $dm? $dh(person=3) $dc?] $vm? $vh $vc?]
+    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-pers=3> $vc]
+  rule
+    context: |[CP * * complementizer=+Q @]
+    form: |[IP ~ $mod $I |[VP $subj $vmod $head:aux $comp]]
+    result: |[IP $head $mod $I |[VP $subj $vmod ~ $comp]]
+#plurality
+  rule
+    form: [Dbar $head(plural=true) |[NP $s? $m? $h:noun $c?]]
+    result: [Dbar $head |[NP $s $m <suffix $h plural=s> $c]]
+#possession
+  rule
+    form: |[DP $spec:DP $mod? $head $comp?]
+    result: |[DP <suffix $spec $head> $mod ~ $comp]
+#subject position
+  rule
+    form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
+    result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]

@@ -8,43 +8,34 @@ d_c (mood)
   vowel: i
 nonpast (tense)
   form
-    context: @
     structure: [I @ $aspect mood=d_c]
     result: [I ~ $aspect ~]
   form
     context: [I @ * $a(vowel=ol)]
-    structure: @
     form: ol
   form
     context: [I @ * $a(vowel=i)]
-    structure: @
     form: i
-immediate-past (#tense)
+immediate-past (tense)
   form
     context: [I @ * $a(vowel=ol)]
-    structure: @
     form: el
   form
     context: [I @ * $a(vowel=i)]
-    structure: @
     form: e
-midpast (#tense)
+midpast (tense)
   form
     context: [I @ * $a(vowel=ol)]
-    structure: @
     form: y
   form
     context: [I @ * $a(vowel=i)]
-    structure: @
     form: a
-remote-past (#tense)
+remote-past (tense)
   form
     context: [I @ * $a(vowel=ol)]
-    structure: @
     form: uh
   form
     context: [I @ * $a(vowel=i)]
-    structure: @
     form: ul
 null (determiner)
   inaudible
@@ -68,7 +59,7 @@ danec (verb)
 dasnan (describer)
 dyfnyn (verb)
   transitive: true
-jeltan (verb)
+jelten (verb)
   transitive: false
 jezlan (verb)
   transitive: true
@@ -78,7 +69,7 @@ seln (postposition)
 tyk (conjunction)
   clause-only: true
 nuhtit (describer)
-zlulzit (describer)
+zlulzim (describer)
 
 cadelgyn (noun)
 cadelk (noun)

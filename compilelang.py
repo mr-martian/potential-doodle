@@ -241,17 +241,13 @@ def loadlexicon(lang):
         for p in root.children:
             if p.label == 'form':
                 c = p.fvo('context', lang, blank(lang), '@')
-                form = p.fvo('structure', lang, m)
+                form = p.fvo('structure', lang, m, '@')
                 for f in p['form']:
                     fm = Node(lang, root.arg, [f.val], defaultdict(list, {'form of': m}))
-                    Translation(form, fm, root.label, context=c)
+                    Translation(form, fm, root.label, context=c, resultlang=lang)
                 for f in p['result']:
                     fm = toobj(f.val, lang, None)
-                    Translation(form, fm, root.label, context=c)
-            elif p.label == 'display':
-                c = p.fvo('context', lang, blank(lang), '@')
-                f = p.firstval('form')
-                Translation(m, m.swapchildren([f]), root.label, context=c)
+                    Translation(form, fm, root.label, context=c, resultlang=lang)
             elif p.label == 'inaudible':
                 fm = Node(lang, root.arg, [None], defaultdict(list, {'form of': m}))
                 Translation(m, fm, root.label, context=None)

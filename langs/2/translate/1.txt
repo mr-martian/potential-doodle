@@ -1,20 +1,19 @@
-complementizer=comp: complementizer=comp
-tense=nonpast: tense=present; tense=future
-tense=immediate=past: tense=past
+complementizer=comp: complementizer=-Q
+tense=nonpast: tense=nonpast
+tense=immediate-past: tense=past
 tense=midpast: tense=past
 tense=remote-past: tense=past
-mood=m_t: mood=not
-mood=d_c: mood=do
-mood=g_m: mood=must
+#mood=m_t: mood=not
+#mood=d_c: mood=do
+#mood=g_m: mood=must
 determiner=null: determiner=a; determiner=the
-determiner=vmeh: determiner=s
+determiner=vmeh: determiner='s
 noun/noun=ah: noun-inflection=s
 aspect=feh: aspect=durative
-case=vmeh: noun-inflection=gen
 verb=danec: verb=borrow; verb=copy; verb=imitate
 describer=dasnan: adjective=cosmic
 verb=dyfnyn: verb=measure
-verb=jeltan: verb=hide; verb=cower
+verb=jelten: verb=hide; verb=cower
 verb=jezlan
   translate
     from: [Vbar @ $comp]
@@ -23,7 +22,7 @@ conjunction=keh: conjunction=and
 postposition=seln: preposition=to; preposition=towards
 conjunction=tyk: conjunction=so
 describer=nuhtit: adjective=sweet
-describer=zlulzit: adjective=chocolate
+describer=zlulzim: adjective=chocolate
 
 noun=cadelgyn: noun=astronaut; noun=cosmonaut
 noun=cadelk: noun=planet

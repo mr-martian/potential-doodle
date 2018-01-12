@@ -18,6 +18,7 @@
 - [ ] [Compilation](compilelang.py)
   - [ ] document format
   - [ ] more compact notation for common operations
+  - [ ] line numbers for error messages?
 - [ ] [Translation](gentext.py)
   - [ ] separate from generation
   - [ ] speed up
@@ -26,10 +27,18 @@
 - [x] [Generation](gentext.py)
 - [ ] Language data
   - [x] fix display/form
-  - [ ] traces
-  - [ ] theta roles
+  - [ ] traces?
+  - [ ] theta roles?
   - [ ] conjunctions
   - [x] modifiers
+  - [ ] post-movement lexical transforms
+  - [ ] form based on preceding or following word
+  - [ ] rules involving contents of morphemes
+  - [ ] [English](langs/1)
+    - [ ] auxiliary not
+    - [ ] lexicon
+  - [ ] [Sajem Tan](langs/2)
+    - [ ] lexicon
 - [ ] practice
   - [ ] make interface
   - [ ] store data

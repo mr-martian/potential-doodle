@@ -108,16 +108,10 @@ if __name__ == '__main__':
     fl = int(sys.argv[1])
     tl = int(sys.argv[2])
 
-    #sen, tr = gen_and_trans(fl, tl)
-    #mv = movement(sen)
-    #print(movement(sen)[0].display())
-    loadlang(fl)
-    deep = make(fl)
-    print(deep)
-    print('\n')
-    sen = movement(deep)
-    print(sen)
-    print('\n')
-    print(' '.join(sen.display().split()))
-    #for t in tr:
-    #    print(t.display())
+    sen, tr = gen_and_trans(fl, tl)
+    print(sen.display())
+    f = open('trace.txt', 'w')
+    f.write(str(sen))
+    f.close()
+    for t in tr:
+        print(t.display())
