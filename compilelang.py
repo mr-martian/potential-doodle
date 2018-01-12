@@ -245,6 +245,9 @@ def loadlexicon(lang):
                 for f in p['form']:
                     fm = Node(lang, root.arg, [f.val], defaultdict(list, {'form of': m}))
                     Translation(form, fm, root.label, context=c)
+                for f in p['result']:
+                    fm = toobj(f.val, lang, None)
+                    Translation(form, fm, root.label, context=c)
             elif p.label == 'display':
                 c = p.fvo('context', lang, blank(lang), '@')
                 f = p.firstval('form')

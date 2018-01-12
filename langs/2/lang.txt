@@ -59,19 +59,21 @@ transform
 #aspect
   rule
     context: @
-    form: [Ibar [I $tense $aspect $mood] |[VP $spec $mod $head $comp]]
+    form: [Ibar [I $tense? $aspect $mood?] |[VP $spec $mod $head $comp]]
     result: [Ibar [I $tense ~ $mood] |[VP $spec $mod <suffix $head $aspect> $comp]]
 #tense + mood
   rule
     context: @
-    form: [I tense=nonpast ~ mood=d_c]
-    result: [I]
-  rule
-    context: @
     form: [I $tense ~ $mood]
     result: <aux $mood $tense>
+#subject position
+  rule
+    context: @
+    form: |[IP ~ $imod $ihead |[VP $subj $vmod $vhead $vcomp]]
+    result: |[IP $subj $imod $ihead |[VP ~ $vmod $vhead $vcomp]]
 #rotations
   rotate: Pbar
   rotate: VP
   rotate: Vbar
   rotate: Ibar
+  rotate: IP

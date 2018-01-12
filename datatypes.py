@@ -38,23 +38,21 @@ class Variable:
         else:
             if self.blankcond: return v != None
             else: return match(v, self.cond)
-        #if self.blankcond:
-        #    return vrs[self.label] != None
-        #else:
-        #    return match(vrs[self.label], self.cond)
     def putvars(self, vrs):
         return vrs[self.label]
     def __str__(self):
         return '$%s:%s(%s)' % (self.label, self.value, self.cond)
     def __repr__(self):
         return self.__str__()
-class Unknown:
+class Unknown(Variable):
+    count = 0
     def __init__(self):
-        self.n = None
+        Variable.__init__(self, ' '+str(Unknown.count), None, None, self)
+        Unknown.count += 1
     def __str__(self):
-        return 'Unknown()'
+        return 'Unknown(%s)' % self.label
     def __repr__(self):
-        return 'Unknown()'
+        return 'Unknown(%s)' % self.label
 class Option(list):
     pass
 ###DATA STRUCTURES
@@ -79,6 +77,10 @@ class Node:
     def getvars(self, form, vrs={' failed': False}):
         if isinstance(form, Variable):
             vrs[form.label] = self
+            if not form.check(vrs):
+                vrs[' failed'] = 'variable condition'
+        elif isinstance(form, Unknown):
+            pass
         elif type(self) != type(form):
             vrs[' failed'] = 'type'#True
         elif not match(self.lang, form.lang) or not match(self.ntype, form.ntype):
@@ -262,9 +264,9 @@ class Translation:
         else:
             self.langs = [form.lang, result.lang]
         self.category = category
-        self.roots = [] #roots of all morphemes in result
-        if isinstance(result, Node):
-            for c in result.iternest():
+        self.roots = [] #roots of all morphemes in form
+        if isinstance(form, Node):
+            for c in form.iternest():
                 if isinstance(c, str):
                     self.roots.append(c)
         if not context:

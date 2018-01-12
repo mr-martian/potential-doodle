@@ -1,20 +1,51 @@
 comp (complementizer)
+  inaudible
+g_m (mood)
+  vowel: ol
+m_t (mood)
+  vowel: ol
+d_c (mood)
+  vowel: i
 nonpast (tense)
-  display
-#    context: <aux $a(vowel=ol) @>
+  form
+    context: @
+    structure: [I @ $aspect mood=d_c]
+    result: [I ~ $aspect ~]
+  form
     context: [I @ * $a(vowel=ol)]
+    structure: @
     form: ol
-  display
+  form
     context: [I @ * $a(vowel=i)]
+    structure: @
     form: i
-#  form
-#    context: <aux $a(vowel=ol) @>
-#    structure: @
-#    form: ol
-#  form
-#    context: <aux $a(vowel=i) @>
-#    structure: @
-#    form: i
+immediate-past (#tense)
+  form
+    context: [I @ * $a(vowel=ol)]
+    structure: @
+    form: el
+  form
+    context: [I @ * $a(vowel=i)]
+    structure: @
+    form: e
+midpast (#tense)
+  form
+    context: [I @ * $a(vowel=ol)]
+    structure: @
+    form: y
+  form
+    context: [I @ * $a(vowel=i)]
+    structure: @
+    form: a
+remote-past (#tense)
+  form
+    context: [I @ * $a(vowel=ol)]
+    structure: @
+    form: uh
+  form
+    context: [I @ * $a(vowel=i)]
+    structure: @
+    form: ul
 null (determiner)
   inaudible
   hasspec: false
@@ -28,22 +59,6 @@ om (rel)
   form
     structure: @
     form: ]
-ol (ol-tense)
-  tense: nonpast
-el (ol-tense)
-  tense: immediate-past
-y (ol-tense)
-  tense: mid-past
-uh (ol-tense)
-  tense: remote-past
-i (i-tense)
-  tense: nonpast
-e (i-tense)
-  tense: immediate-past
-a (i-tense)
-  tense: mid-past
-ul (i-tense)
-  tense: remote-past
 zho (pronoun)
 ah (noun/noun)
 feh (aspect)
@@ -53,18 +68,12 @@ danec (verb)
 dasnan (describer)
 dyfnyn (verb)
   transitive: true
-g_m (mood)
-  vowel: ol
 jeltan (verb)
   transitive: false
 jezlan (verb)
   transitive: true
 keh (conjunction)
   clause-only: false
-m_t (mood)
-  vowel: ol
-d_c (mood)
-  vowel: i
 seln (postposition)
 tyk (conjunction)
   clause-only: true

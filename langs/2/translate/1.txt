@@ -1,5 +1,8 @@
 complementizer=comp: complementizer=comp
 tense=nonpast: tense=present; tense=future
+tense=immediate=past: tense=past
+tense=midpast: tense=past
+tense=remote-past: tense=past
 mood=m_t: mood=not
 mood=d_c: mood=do
 mood=g_m: mood=must

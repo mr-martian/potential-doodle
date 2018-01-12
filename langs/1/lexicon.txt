@@ -8,6 +8,7 @@ gen (noun-inflection)
     form: 's
 comp (complementizer)
   inaudible
+past (tense)
 present (tense)
 future (tense)
 not (mood)
