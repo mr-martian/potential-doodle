@@ -46,12 +46,13 @@ class Variable:
 class Unknown(Variable):
     count = 0
     def __init__(self):
-        Variable.__init__(self, ' '+str(Unknown.count), None, None, self)
+        Variable.__init__(self, ' '+str(Unknown.count)+'?', None, None, self)
         Unknown.count += 1
     def __str__(self):
+        return '*'
         return 'Unknown(%s)' % self.label
     def __repr__(self):
-        return 'Unknown(%s)' % self.label
+        return self.__str__()
 class Option(list):
     pass
 ###DATA STRUCTURES
@@ -217,6 +218,14 @@ class Node:
             if isinstance(ch, Node):
                 for c in ch.iternest():
                     yield c
+    def roots(self):
+        ret = []
+        for ch in self.children:
+            if isinstance(ch, str):
+                ret.append(ch)
+            elif isinstance(ch, Node):
+                ret += ch.roots()
+        return ret
     def alllang(self, lang):
         for n in self.iternest():
             if isinstance(n, Node) and n.lang != lang:
@@ -267,7 +276,7 @@ def register(morph):
 ###TRANSFORMATIONS
 class Translation:
     __alltrans = []
-    def __init__(self, form, result, category, context=None, resultlang=None):
+    def __init__(self, form, result, category, context=None, resultlang=None, mode='syntax'):
         self.form = form
         self.result = result
         if resultlang:
@@ -280,11 +289,28 @@ class Translation:
             for c in form.iternest():
                 if isinstance(c, str):
                     self.roots.append(c)
+        self.rootset = set(self.roots)
         if not context:
             self.context = Variable(' ', None, Unknown(), form.lang)
         else:
             self.context = context
         Translation.__alltrans.append(self)
+        if self.langs[0] == self.langs[1]:
+            l = Language.getormake(self.langs[0])
+            if mode == 'syntax':
+                l.movesyntax.append(self)
+            elif mode == 'conj':
+                l.moveconj[category].append(self)
+            else:
+                x = len(l.movelex[category])
+                l.movelex[category].append(self)
+                assert(len(l.movelex[category]) > x)
+        else:
+            l = LangLink.getormake(self.langs[0], self.langs[1])
+            if mode == 'syntax':
+                l.syntax.append(self)
+            else:
+                l.pats[category].append(self)
     def find(fromlang, tolang, limit):
         for tr in Translation.__alltrans:
             if tr.langs == [fromlang, tolang] and tr.category in limit:
@@ -293,8 +319,6 @@ class Translation:
         return '{%s => %s}%s' % (self.form, self.result, self.roots)
     def __repr__(self):
         return self.__str__()
-    def entail(self):
-        return list(Translation.find(self.langs[1], self.langs[1], self.roots))
 ###GENERATION
 class SyntaxPat:
     def __init__(self, name, conds, opts, vrs):
@@ -315,6 +339,10 @@ class Language:
         self.transform = []
         self.rotate = []
         self.syntaxstart = None
+        #Movement
+        self.movelex = defaultdict(list)
+        self.movesyntax = []
+        self.moveconj = defaultdict(list)
         Language.__alllangs[lang] = self
     def addmorphopt(self, ntype, struct):
         self.morphology[ntype].append(struct)
@@ -322,6 +350,11 @@ class Language:
         return lang in Language.__alllangs
     def get(lang):
         return Language.__alllangs[lang]
+    def getormake(lang):
+        if lang in Language.__alllangs:
+            return Language.__alllangs[lang]
+        else:
+            return Language(lang)
     def getpats(self):
         r = {}
         for k in self.syntax:
@@ -331,3 +364,43 @@ class Language:
         for k, v in AllMorphemes[self.lang].items():
             r[k] = list(v.values())
         return r
+    def movefind(self, roots, conj=False):
+        if conj:
+            dct = self.moveconj
+        else:
+            dct = self.movelex
+        s = set(roots)
+        ret = []
+        for r in roots:
+            for p in dct[r]:
+                if p.rootset < s:
+                    ret.append(p)
+        return ret
+class LangLink:
+    __alllinks = {}
+    def __init__(self, fromlang, tolang):
+        self.fromlang = fromlang
+        self.tolang = tolang
+        self.syntax = []
+        self.pats = defaultdict(list)
+        LangLink.__alllinks['%s-%s' % (fromlang, tolang)] = self
+    def find(self, roots):
+        s = set(roots)
+        ret = []
+        for r in roots:
+            for p in self.pats[r]:
+                if p.rootset < s:
+                    ret.append(p)
+        return ret
+    def getormake(fromlang, tolang):
+        s = '%s-%s' % (fromlang, tolang)
+        if s in LangLink.__alllinks:
+            return LangLink.__alllinks[s]
+        else:
+            return LangLink(fromlang, tolang)
+    def translate(self, sen):
+        tr = sen.transform(self.find(sen.roots()))
+        ret = []
+        for s in tr:
+            ret += s.transform(self.syntax)
+        return ret

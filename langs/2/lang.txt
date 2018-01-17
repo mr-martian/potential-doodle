@@ -46,20 +46,20 @@ transform
 #possessives
   rule
     context: @
-    form: |[DP $spec $mod determiner=vmeh $comp]
+    form: |[DP $spec? $mod? determiner=vmeh $comp?]
     result: |[DP <suffix $spec determiner=vmeh> $mod ~ $comp]
   rule
     context: @
-    form: <suffix |[DP $spec $mod $head $comp] determiner=vmeh>
+    form: <suffix |[DP $spec? $mod? $head $comp] determiner=vmeh>
     result: |[DP $spec $mod $head <suffix $comp determiner=vmeh>]
   rule
     context: @
-    form: <suffix |[NP $spec $mod $head $comp] determiner=vmeh>
+    form: <suffix |[NP $spec? $mod? $head $comp?] determiner=vmeh>
     result: |[NP $spec $mod <suffix $head determiner=vmeh> $comp]
 #aspect
   rule
     context: @
-    form: [Ibar [I $tense? $aspect $mood?] |[VP $spec $mod $head $comp]]
+    form: [Ibar [I $tense? $aspect $mood?] |[VP $spec $mod? $head $comp?]]
     result: [Ibar [I $tense ~ $mood] |[VP $spec $mod <suffix $head $aspect> $comp]]
 #tense + mood
   rule
@@ -69,7 +69,7 @@ transform
 #subject position
   rule
     context: @
-    form: |[IP ~ $imod $ihead |[VP $subj $vmod $vhead $vcomp]]
+    form: |[IP ~ $imod? $ihead |[VP $subj $vmod? $vhead $vcomp?]]
     result: |[IP $subj $imod $ihead |[VP ~ $vmod $vhead $vcomp]]
 #rotations
   rotate: Pbar

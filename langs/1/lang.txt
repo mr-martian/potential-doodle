@@ -83,29 +83,38 @@ transform
     result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ $mod <suffix $head participle=ed> $comp]]]
   rule
     context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
+    form: [Ibar [I $tense ~ $mood] |[VP $subj $mod $head $comp]]
+    result: [Ibar [I $tense ~ ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
+  rule
+    context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
     form: [Ibar [I $tense aspect=durative ~] |[VP $subj $mod $head:verb $comp]]
     result: [Ibar [I $tense aspect=durative ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
   rule
-    form: [Ibar [I $tense $aspect? ~] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I ~ $aspect ~] |[VP $subj $mod <suffix $head $tense> $comp]]
+    form: [Ibar [I $t? $a? $mood] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $t $a ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
   rule
-    form: [I $tense $aspect? $mood?]
-    result: [I ~ $aspect $mood]
+    form: [Ibar [I $tense $aspect? $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I ~ $aspect $mood?] |[VP $subj $mod <suffix $head $tense> $comp]]
   rule
-    form: |[VP |[DP $ds? $dm? $dh(plural=true) $dc?] $vm? $vh $vc?]
-    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-num=PL> $vc]
+    context: |[VP |[DP $ds? $dm? $dh(plural=true) $dc?] $vm? @ $vc?]
+    form: $vh
+    result: <suffix $vh v-num=PL>
   rule
-    form: |[VP |[DP $ds? $dm? $dh(plural=false) $dc?] $vm? $vh $vc?]
-    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-num=SG> $vc]
+    context: |[VP |[DP $ds? $dm? $dh(plural=false) $dc?] $vm? @ $vc?]
+    form: $vh
+    result: <suffix $vh v-num=SG>
   rule
-    form: |[VP |[DP $ds? $dm? $dh(person=1) $dc?] $vm? $vh $vc?]
-    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-pers=1> $vc]
+    context: |[VP |[DP $ds? $dm? $dh(person=1) $dc?] $vm? @ $vc?]
+    form: $vh
+    result: <suffix $vh v-pers=1>
   rule
-    form: |[VP |[DP $ds? $dm? $dh(person=2) $dc?] $vm? $vh $vc?]
-    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-pers=2> $vc]
+    context: |[VP |[DP $ds? $dm? $dh(person=2) $dc?] $vm? @ $vc?]
+    form: $vh
+    result: <suffix $vh v-pers=2>
   rule
-    form: |[VP |[DP $ds? $dm? $dh(person=3) $dc?] $vm? $vh $vc?]
-    result: |[VP |[DP $ds $dm $dh $dc] $vm <suffix $vh v-pers=3> $vc]
+    context: |[VP |[DP $ds? $dm? $dh(person=3) $dc?] $vm? @ $vc?]
+    form: $head
+    result: <suffix $head v-pers=3>
   rule
     context: |[CP * * complementizer=+Q @]
     form: |[IP ~ $mod $I |[VP $subj $vmod $head:aux $comp]]

@@ -1,5 +1,5 @@
 comp (complementizer)
-  inaudible
+  audible: false
 g_m (mood)
   vowel: ol
 m_t (mood)
@@ -8,37 +8,37 @@ d_c (mood)
   vowel: i
 nonpast (tense)
   form
-    structure: [I @ $aspect mood=d_c]
+    structure: [I @ $aspect? mood=d_c]
     result: [I ~ $aspect ~]
   form
-    context: [I @ * $a(vowel=ol)]
+    context: [I @ $aspect? $a(vowel=ol)]
     form: ol
   form
-    context: [I @ * $a(vowel=i)]
+    context: [I @ $aspect? $a(vowel=i)]
     form: i
 immediate-past (tense)
   form
-    context: [I @ * $a(vowel=ol)]
+    context: [I @ $aspect? $a(vowel=ol)]
     form: el
   form
-    context: [I @ * $a(vowel=i)]
+    context: [I @ $aspect? $a(vowel=i)]
     form: e
 midpast (tense)
   form
-    context: [I @ * $a(vowel=ol)]
+    context: [I @ $aspect? $a(vowel=ol)]
     form: y
   form
-    context: [I @ * $a(vowel=i)]
+    context: [I @ $aspect? $a(vowel=i)]
     form: a
 remote-past (tense)
   form
-    context: [I @ * $a(vowel=ol)]
+    context: [I @ $aspect? $a(vowel=ol)]
     form: uh
   form
-    context: [I @ * $a(vowel=i)]
+    context: [I @ $aspect? $a(vowel=i)]
     form: ul
 null (determiner)
-  inaudible
+  audible: false
   hasspec: false
 vmeh (determiner)
   hasspec: true

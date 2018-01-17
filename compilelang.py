@@ -123,7 +123,7 @@ def destring(s, lang, at):
     elif s[0] == '(':
         l = Option()
         rest = s[1:]
-        while s[0] != ')':
+        while rest[0] != ')':
             o, rest = destring(rest, lang, at)
             l.append(o)
         rest.pop(0)
@@ -239,25 +239,29 @@ def loadlexicon(lang):
     for root in rootslist:
         m = Node(lang, root.arg, [root.label])
         for p in root.children:
-            if p.label == 'form':
+            if p.label in ['form', 'conjugation']:
+                if p.label == 'form':
+                    mode = 'lex'
+                else:
+                    mode = 'conj'
                 c = p.fvo('context', lang, blank(lang), '@')
                 form = p.fvo('structure', lang, m, '@')
                 for f in p['form']:
-                    fm = Node(lang, root.arg, [f.val], defaultdict(list, {'form of': m}))
-                    Translation(form, fm, root.label, context=c, resultlang=lang)
+                    fm = Node(lang, root.arg, [f.val])#, defaultdict(list, {'form of': m}))
+                    Translation(form, fm, root.label, context=c, resultlang=lang, mode=mode)
                 for f in p['result']:
                     fm = toobj(f.val, lang, None)
-                    Translation(form, fm, root.label, context=c, resultlang=lang)
-            elif p.label == 'inaudible':
-                fm = Node(lang, root.arg, [None], defaultdict(list, {'form of': m}))
-                Translation(m, fm, root.label, context=None)
+                    Translation(form, fm, root.label, context=c, resultlang=lang, mode=mode)
+            #elif p.label == 'inaudible':
+            #    fm = Node(lang, root.arg, [None], defaultdict(list, {'form of': m}))
+            #    Translation(m, fm, root.label, context=None)
             else:
                 m.props[p.label] = p.val
         register(m)
 def loadlang(lang):
     loadlexicon(lang)
     things = ParseLine.fromfile('langs/%s/lang.txt' % lang)
-    ret = Language(lang)
+    ret = Language.getormake(lang)
     for th in things:
         if th.label == 'syntax':
             for ch in th.children:
@@ -290,14 +294,14 @@ def loadlang(lang):
                                 node = toobj('|[%sP %s]' % (name, ' '.join(xargs)), lang)
                                 tolang = int(line.arg)
                                 #Translation(Variable('P', name+'P', None, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
-                                Translation(toobj('[%sP * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
-                                Translation(toobj('[%smod * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
-                                Translation(toobj('[%sbar * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
+                                Translation(toobj('[%sP * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
+                                Translation(toobj('[%smod * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
+                                Translation(toobj('[%sbar * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
                             else:
                                 node = toobj(op.firstval('structure'), lang)
                                 for tr in op['translation']:
                                     res = toobj(tr.val, int(tr.arg))
-                                    Translation(node, res, 'syntax')
+                                    Translation(node, res, 'syntax', resultlang=int(tr.arg), mode='syntax')
                             conds.append([toobj(x, lang) for x in op.args])
                             ops.append(node)
                         ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs)
@@ -309,7 +313,7 @@ def loadlang(lang):
                 tc = ch.fvo('context', lang, blank(lang), '@')
                 tf = ch.fvo('form', lang, None)
                 tr = ch.fvo('result', lang, None)
-                ret.transform.append(Translation(tf, tr, 'transform', tc))
+                ret.transform.append(Translation(tf, tr, 'transform', context=tc, resultlang=lang, mode='syntax'))
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)
                 #ret.transform.append(Translation(toobj('[%s * *]' % ch.val, lang), 'rotate', 'transform', resultlang=lang))
@@ -323,13 +327,13 @@ def loadtrans(lfrom, lto):
             if lex.val:
                 for g in lex.val.split(';'):
                     d = toobj(g.strip(), lto, m)
-                    Translation(m, d, m.children[0])
+                    Translation(m, d, m.children[0], resultlang=lto, mode='lex')
             for tr in lex.children:
                 if tr.label == 'translate':
                     f = tr.fvo('from', lfrom, m)
                     c = tr.fvo('context', lfrom, blank(lfrom), '@')
                     for t in tr.vals('to'):
-                        Translation(f, toobj(t, lto, m), m.children[0], context=c)
+                        Translation(f, toobj(t, lto, m), m.children[0], context=c, resultlang=lto, mode='lex')
 def loadlangset(langs):
     for l in langs:
         loadlang(l)
