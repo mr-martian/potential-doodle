@@ -31,12 +31,16 @@
   - [ ] theta roles?
   - [ ] conjunctions
   - [x] modifiers
-  - [ ] post-movement lexical transforms
+  - [x] post-movement lexical transforms
   - [ ] form based on preceding or following word
-  - [ ] rules involving contents of morphemes
+  - [x] rules involving contents of morphemes
   - [ ] [English](langs/1)
     - [ ] auxiliary not
     - [ ] lexicon
+    - [ ] AP paraphenalia
+    - [ ] NP paraphenalia
+    - [ ] VP paraphenalia
+    - [ ] double object constructions
   - [ ] [Sajem Tan](langs/2)
     - [ ] lexicon
 - [ ] practice

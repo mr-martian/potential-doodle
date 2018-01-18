@@ -158,19 +158,14 @@ measure (verb)
   object1: NP
 mouse (noun)
   usagenotes (1): rodent, often used as example of a small creature
-  form
-    structure: <suffix @ noun-inflection=s>
+  conjugation
+    structure: <suffix @ plural=s>
     form: mice
-must (auxilliary)
-  past: false
 O (preposition)
 optimism (noun)
 sandwich (noun)
 so (conjunction)
-the (article)
-  definite: true
 thing (noun)
-thou (noun)
 to (preposition)
 towards (preposition)
 truth (noun)

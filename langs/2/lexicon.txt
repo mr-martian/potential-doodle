@@ -43,13 +43,9 @@ null (determiner)
 vmeh (determiner)
   hasspec: true
 mu (rel)
-  form
-    structure: @
-    form: [
+  display: [
 om (rel)
-  form
-    structure: @
-    form: ]
+  display: ]
 zho (pronoun)
 ah (noun/noun)
 feh (aspect)

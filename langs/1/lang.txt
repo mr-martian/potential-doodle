@@ -12,7 +12,7 @@ syntax
     IP
       xbar (2): ~; ~; I; VP
     NP
-      xbar (2): ~; AP; noun; ~
+      xbar (2): ~; AP?; noun; ~
     PP
       xbar (2): ~; ~; preposition; DP
     I
@@ -30,46 +30,15 @@ syntax
     VP
       variable: $head:verb
       option ($head(objects=1), $head(object1=NP))
-        xbar (2): DP; ~; $head; DP
+        xbar (2): DP; adverb?; $head; DP
       option ($head(objects=1), $head(object1=PP))
-        xbar (2): DP; ~; $head; PP
+        xbar (2): DP; adverb?; $head; PP
       option ($head(objects=1), $head(object1=AP))
-        xbar (2): DP; ~; $head; AP
+        xbar (2): DP; adverb?; $head; AP
       option ($head(objects=0))
-        xbar (2): DP; ~; $head; ~
-#    AP
-#      structure: [AP degree? [Abar adjective PP?]]
-#    NP
-#      option
-#        structure: [NP determiner Nmod]
-#      option
-#        structure: [NP NP? Nmod]
-#    Nmod
-#      structure: [Nmod AP? [Nbar noun PP? CP?]]
-#    VP
-#      structure: [VP adverb [Vmod Vbar PP?]]
-#    Vbar
-#      variable: $head:verb
-#      option ($head(objects=0))
-#        structure: [Vbar $head]
-#      option ($head(objects=1), $head(object1=NP))
-#        structure: [Vbar $head NP]
-#      option ($head(objects=1), $head(object1=PP))
-#        structure: [Vbar $head PP]
-#      option ($head(objects=1), $head(object1=CP))
-#        structure: [Vbar $head CP]
-#      option ($head(objects=1), $head(object1=AP))
-#        structure: [Vbar $head AP]
-#      option ($head(objects=2), $head(object1=NP), $head(object2=NP))
-#        structure: [Vbar $head NP NP]
-#      option ($head(objects=2), $head(object1=NP), $head(object2=PP))
-#        structure: [Vbar $head NP PP]
-#      option ($head(objects=2), $head(object1=PP), $head(object2=PP))
-#        structure: [Vbar $head PP PP]
-#  coordination
-#    nodes: AP, Abar, adjective, CP, Cbar, IP, Ibar, NP, Nmod, Nbar, noun, VP, Vmod, Vbar
-#    count: 2
-#    order: 1 conjunction 2
+        xbar (2): DP; adverb?; $head; ~
+      option ($head(objects=1), $head(object1=CP))
+        xbar (2): DP; adverb?; $head; CP
 transform
 #TAM + agreement
   rule

@@ -35,7 +35,6 @@ def destring(s, lang, at):
     special = '[]<>$:(){}=@'
     def ok(th):
         return isinstance(th, str) and th not in special
-    #print('destring("%s", %d, %s)' % (s, lang, at))
     assert(isinstance(lang, int))
     if not isinstance(s[0], str):
         return s[0], s[1:]
@@ -247,14 +246,11 @@ def loadlexicon(lang):
                 c = p.fvo('context', lang, blank(lang), '@')
                 form = p.fvo('structure', lang, m, '@')
                 for f in p['form']:
-                    fm = Node(lang, root.arg, [f.val])#, defaultdict(list, {'form of': m}))
+                    fm = Node(lang, root.arg, [f.val])
                     Translation(form, fm, root.label, context=c, resultlang=lang, mode=mode)
                 for f in p['result']:
                     fm = toobj(f.val, lang, None)
                     Translation(form, fm, root.label, context=c, resultlang=lang, mode=mode)
-            #elif p.label == 'inaudible':
-            #    fm = Node(lang, root.arg, [None], defaultdict(list, {'form of': m}))
-            #    Translation(m, fm, root.label, context=None)
             else:
                 m.props[p.label] = p.val
         register(m)
@@ -290,10 +286,8 @@ def loadlang(lang):
                                     else:
                                         xargs.append('$%s:%s'%(arg,s))
                                 name = ty.label[:-1] #drop P
-                                #node = toobj('[%sP %s [%sbar %s %s]]' % (name, xargs[0], name, xargs[1], xargs[2]), lang)
                                 node = toobj('|[%sP %s]' % (name, ' '.join(xargs)), lang)
                                 tolang = int(line.arg)
-                                #Translation(Variable('P', name+'P', None, lang), ['setlang', tolang], 'syntax', resultlang=tolang)
                                 Translation(toobj('[%sP * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
                                 Translation(toobj('[%smod * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
                                 Translation(toobj('[%sbar * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
@@ -316,7 +310,6 @@ def loadlang(lang):
                 ret.transform.append(Translation(tf, tr, 'transform', context=tc, resultlang=lang, mode='syntax'))
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)
-                #ret.transform.append(Translation(toobj('[%s * *]' % ch.val, lang), 'rotate', 'transform', resultlang=lang))
     return ret
 def loadtrans(lfrom, lto):
     fname = 'langs/%s/translate/%s.txt' % (lfrom, lto)
@@ -340,11 +333,3 @@ def loadlangset(langs):
     for lf in langs:
         for lt in langs:
             loadtrans(lf, lt)
-if __name__ == '__main__':
-    #loadlexicon(2)
-    #l = loadlang(2)
-    #print([x[0].label for x in l.syntax['NP'].conds])
-    #print(destring('$head(<* {transitive=true} *>)', 7, None))
-    #print(l)
-    #print(toobj('<(3) ~ ~ ~>', 7, None))
-    loadlangset([2,1])

@@ -7,7 +7,6 @@ class Variable:
         self.value = value
         self.opt = False
         self.lang = lang
-        #self.blankcond = True
         if self.value and self.value[-1] == '?':
             self.opt = True
             self.value = self.value[:-1]
@@ -50,7 +49,6 @@ class Unknown(Variable):
         Unknown.count += 1
     def __str__(self):
         return '*'
-        return 'Unknown(%s)' % self.label
     def __repr__(self):
         return self.__str__()
 class Option(list):
@@ -82,15 +80,15 @@ class Node:
         elif isinstance(form, Unknown):
             pass
         elif type(self) != type(form):
-            vrs[' failed'] = 'type'#True
+            vrs[' failed'] = 'type'
         elif not match(self.lang, form.lang) or not match(self.ntype, form.ntype):
-            vrs[' failed'] = 'lang or ntype'#True
+            vrs[' failed'] = 'lang or ntype'
         elif match(self, form):
             pass
         elif len(self.children) != len(form.children):
-            vrs[' failed'] = 'len(children)'#True
+            vrs[' failed'] = 'len(children)'
         elif not set(form.props.keys()) <= set(self.props.keys()):
-            vrs[' failed'] = 'too many properties: %s not <= %s' % (form.props.keys(), self.props.keys())#True
+            vrs[' failed'] = 'too many properties: %s not <= %s' % (form.props.keys(), self.props.keys())
         else:
             for s, f in zip(self.children, form.children):
                 if isinstance(s, Node):
@@ -122,14 +120,11 @@ class Node:
                 self.children[i] = vrs[ch.label]
         return self
     def trans(self, tr):
-        #print('%s.trans(%s)' % (self, tr))
         vrs = self.getvars(tr.context, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], Node):
-            #print('failed on context')
             return []
         subvrs = vrs[' '].getvars(tr.form, {' failed': False})
         if subvrs[' failed']:
-            #print('failed on form')
             return []
         if isinstance(tr.result, Node):
             vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
@@ -170,20 +165,23 @@ class Node:
             return ret
         else:
             return [self]
-    def v__str__(self):
+    def __str__(self):
         if isinstance(self.children, list):
             s = '[' + ' '.join([str(x) for x in self.children]) + ']'
         else:
             s = str(self.children)
-        #return '%s(%s)[%s %s]' % (self.__class__.__name__, self.lang, self.ntype, s)
         return '%s(%s)%s' % (self.ntype, self.lang, s)
-    def __str__(self):
-        b = '%s(%s)' % (self.ntype, self.lang)
-        l = '\n'.join([str(x) for x in self.children]).split('\n')
-        s = '\n  '.join(l)
-        return b + '[\n  ' + s + '\n]' + str(dict(self.props))
     def __repr__(self):
         return self.__str__()
+    def debug(self, depth=0):
+        ls = [('  '*depth) + ('%s(%s)[' % (self.ntype, self.lang))]
+        for c in self.children:
+            if isinstance(c, Node):
+                l.append(c.debug(depth+1))
+            else:
+                l.append('  '*(depth+1) + str(c))
+        ls.append('  '*depth + ']' + str(dict(self.props)))
+        return '\n'.join(ls)
     def addmode(name, pats):
         Node.__modes[name] = pats
     def display(self):
@@ -286,15 +284,12 @@ class Translation:
         self.category = category
         self.roots = [] #roots of all morphemes in form
         if isinstance(form, Node):
-            for c in form.iternest():
-                if isinstance(c, str):
-                    self.roots.append(c)
+            self.roots = form.roots()
         self.rootset = set(self.roots)
         if not context:
             self.context = Variable(' ', None, Unknown(), form.lang)
         else:
             self.context = context
-        Translation.__alltrans.append(self)
         if self.langs[0] == self.langs[1]:
             l = Language.getormake(self.langs[0])
             if mode == 'syntax':
@@ -311,10 +306,6 @@ class Translation:
                 l.syntax.append(self)
             else:
                 l.pats[category].append(self)
-    def find(fromlang, tolang, limit):
-        for tr in Translation.__alltrans:
-            if tr.langs == [fromlang, tolang] and tr.category in limit:
-                yield tr
     def __str__(self):
         return '{%s => %s}%s' % (self.form, self.result, self.roots)
     def __repr__(self):
@@ -404,3 +395,31 @@ class LangLink:
         for s in tr:
             ret += s.transform(self.syntax)
         return ret
+###MOVEMENT
+def movement1(sen):
+    roots = sen.roots()
+    lang = Language.getormake(sen.lang)
+    pats = lang.movefind(roots, False)
+    lexsen = sen.transform(pats)[0] or sen
+    for p in lang.movesyntax:
+        lexsen = lexsen.transform([p])[0] or lexsen
+    lexsen = lexsen.transform(lang.movefind(lexsen.roots(), True))[0] or lexsen
+    return lexsen
+def movementall(sen):
+    roots = sen.roots()
+    lang = Language.getormake(sen.lang)
+    pats1 = lang.movefind(roots, False)
+    sens1 = sen.transform(pats1) or [sen]
+    sens2 = []
+    for s in sens1:
+        l = len(sens1)
+        for p in lang.movesyntax:
+            sens2 += s.transform([p])
+        if len(sens1) == l:
+            sens2.append(s)
+    sens3 = []
+    for s in sens2:
+        pats2 = lang.movefind(s.roots(), True)
+        #@Speed: should find alternative to listing all roots every time
+        sens3 += s.transform(pats2) or [s]
+    return sens3
