@@ -273,7 +273,6 @@ def register(morph):
         AllMorphemes[morph.lang][morph.ntype][morph.props['searchkey']] = morph
 ###TRANSFORMATIONS
 class Translation:
-    __alltrans = []
     def __init__(self, form, result, category, context=None, resultlang=None, mode='syntax'):
         self.form = form
         self.result = result
