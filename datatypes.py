@@ -127,14 +127,14 @@ class Node:
             return []
         if isinstance(tr.result, Node):
             vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
-            return copy.deepcopy(tr.context).putvars(vrs)
         elif isinstance(tr.result, list):
             if tr.result[0] == 'setlang':
-                return Node(tr.result[1], self.ntype, self.children[:], self.props.copy())
+                vrs[' '] = Node(tr.result[1], self.ntype, self.children[:], self.props.copy())
             else:
                 return []
         else:
             return []
+        return copy.deepcopy(tr.context).putvars(vrs)
     def transform(self, pats):
         if len(pats) > 0:
             chs = []

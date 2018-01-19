@@ -42,7 +42,7 @@ PL (v-num)
 SG (v-num)
   audible: false
   conjugation
-    structure: <suffix <suffix <suffix $v tense=nonpast> @> v-pers=3>
+    context: <suffix <suffix <suffix $v tense=nonpast> @> v-pers=3>
     form: s
 ed (participle)
 ing (participle)

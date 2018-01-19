@@ -46,12 +46,31 @@ def gen_and_trans(flang, tlang):
     tr = LangLink.getormake(flang, tlang).translate(sen)
     ret = [movement1(s) for s in tr if s.alllang(tlang)]
     return movement1(sen), ret
+def gatdebug(flang, tlang):
+    loadlangset([flang, tlang])
+    sen = make(Language.getormake(flang))
+    f = open('trace.txt', 'w')
+    f.write(str(sen))
+    f.write('\n\n')
+    m = movement1(sen)
+    f.write(str(m))
+    print(m.display())
+    f.write('\n\n' + m.display() + '\n\n\n=====================================\n\n\n')
+    tr = LangLink.getormake(flang, tlang).translate(sen)
+    for t in tr:
+        if t.alllang(tlang):
+            m = movement1(t)
+            f.write(str(m) + '\n' + m.display() + '\n\n')
+            print(m.display())
+    f.close()
 if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
     tl = int(sys.argv[2])
 
-    sen, tr = gen_and_trans(fl, tl)
-    print(sen.display())
-    for t in tr:
-        print(t.display())
+    gatdebug(fl, tl)
+    #sen, tr = gen_and_trans(fl, tl)
+    #print(sen)
+    #print(sen.display())
+    #for t in tr:
+    #    print(t.display())

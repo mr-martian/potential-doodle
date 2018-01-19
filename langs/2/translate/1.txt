@@ -4,7 +4,10 @@ tense=immediate-past: tense=past
 tense=midpast: tense=past
 tense=remote-past: tense=past
 mood=m_t: mood=not
-mood=d_c: ~
+mood=d_c
+  translate
+    from: [I $t $a @]
+    to: [I $t $a ~]
 mood=g_m: mood=must
 determiner=null: determiner=a; determiner=the
 determiner=vmeh: determiner='s
