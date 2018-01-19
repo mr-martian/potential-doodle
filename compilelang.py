@@ -1,5 +1,4 @@
 from datatypes import *
-from collections import defaultdict
 from os.path import isfile
 ###PARSING
 def tokenize(s):
@@ -111,7 +110,7 @@ def destring(s, lang, at):
         return Node(l or lang, mode, [a, b]), rest
     elif s[0] == '{': #Morpheme pattern
         rest = s[1:]
-        d = defaultdict(list)
+        d = {}
         while rest[0] != '}':
             p = rest.pop(0)
             assert(rest.pop(0) == '=')

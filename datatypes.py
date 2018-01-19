@@ -38,6 +38,8 @@ class Variable:
             return valmatch and match(v, self.cond)
     def putvars(self, vrs):
         return vrs[self.label]
+    def putvarscopy(self, vrs):
+        return vrs[self.label]
     def __str__(self):
         return '$%s:%s(%s)' % (self.label, self.value, self.cond)
     def __repr__(self):
@@ -66,12 +68,9 @@ class Node:
         self.children = children
         self.props = props
         if not props:
-            self.props = defaultdict(list)
+            self.props = {}
     def swapchildren(self, ls):
-        return Node(self.lang, self.ntype, ls, copy.deepcopy(self.props))
-        r = copy.deepcopy(self)
-        r.children = ls
-        return r
+        return Node(self.lang, self.ntype, ls, self.props.copy())
     def getvars(self, form, vrs={' failed': False}):
         if isinstance(form, Variable):
             vrs[form.label] = self
@@ -129,13 +128,9 @@ class Node:
         if isinstance(tr.result, Node):
             vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
             return copy.deepcopy(tr.context).putvars(vrs)
-        elif tr.result == 'rotate':
-            return self.swapchildren(list(reversed(self.children)))
         elif isinstance(tr.result, list):
             if tr.result[0] == 'setlang':
-                ret = copy.deepcopy(self)
-                ret.lang = tr.result[1]
-                return ret
+                return Node(tr.result[1], self.ntype, self.children[:], self.props.copy())
             else:
                 return []
         else:
@@ -180,7 +175,7 @@ class Node:
                 l.append(c.debug(depth+1))
             else:
                 l.append('  '*(depth+1) + str(c))
-        ls.append('  '*depth + ']' + str(dict(self.props)))
+        ls.append('  '*depth + ']' + str(self.props))
         return '\n'.join(ls)
     def addmode(name, pats):
         Node.__modes[name] = pats
