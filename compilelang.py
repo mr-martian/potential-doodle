@@ -250,6 +250,10 @@ def loadlexicon(lang):
                 for f in p['result']:
                     fm = toobj(f.val, lang, None)
                     Translation(form, fm, root.label, context=c, resultlang=lang, mode=mode)
+                for f in p['setdisplay']:
+                    Translation(form, ['setdisplay', f.val], root.label, context=c, resultlang=lang, mode=mode)
+                if 'blank' in p:
+                    Translation(form, ['setdisplay', ''], root.label, context=c, resultlang=lang, mode=mode)
             else:
                 m.props[p.label] = p.val
         register(m)

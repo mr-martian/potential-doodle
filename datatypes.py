@@ -130,6 +130,9 @@ class Node:
         elif isinstance(tr.result, list):
             if tr.result[0] == 'setlang':
                 vrs[' '] = Node(tr.result[1], self.ntype, self.children[:], self.props.copy())
+            elif tr.result[0] == 'setdisplay':
+                vrs[' '] = Node(self.lang, self.ntype, self.children[:], self.props.copy())
+                vrs[' '].props['display'] = tr.result[1]
             else:
                 return []
         else:

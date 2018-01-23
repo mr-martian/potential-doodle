@@ -12,31 +12,31 @@ nonpast (tense)
     result: [I ~ $aspect ~]
   form
     context: [I @ $aspect? $a(vowel=ol)]
-    form: ol
+    setdisplay: ol
   form
     context: [I @ $aspect? $a(vowel=i)]
-    form: i
+    setdisplay: i
 immediate-past (tense)
   form
     context: [I @ $aspect? $a(vowel=ol)]
-    form: el
+    setdisplay: el
   form
     context: [I @ $aspect? $a(vowel=i)]
-    form: e
+    setdisplay: e
 midpast (tense)
   form
     context: [I @ $aspect? $a(vowel=ol)]
-    form: y
+    setdisplay: y
   form
     context: [I @ $aspect? $a(vowel=i)]
-    form: a
+    setdisplay: a
 remote-past (tense)
   form
     context: [I @ $aspect? $a(vowel=ol)]
-    form: uh
+    setdisplay: uh
   form
     context: [I @ $aspect? $a(vowel=i)]
-    form: ul
+    setdisplay: ul
 null (determiner)
   audible: false
   hasspec: false
