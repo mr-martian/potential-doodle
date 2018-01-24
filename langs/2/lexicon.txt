@@ -12,7 +12,9 @@ nonpast (tense)
     result: [I ~ $aspect ~]
   form
     context: [I @ $aspect? $a(vowel=ol)]
-    setdisplay: ol
+    setprops
+      display: ol
+      reformed: ö
   form
     context: [I @ $aspect? $a(vowel=i)]
     setdisplay: i

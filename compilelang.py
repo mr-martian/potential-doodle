@@ -252,6 +252,11 @@ def loadlexicon(lang):
                     Translation(form, fm, root.label, context=c, resultlang=lang, mode=mode)
                 for f in p['setdisplay']:
                     Translation(form, ['setdisplay', f.val], root.label, context=c, resultlang=lang, mode=mode)
+                for f in p['setprops']:
+                    d = {}
+                    for prop in f.children:
+                        d[prop.label] = prop.val
+                    Translation(form, ['set', d], root.label, context=c, resultlang=lang, mode=mode)
                 if 'blank' in p:
                     Translation(form, ['setdisplay', ''], root.label, context=c, resultlang=lang, mode=mode)
             else:

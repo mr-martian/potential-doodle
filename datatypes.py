@@ -133,6 +133,9 @@ class Node:
             elif tr.result[0] == 'setdisplay':
                 vrs[' '] = Node(self.lang, self.ntype, self.children[:], self.props.copy())
                 vrs[' '].props['display'] = tr.result[1]
+            elif tr.result[0] == 'set':
+                vrs[' '] = Node(self.lang, self.ntype, self.children[:], self.props.copy())
+                vrs[' '].props.update(tr.result[1])
             else:
                 return []
         else:
@@ -182,15 +185,15 @@ class Node:
         return '\n'.join(ls)
     def addmode(name, pats):
         Node.__modes[name] = pats
-    def display(self):
+    def display(self, mode='display'):
         if 'audible' in self.props and self.props['audible'] == 'false':
             return ''
-        if 'display' in self.props:
-            return self.props['display']
+        if mode in self.props:
+            return self.props[mode]
         l = []
         for c in self.children:
             if isinstance(c, Node):
-                d = c.display()
+                d = c.display(mode)
                 if d: l.append(d)
             elif not c:
                 pass
