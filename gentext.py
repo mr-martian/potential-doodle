@@ -1,5 +1,5 @@
-import random, itertools, copy
-from compilelang import loadlang, loadlangset
+import random, itertools, copy, os.path
+from compilelang import loadlang, loadlangset, toobj
 from datatypes import *
 def gen(pats, tree, depth, setvars):
     if isinstance(tree, Node):
@@ -46,10 +46,12 @@ def gen_and_trans(flang, tlang):
     tr = LangLink.getormake(flang, tlang).translate(sen)
     ret = [movement1(s) for s in tr if s.alllang(tlang)]
     return movement1(sen), ret
-def gatdebug(flang, tlang):
+def gatdebug(flang, tlang, oldsen=None):
     loadlangset([flang, tlang])
-    sen = make(Language.getormake(flang))
+    sen = oldsen or make(Language.getormake(flang))
     f = open('trace.txt', 'w')
+    f.write(sen.writecompile())
+    f.write('\n\n')
     f.write(str(sen))
     f.write('\n\n')
     m = movement1(sen)
@@ -67,8 +69,18 @@ if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
     tl = int(sys.argv[2])
+    sen = None
+    if len(sys.argv) > 3:
+        if sys.argv[3] == 'reuse':
+            f = open('trace.txt')
+            s = toobj(f.readline(), fl)
+            f.close()
+        elif os.path.isfile(sys.argv[3]):
+            f = open(sys.argv[3])
+            sen = toobj(f.readline(), fl)
+            f.close()
 
-    gatdebug(fl, tl)
+    gatdebug(fl, tl, oldsen=sen)
     #sen, tr = gen_and_trans(fl, tl)
     #print(sen)
     #print(sen.display())

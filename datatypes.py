@@ -183,6 +183,18 @@ class Node:
                 l.append('  '*(depth+1) + str(c))
         ls.append('  '*depth + ']' + str(self.props))
         return '\n'.join(ls)
+    def writecompile(self):
+        if len(self.children) == 1 and isinstance(self.children[0], str):
+            return self.ntype + '=' + self.children[0]
+        l = [self.ntype]
+        for c in self.children:
+            if isinstance(c, Node):
+                l.append(c.writecompile())
+            elif not c:
+                l.append('~')
+            else:
+                l.append(str(c))
+        return '[' + ' '.join(l) + ']'
     def addmode(name, pats):
         Node.__modes[name] = pats
     def display(self, mode='display'):
@@ -286,6 +298,11 @@ class Translation:
         if isinstance(form, Node):
             self.roots = form.roots()
         self.rootset = set(self.roots)
+        self.resultroots = []
+        if isinstance(result, Node):
+            self.resultroots = result.roots()
+        self.resultrootset = set(self.resultroots)
+        self.addedroots = self.resultrootset - self.rootset
         if not context:
             self.context = Variable(' ', None, Unknown(), form.lang)
         else:
@@ -407,6 +424,7 @@ def movement1(sen):
     return lexsen
 def movementall(sen):
     roots = sen.roots()
+    rootset = set(roots)
     lang = Language.getormake(sen.lang)
     pats1 = lang.movefind(roots, False)
     sens1 = sen.transform(pats1) or [sen]
@@ -418,8 +436,14 @@ def movementall(sen):
         if len(sens1) == l:
             sens2.append(s)
     sens3 = []
+    rootset = set(roots)
+    for p in pats1:
+        rootset.update(p.addedroots)
+    for p in lang.movesyntax:
+        rootset.update(p.addedroots)
+    roots = list(rootset)
     for s in sens2:
-        pats2 = lang.movefind(s.roots(), True)
+        pats2 = lang.movefind(roots, True)
         #@Speed: should find alternative to listing all roots every time
         sens3 += s.transform(pats2) or [s]
     return sens3

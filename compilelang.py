@@ -1,5 +1,9 @@
 from datatypes import *
 from os.path import isfile
+UNKNOWN_MORPH = "ERROR"
+#what to do when parser encounters a morpheme that isn't in the lexicon
+#options: "ERROR", "CREATE", "CREATE_AND_LOG"
+#"ERROR" is default because loading twice leads to copies that represent the same morpheme, but with different properties. -D.S. 2018-02-11
 ###PARSING
 def tokenize(s):
     ret = []
@@ -14,7 +18,10 @@ def tokenize(s):
                 ret.append(c)
             add = False
         elif c == '|':
-            ret.append(c)
+            if digraph:
+                ret[-1] += c
+            else:
+                ret.append(c)
             digraph = True
         elif c == '~':
             ret.append(None)
@@ -85,8 +92,12 @@ def destring(s, lang, at):
         while rest[0] != ']':
             t, rest = destring(rest, lang, at)
             ch.append(t)
-        if len(ch) == 3:
-            ch.insert(1, None)
+        if len(ch) == 1: #just head
+            ch.insert(1, None) #insert comp
+        if len(ch) == 2: #head and comp
+            ch.insert(0, None) #insert spec
+        if len(ch) == 3: #spec, head, and comp
+            ch.insert(1, None) #insert mod
         name = ntype[:-1]
         bar = Node(lang, name+'bar', ch[2:])
         mod = Node(lang, name+'mod', [ch[1], bar])
@@ -132,7 +143,15 @@ def destring(s, lang, at):
                 loadlexicon(lang)
             r = AllMorphemes[lang][s[0]][s[2]]
             if r == None:
-                raise ParseError('Unknown lang %d morpheme %s=%s' % (lang, s[0], s[2]))
+                if UNKNOWN_MORPH == "CREATE_AND_LOG":
+                    r = Node(lang, s[0], [s[2]])
+                    f = open('missing_morphemes.txt', 'a')
+                    f.write(str(lang) + ': ' + s[0] + '=' + s[2] + '\n')
+                    f.close()
+                if UNKNOWN_MORPH == "CREATE":
+                    r = Node(lang, s[0], [s[2]])
+                else: #UNKNOWN_MORPH == "ERROR"
+                    raise ParseError('Unknown lang %d morpheme %s=%s' % (lang, s[0], s[2]))
             return r, s[3:]
         else:
             return destring(['$', ':'] + s, lang, at)

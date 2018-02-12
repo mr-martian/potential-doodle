@@ -5,6 +5,7 @@ s (noun-inflection)
   audible: false
 +Q (complementizer)
   audible: false
+that (complementizer)
 
 past (tense)
   display: ed
@@ -156,6 +157,12 @@ kill (verb)
 measure (verb)
   objects: 1
   object1: NP
+see (verb)
+  objects: 1
+  object1: NP
+  conjugation
+    structure: <suffix @ tense=past>
+    form: saw
 mouse (noun)
   usagenotes (1): rodent, often used as example of a small creature
   conjugation
@@ -473,214 +480,89 @@ year (noun)
 producer (noun)
 tree (noun)
 Google-Glass (noun)
-  form
-    structure: @
-    form: Google Glass
+  display: Google Glass
 Sherlock-Holmes (noun)
-  form
-    structure: @
-    form: Sherlock Holmes
+  display: Sherlock Holmes
 binding (noun)
-  form
-    structure: @
-    form: binding
 book-cover (noun)
-  form
-    structure: @
-    form: book cover
+  display: book cover
 boundary (noun)
-  form
-    structure: @
-    form: boundary
 bulletin-board (noun)
-  form
-    structure: @
-    form: bulletin board
+  display: bulletin board
 cane (noun)
-  form
-    structure: @
-    form: cane
 card-game (noun)
-  form
-    structure: @
-    form: card game
+  display: card game
 cold (noun)
-  form
-    structure: @
-    form: cold
 community (noun)
-  form
-    structure: @
-    form: community
 contact-lens (noun)
-  form
-    structure: @
-    form: contact lens
+  display: contact lens
 couch-potato (noun)
-  form
-    structure: @
-    form: couch potato
+  display: couch potato
 donut (noun)
-  form
-    structure: @
-    form: donut
 doughnut (noun)
-  form
-    structure: @
-    form: doughnut
 end (noun)
-  form
-    structure: @
-    form: end
 energy-beam (noun)
-  form
-    structure: @
-    form: energy beam
+  display: energy beam
 eyewear (noun)
-  form
-    structure: @
-    form: eyewear
 french-horn (noun)
-  form
-    structure: @
-    form: french horn
+  display: french horn
 gelato (noun)
-  form
-    structure: @
-    form: gelato
 glasses (noun)
-  form
-    structure: @
-    form: glasses
 hula-hoop (noun)
-  form
-    structure: @
-    form: hula hoop
+  display: hula hoop
 ice-cream (noun)
-  form
-    structure: @
-    form: ice cream
+  display: ice cream
 laser (noun)
-  form
-    structure: @
-    form: laser
 limit (noun)
-  form
-    structure: @
-    form: limit
 marinara-sauce (noun)
-  form
-    structure: @
-    form: marinara sauce
+  display: marinara sauce
 mind (noun)
-  form
-    structure: @
-    form: mind
 monocle (noun)
-  form
-    structure: @
-    form: monocle
 movie-theater (noun)
-  form
-    structure: @
-    form: movie theater
+  display: movie theater
 music-box (noun)
-  form
-    structure: @
-    form: music box
+  display: music box
 nature (noun)
-  form
-    structure: @
-    form: nature
 notebook (noun)
-  form
-    structure: @
-    form: notebook
 olive-oil (noun)
-  form
-    structure: @
-    form: olive oil
+  display: olive oil
 outer-space (noun)
-  form
-    structure: @
-    form: outer space
+  display: outer space
 page (noun)
-  form
-    structure: @
-    form: page
 pedal-boat (noun)
-  form
-    structure: @
-    form: pedal boat
+  display: pedal boat
 phaser (noun)
-  form
-    structure: @
-    form: phaser
 playing-card (noun)
-  form
-    structure: @
-    form: playing card
+  display: playing card
 ray-gun (noun)
-  form
-    structure: @
-    form: ray gun
+  display: ray gun
 rubber-duckie (noun)
-  form
-    structure: @
-    form: rubber duckie
+  display: rubber duckie
 sign-language (noun)
-  form
-    structure: @
-    form: sign language
+  display: sign language
 space-helicopter (noun)
-  form
-    structure: @
-    form: space helicopter
+  display: space helicopter
 spectacles (noun)
-  form
-    structure: @
-    form: spectacles
 staff (noun)
-  form
-    structure: @
-    form: staff
 sugar-glider (noun)
-  form
-    structure: @
-    form: sugar glider
+  display: sugar glider
 termination-point (noun)
-  form
-    structure: @
-    form: termination point
+  display: termination point
 thought (noun)
-  form
-    structure: @
-    form: thought
 thumbs-down (noun)
-  form
-    structure: @
-    form: thumbs down
+  display: thumbs down
 thumbs-up (noun)
-  form
-    structure: @
-    form: thumbs up
+  display: thumbs up
 underachiever (noun)
-  form
-    structure: @
-    form: underachiever
 vegetable-oil (noun)
-  form
-    structure: @
-    form: vegetable oil
+  display: vegetable oil
+vision (noun)
 walking-stick (noun)
-  form
-    structure: @
-    form: walking stick
+  display: walking stick
 wiki (noun)
-  form
-    structure: @
-    form: wiki
 writing-system (noun)
-  form
-    structure: @
-    form: writing system
+  display: writing system
+
+
+#PROPER NOUNS
+Obadiah (noun)
