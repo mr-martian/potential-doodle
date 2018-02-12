@@ -442,8 +442,7 @@ def movementall(sen):
     for p in lang.movesyntax:
         rootset.update(p.addedroots)
     roots = list(rootset)
+    pats2 = lang.movefind(roots, True)
     for s in sens2:
-        pats2 = lang.movefind(roots, True)
-        #@Speed: should find alternative to listing all roots every time
         sens3 += s.transform(pats2) or [s]
     return sens3
