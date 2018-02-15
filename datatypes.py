@@ -347,6 +347,7 @@ class Language:
         self.transform = []
         self.rotate = []
         self.syntaxstart = None
+        self.setlang = []
         #Movement
         self.movelex = defaultdict(list)
         self.movesyntax = []
@@ -392,6 +393,9 @@ class LangLink:
         self.syntax = []
         self.pats = defaultdict(list)
         LangLink.__alllinks['%s-%s' % (fromlang, tolang)] = self
+        sl = Language.getormake(fromlang).setlang
+        for s in sl:
+            Translation(Variable('node', s, Unknown(), fromlang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
     def find(self, roots):
         s = set(roots)
         ret = []

@@ -1,0 +1,7 @@
+noun=lady: noun=wanita
+pronoun=I: pronoun=aku
+preposition=between: preposition=antara
+preposition=in: preposition=dalam
+preposition=from: preposition=daripada
+preposition=to: preposition=kepada
+preposition=for: preposition=untuk

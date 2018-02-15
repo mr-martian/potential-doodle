@@ -4,17 +4,18 @@ metadata
   creator: Natlang
 syntax
   start-with: CP
+  auto-setlang: AP; CP; IP, NP, PP, DP, VP
   node-types
     AP
-      xbar (2): ~; ~; adjective; ~
+      xbar: ~; ~; adjective; ~
     CP
-      xbar (2): ~; ~; complementizer; IP
+      xbar: ~; ~; complementizer; IP
     IP
-      xbar (2): ~; ~; I; VP
+      xbar: ~; ~; I; VP
     NP
-      xbar (2): ~; AP?; noun; ~
+      xbar: ~; AP?; noun; ~
     PP
-      xbar (2): ~; ~; preposition; DP
+      xbar: ~; ~; preposition; DP
     I
       variable: $t:tense
       variable: $a:aspect
@@ -24,21 +25,21 @@ syntax
     DP
       variable: $head:determiner
       option ($head(hasspec=true))
-        xbar (2): DP; ~; $head; NP
+        xbar: DP; ~; $head; NP
       option ($head(hasspec=false))
-        xbar (2): ~; ~; $head; NP
+        xbar: ~; ~; $head; NP
     VP
       variable: $head:verb
       option ($head(objects=1), $head(object1=NP))
-        xbar (2): DP; adverb?; $head; DP
+        xbar: DP; adverb?; $head; DP
       option ($head(objects=1), $head(object1=PP))
-        xbar (2): DP; adverb?; $head; PP
+        xbar: DP; adverb?; $head; PP
       option ($head(objects=1), $head(object1=AP))
-        xbar (2): DP; adverb?; $head; AP
+        xbar: DP; adverb?; $head; AP
       option ($head(objects=0))
-        xbar (2): DP; adverb?; $head; ~
+        xbar: DP; adverb?; $head; ~
       option ($head(objects=1), $head(object1=CP))
-        xbar (2): DP; adverb?; $head; CP
+        xbar: DP; adverb?; $head; CP
 transform
 #TAM + agreement
   rule
@@ -88,6 +89,21 @@ transform
     context: |[CP * * complementizer=+Q @]
     form: |[IP ~ $mod $I |[VP $subj $vmod $head:aux $comp]]
     result: |[IP $head $mod $I |[VP $subj $vmod ~ $comp]]
+#relative clauses
+  rule
+    form: |[IP ~ $imod? $i? [VP |[DP $subj:rel-pronoun] $rest?]]
+    result: |[IP |[DP $subj] $imod $i [VP ~ $rest]]
+  rule
+    form: |[IP ~ $imod? $i? |[VP $subj? $vmod? $v? |[DP $obj:rel-pronoun]]]
+    result: |[IP |[DP $obj] $imod? $i? |[VP $subj? $vmod? $v? ~]]
+  rule
+    context: [Nbar $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q [IP |[DP $rel:rel-pronoun] $rest]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q [IP ~ $rest]]
+  rule
+    context: [Nbar $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q |[conjP [IP |[DP $rel:rel-pronoun] $rest] $jmod? $j? $jbar?]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q |[conjP [IP ~ $rest] $jmod $j $jbar]]
 #plurality
   rule
     form: [Dbar $head(plural=true) |[NP $s? $m? $h:noun $c?]]
@@ -100,3 +116,5 @@ transform
   rule
     form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
     result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]
+#rotations
+  rotate: Vmod

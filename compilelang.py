@@ -290,6 +290,10 @@ def loadlang(lang):
             for ch in th.children:
                 if ch.label == 'start-with':
                     ret.syntaxstart = ch.val
+                elif ch.label == 'auto-setlang':
+                    for n in ch.val.split(';'):
+                        s = n.strip()
+                        ret.setlang += [s, s[:-1]+'mod', s[:-1]+'bar']
                 elif ch.label == 'node-types':
                     for ty in ch.children:
                         vrs = [toobj(s, lang) for s in ty.vals('variable')]
@@ -314,10 +318,6 @@ def loadlang(lang):
                                         xargs.append('$%s:%s'%(arg,s))
                                 name = ty.label[:-1] #drop P
                                 node = toobj('|[%sP %s]' % (name, ' '.join(xargs)), lang)
-                                tolang = int(line.arg)
-                                Translation(toobj('[%sP * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
-                                Translation(toobj('[%smod * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
-                                Translation(toobj('[%sbar * *]' % name, lang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
                             else:
                                 node = toobj(op.firstval('structure'), lang)
                                 for tr in op['translation']:

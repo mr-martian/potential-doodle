@@ -1,0 +1,42 @@
+metadata
+  name
+    local: Malay
+  creator: Natlang
+syntax
+  start-with: CP
+  node-types
+    AP
+      xbar (2): ~; ~; adjective; ~
+    CP
+      xbar (2): ~; ~; complementizer; IP
+    IP
+      xbar (2): ~; ~; I; VP
+    NP
+      xbar (2): ~; AP?; noun; ~
+    PP
+      xbar (2): ~; ~; preposition; DP
+    I
+      variable: $t:tense
+      variable: $a:aspect
+      variable: $m:mood?
+      structure: [I $t $a $m]
+      translation (2): [I $t $a $m]
+    DP
+      variable: $head:determiner
+      option ($head(hasspec=true))
+        xbar (2): DP; ~; $head; NP
+      option ($head(hasspec=false))
+        xbar (2): ~; ~; $head; NP
+    VP
+      variable: $head:verb
+      option ($head(objects=1), $head(object1=NP))
+        xbar (2): DP; adverb?; $head; DP
+      option ($head(objects=1), $head(object1=PP))
+        xbar (2): DP; adverb?; $head; PP
+      option ($head(objects=1), $head(object1=AP))
+        xbar (2): DP; adverb?; $head; AP
+      option ($head(objects=0))
+        xbar (2): DP; adverb?; $head; ~
+      option ($head(objects=1), $head(object1=CP))
+        xbar (2): DP; adverb?; $head; CP
+transform

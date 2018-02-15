@@ -13,6 +13,8 @@ nonpast (tense)
   audible: false
 durative (aspect)
   audible: false
+habitual (aspect)
+  audible: false
 perfect (aspect)
 continuous (aspect)
 perfect-continuous (aspect)
@@ -28,6 +30,10 @@ can't (mood)
     result: [I tense=past $aspect mood=couldn't]
 not (mood)
 must (mood)
+will (mood)
+  conjugation
+    structure: <suffix <suffix <suffix @ tense=nonpast> $num> $pers>
+    form: will
 do (aux)
 does (aux)
 did (aux)
@@ -122,9 +128,55 @@ thes (determiner)
   conjugation
     context: <suffix |[DP $s? $m? $h? |[NP $ns? $nm? <suffix $head plural=s> $nc?]] @>
     form: '
+her (determiner)
+  plural: false
+  hasspec: false
+herPL (determiner)
+  display: her
+  plural: true
+  hasspec: false
+those (determiner)
+  plural: true
+  hasspec: false
+I (pronoun)
+he (pronoun)
+she (pronoun)
+it (pronoun)
+we (pronoun)
+us (pronoun)
+they (pronoun)
+you (pronoun)
+#cases?
+not (quantifier)
+many (quantifier)
+all (quantifier)
+who (rel-pronoun)
+that (rel-pronoun)
+3S (null-pro)
+  person: 3
+  plural: false
+  audible: false
+3PL (null-pro)
+  person: 3
+  plural: true
+  audible: false
 
 and (conjunction)
+but (conjunction)
+for (conjunction)
+
 at (preposition)
+because-of (preposition)
+  display: because of
+between (preposition)
+for (preposition)
+from (preposition)
+in (preposition)
+O (preposition)
+to (preposition)
+towards (preposition)
+with (preposition)
+
 be (verb)
   objects: 1
   object1: AP
@@ -154,9 +206,18 @@ imitate (verb)
 kill (verb)
   objects: 1
   object1: NP
+know (verb)
+  objects: 1
+  object1: NP
+love (verb)
+  objects: 1
+  object1: NP
 measure (verb)
   objects: 1
   object1: NP
+reside (verb)
+  objects: 1
+  object1: PP
 see (verb)
   objects: 1
   object1: NP
@@ -168,21 +229,26 @@ mouse (noun)
   conjugation
     structure: <suffix @ plural=s>
     form: mice
-O (preposition)
 optimism (noun)
 sandwich (noun)
 so (conjunction)
 thing (noun)
-to (preposition)
-towards (preposition)
 truth (noun)
 understand (verb)
   objects: 1
   object1: NP
-unproductive (adjective)
 you (noun)
-sweet (adjective)
+
+also (adverb)
+forever (adverb)
+just (adverb)
+
+alone (adjective)
+  after: true
 chocolate (adjective)
+elect (adjective)
+sweet (adjective)
+unproductive (adjective)
 
 Calcium (noun)
 Copper (noun)
@@ -239,6 +305,9 @@ charcoal (noun)
 cheese (noun)
 chicken (noun)
 child (noun)
+  conjugation
+    structure: <suffix @ plural=s>
+    form: children
 chopstick (noun)
 chromesthesia (noun)
 circle (noun)
@@ -279,6 +348,7 @@ dusk (noun)
 ear (noun)
 echo (noun)
 effort (noun)
+elder (noun)
 electricity (noun)
 elephant (noun)
 emoji (noun)
@@ -334,6 +404,7 @@ juice (noun)
 kid (noun)
 knot (noun)
 ladle (noun)
+lady (noun)
 language (noun)
 leader (noun)
 leaf (noun)

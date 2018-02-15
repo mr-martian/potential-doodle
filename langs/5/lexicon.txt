@@ -1,0 +1,72 @@
+#pronouns
+aku (pronoun)
+  person: 1
+  plural: false
+  formal: false
+  conjugation
+    context: <suffix $noun @>
+    form: ku
+saya (pronoun)
+  person: 1
+  plural: false
+  formal: true
+kami (pronoun)
+  person: 1
+  plural: true
+  exclusive: true
+kita (pronoun)
+  person: 1
+  plural: true
+  exclusive: false
+kamu (pronoun)
+  person: 2
+  plural: false
+  formal: false
+  conjugation
+    context: <suffix $noun @>
+    form: mu
+anda (pronoun)
+  person: 2
+  plural: false
+  formal: true
+kalian (pronoun)
+  person: 2
+  plural: true
+  formal: false
+anda-sekalian (pronoun)
+  person: 2
+  plural: true
+  formal: true
+  display: anda sekalian
+ia (pronoun)
+  person: 3
+  plural: false
+  conjugation
+    context: <suffix $noun @>
+    form: nya
+dia (pronoun)
+  person: 3
+  plural: false
+  emphatic: true
+dia-orang (pronoun)
+  person: 3
+  plural: true
+  formal: false
+  display: dia orang
+mereka (pronoun)
+  person: 3
+  plural: true
+  formal: true
+ini (demonstrative)
+  proximal: true
+itu (demonstrative)
+  proximal: false
+
+
+wanita (noun)
+
+antara (preposition)
+dalam (preposition)
+daripada (preposition)
+kepada (preposition)
+untuk (preposition)
