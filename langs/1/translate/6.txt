@@ -1,0 +1,2 @@
+noun=lady: noun=mujer
+pronoun=I: pronoun=yo

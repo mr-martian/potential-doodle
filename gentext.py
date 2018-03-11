@@ -46,7 +46,7 @@ def gen_and_trans(flang, tlang):
     tr = LangLink.getormake(flang, tlang).translate(sen)
     ret = [movement1(s) for s in tr if s.alllang(tlang)]
     return movement1(sen), ret
-def gatdebug(flang, tlang, oldsen=None):
+def gatdebug(flang, tlang, oldsen=None, args=[]):
     loadlangset([flang, tlang])
     sen = oldsen or make(Language.getormake(flang))
     f = open('trace.txt', 'w')
@@ -59,11 +59,24 @@ def gatdebug(flang, tlang, oldsen=None):
     print(m.display())
     f.write('\n\n' + m.display() + '\n\n\n=====================================\n\n\n')
     tr = LangLink.getormake(flang, tlang).translate(sen)
+    foundany = False
     for t in tr:
         if t.alllang(tlang):
+            foundany = True
             m = movement1(t)
             f.write(str(m) + '\n' + m.display() + '\n\n')
             print(m.display())
+    if 'todo' in args and not foundany:
+        ls = []
+        for t in tr:
+            for n in t.iternest():
+                if isinstance(n, Node) and n.lang == flang:
+                    if isinstance(n.children[0], str):
+                        ls.append(n.children[0])
+                    f.write(str(n) + '\n')
+        s = str(list(sorted(list(set(ls)))))
+        f.write('TODO: %s' % s)
+        print(s)
     f.close()
 if __name__ == '__main__':
     import sys
@@ -80,7 +93,7 @@ if __name__ == '__main__':
             sen = toobj(f.readline(), fl)
             f.close()
 
-    gatdebug(fl, tl, oldsen=sen)
+    gatdebug(fl, tl, oldsen=sen, args=sys.argv[4:])
     #sen, tr = gen_and_trans(fl, tl)
     #print(sen)
     #print(sen.display())

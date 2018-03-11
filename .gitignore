@@ -5,3 +5,4 @@ failed.txt
 test.sh
 langs/*/*.lisp
 submit/*
+*.hfst

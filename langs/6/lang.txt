@@ -1,0 +1,122 @@
+metadata
+  name
+    local: Español
+    1: Spanish
+  creator: Natlang
+syntax
+  start-with: CP
+  auto-setlang: AP; CP; IP, NP, PP, DP, VP
+  node-types
+    AP
+      xbar: ~; ~; adjective; ~
+    CP
+      xbar: ~; ~; complementizer; IP
+    IP
+      xbar: ~; ~; I; VP
+    NP
+      xbar: ~; AP?; noun; ~
+    PP
+      xbar: ~; ~; preposition; DP
+    I
+      variable: $t:tense
+      variable: $a:aspect
+      variable: $m:mood?
+      structure: [I $t $a $m]
+      translation (2): [I $t $a $m]
+    DP
+      variable: $head:determiner
+      option ($head(hasspec=true))
+        xbar: DP; ~; $head; NP
+      option ($head(hasspec=false))
+        xbar: ~; ~; $head; NP
+    VP
+      variable: $head:verb
+      option ($head(objects=1), $head(object1=NP))
+        xbar: DP; adverb?; $head; DP
+      option ($head(objects=1), $head(object1=PP))
+        xbar: DP; adverb?; $head; PP
+      option ($head(objects=1), $head(object1=AP))
+        xbar: DP; adverb?; $head; AP
+      option ($head(objects=0))
+        xbar: DP; adverb?; $head; ~
+      option ($head(objects=1), $head(object1=CP))
+        xbar: DP; adverb?; $head; CP
+transform
+#TAM + agreement
+  rule
+    form: [Ibar [I $tense aspect=perfect-continuous $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ ~ <suffix aux=be participle=ed> |[VP ~ $mod <suffix $head participle=ing> $comp]]]]
+  rule
+    form: [Ibar [I $tense aspect=continuous $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=be |[VP ~ $mod <suffix $head participle=ing> $comp]]]
+  rule
+    form: [Ibar [I $tense aspect=perfect $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ $mod <suffix $head participle=ed> $comp]]]
+  rule
+    context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
+    form: [Ibar [I $tense ~ $mood] |[VP $subj $mod $head $comp]]
+    result: [Ibar [I $tense ~ ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
+  rule
+    context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
+    form: [Ibar [I $tense aspect=durative ~] |[VP $subj $mod $head:verb $comp]]
+    result: [Ibar [I $tense aspect=durative ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
+  rule
+    form: [Ibar [I $t? $a? $mood] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $t $a ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
+  rule
+    form: [Ibar [I $tense $aspect? $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I ~ $aspect $mood?] |[VP $subj $mod <suffix $head $tense> $comp]]
+  rule
+    context: |[VP |[DP $ds? $dm? $dh(plural=true) $dc?] $vm? @ $vc?]
+    form: $vh
+    result: <suffix $vh v-num=PL>
+  rule
+    context: |[VP |[DP $ds? $dm? $dh(plural=false) $dc?] $vm? @ $vc?]
+    form: $vh
+    result: <suffix $vh v-num=SG>
+  rule
+    context: |[VP |[DP $ds? $dm? $dh(person=1) $dc?] $vm? @ $vc?]
+    form: $vh
+    result: <suffix $vh v-pers=1>
+  rule
+    context: |[VP |[DP $ds? $dm? $dh(person=2) $dc?] $vm? @ $vc?]
+    form: $vh
+    result: <suffix $vh v-pers=2>
+  rule
+    context: |[VP |[DP $ds? $dm? $dh(person=3) $dc?] $vm? @ $vc?]
+    form: $head
+    result: <suffix $head v-pers=3>
+  rule
+    context: |[CP * * complementizer=+Q @]
+    form: |[IP ~ $mod $I |[VP $subj $vmod $head:aux $comp]]
+    result: |[IP $head $mod $I |[VP $subj $vmod ~ $comp]]
+#relative clauses
+  rule
+    form: |[IP ~ $imod? $i? [VP |[DP $subj:rel-pronoun] $rest?]]
+    result: |[IP |[DP $subj] $imod $i [VP ~ $rest]]
+  rule
+    form: |[IP ~ $imod? $i? |[VP $subj? $vmod? $v? |[DP $obj:rel-pronoun]]]
+    result: |[IP |[DP $obj] $imod? $i? |[VP $subj? $vmod? $v? ~]]
+  rule
+    context: [Nbar $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q [IP |[DP $rel:rel-pronoun] $rest]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q [IP ~ $rest]]
+  rule
+    context: [Nbar $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q |[conjP [IP |[DP $rel:rel-pronoun] $rest] $jmod? $j? $jbar?]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q |[conjP [IP ~ $rest] $jmod $j $jbar]]
+#plurality
+  rule
+    form: [Dbar $head(plural=true) |[NP $s? $m? $h:noun $c?]]
+    result: [Dbar $head |[NP $s $m <suffix $h plural=s> $c]]
+#possession
+  rule
+    form: |[DP $spec:DP $mod? $head $comp?]
+    result: |[DP <suffix $spec $head> $mod ~ $comp]
+#subject position
+  rule
+    form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
+    result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]
+#rotations
+  rotate: Vmod
+  rotate: Nmod

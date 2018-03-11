@@ -20,7 +20,7 @@ verb=jelten: verb=hide; verb=cower
 verb=jezlan
   translate
     from: [Vbar @ $comp]
-    to: [Vbar verb=excell [PP ~ [Pbar preposition=at $comp]]]
+    to: [Vbar verb=excell |[PP preposition=at $comp]]
 conjunction=keh: conjunction=and
 postposition=seln: preposition=to; preposition=towards
 conjunction=tyk: conjunction=so

@@ -6,6 +6,7 @@ metadata
       option: Sajem Tan
       option: Common Honey
   creator: Common Honey Tribe
+  transducer: st.lexc
 syntax
   start-with: CP
   node-types
@@ -42,6 +43,27 @@ morphology
     re: _
     re: \\1
     re: .*
+tag-order
+  split-root: _
+  noun
+    format: {root[0]}<n>{plural}{case}
+    tags
+      plural
+        case (plural=false): <sg>
+        case (plural=true): <pl>
+      case
+        value-of: case
+#doesn't deal with experiencer verbs
+  verb
+    format: {root[0]}<v>{type}{aspect}{valency}
+    tags
+      type
+        case (transitive=true): <tv>
+        case (transitive=false): <iv>
+      aspect
+        value-of: aspect
+      valency
+        value-of: valency
 transform
 #possessives
   rule
