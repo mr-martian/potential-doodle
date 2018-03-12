@@ -56,7 +56,8 @@ def gatdebug(flang, tlang, oldsen=None, args=[]):
     f.write('\n\n')
     m = movement1(sen)
     f.write(str(m))
-    print(m.display())
+    print(m.display('tags'))
+    final_output(m)
     f.write('\n\n' + m.display() + '\n\n\n=====================================\n\n\n')
     tr = LangLink.getormake(flang, tlang).translate(sen)
     foundany = False

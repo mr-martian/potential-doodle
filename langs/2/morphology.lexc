@@ -7,7 +7,12 @@ Multichar_Symbols
 
 ! Other symbols
 %>      ! Morpheme boundary
-%{F%}   ! for commitative
+%{Vi%}
+%{Vol%}
+%{Tf%}
+%{Tm%}
+%{Tn%}
+%{Tp%}
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -19,6 +24,8 @@ LEXICON Root
 NounRoot ;
 Punctuation ;
 VerbRoot ;
+AuxRoot ;
+AdjRoot ;
 
 LEXICON NounInflNum
 
@@ -28,15 +35,44 @@ LEXICON NounInflNum
 LEXICON NounInflCase
 
 %<nom%>: # ;
+%<gen%>:vmeh # ;
 
 LEXICON VerbInfl-Transitive
 
-%<v%>%<tv%>: # ;
+%<v%>%<tv%>: VerbInflAspect ;
 
 LEXICON VerbInfl-Intransitive
 
-%<v%>%<iv%>: # ;
+%<v%>%<iv%>: VerbInflAspect ;
 
+LEXICON VerbInflAspect
+
+%<gno%>:um VerbInflValency ;
+%<dur%>:feh VerbInflValency ;
+%<cont%>:sho VerbInflValency ;
+%<perf%>:dah VerbInflValency ;
+%<hab%>:eht VerbInflValency ;
+
+LEXICON VerbInflValency
+
+%<pass%>:sun # ;
+%<goal%>:jahk # ;
+%<stat%>: # ;
+
+LEXICON AuxInfl
+
+%<aux%>: AuxInflTense ;
+
+LEXICON AuxInflTense
+
+%<farpst%>:%{Tf%} # ;
+%<midpst%>:%{Tm%} # ;
+%<nearpst%>:%{Tn%} # ;
+%<nonpst%>:%{Tp%} # ;
+
+LEXICON AdjInfl
+
+%<adj%>: # ;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!                          L E X I C O N                                  !!!

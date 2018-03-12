@@ -1,48 +1,34 @@
 comp (complementizer)
   audible: false
 g_m (mood)
+  root: golm
   vowel: ol
 m_t (mood)
+  root: molt
   vowel: ol
 d_c (mood)
+  root: dic
   vowel: i
 nonpast (tense)
   form
     structure: [I @ $aspect? mood=d_c]
     result: [I ~ $aspect ~]
-  form
-    context: [I @ $aspect? $a(vowel=ol)]
-    setprops
-      display: ol
-      reformed: ö
-  form
-    context: [I @ $aspect? $a(vowel=i)]
-    setdisplay: i
+  audible: false
+  tense: nonpst
 immediate-past (tense)
-  form
-    context: [I @ $aspect? $a(vowel=ol)]
-    setdisplay: el
-  form
-    context: [I @ $aspect? $a(vowel=i)]
-    setdisplay: e
+  audible: false
+  tense: nearpst
 midpast (tense)
-  form
-    context: [I @ $aspect? $a(vowel=ol)]
-    setdisplay: y
-  form
-    context: [I @ $aspect? $a(vowel=i)]
-    setdisplay: a
+  audible: false
+  tense: midpst
 remote-past (tense)
-  form
-    context: [I @ $aspect? $a(vowel=ol)]
-    setdisplay: uh
-  form
-    context: [I @ $aspect? $a(vowel=i)]
-    setdisplay: ul
+  audible: false
+  tense: farpst
 null (determiner)
   audible: false
   hasspec: false
 vmeh (determiner)
+  audible: false
   hasspec: true
 mu (rel)
   display: [
@@ -51,7 +37,10 @@ om (rel)
 zho (pronoun)
 ah (noun/noun)
 feh (aspect)
+  audible: false
+  aspect: dur
 vmeh (case)
+  audible: false
 danec (verb)
   transitive: true
 dasnan (describer)

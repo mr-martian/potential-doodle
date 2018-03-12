@@ -84,7 +84,11 @@ def destring(s, lang, at):
         while rest[0] != ']':
             t, rest = destring(rest, lang, at)
             ch.append(t)
-        return Node(lang, ntype, ch), rest[1:]
+        d = {}
+        rest.pop(0)
+        if rest and rest[0] == '{':
+            d, rest = destring(rest, lang, at)
+        return Node(lang, ntype, ch, d), rest
     elif s[0] == '|[': #xbar Sytnax
         ntype = s[1]
         rest = s[2:]
@@ -101,7 +105,11 @@ def destring(s, lang, at):
         name = ntype[:-1]
         bar = Node(lang, name+'bar', ch[2:])
         mod = Node(lang, name+'mod', [ch[1], bar])
-        return Node(lang, ntype, [ch[0], mod]), rest[1:]
+        d = {}
+        rest.pop(0)
+        if rest and rest[0] == '{':
+            d, rest = destring(rest, lang, at)
+        return Node(lang, ntype, [ch[0], mod], d), rest
     elif s[0] == '<': #Morphology
         rest = s[1:]
         l = None
@@ -119,16 +127,15 @@ def destring(s, lang, at):
             raise ParseError('Morphology Node with too many elements. %s' % rest)
         rest.pop(0)
         return Node(l or lang, mode, [a, b]), rest
-    elif s[0] == '{': #Morpheme pattern
+    elif s[0] == '{': #props pattern
         rest = s[1:]
         d = {}
         while rest[0] != '}':
             p = rest.pop(0)
             assert(rest.pop(0) == '=')
-            d[p] = rest.pop(0)
-        r = Node(lang, Unknown(), Unknown(), d)
+            d[p], rest = destring(rest, lang, at)
         rest.pop(0)
-        return r, rest
+        return d, rest
     elif s[0] == '(':
         l = Option()
         rest = s[1:]
@@ -281,6 +288,14 @@ def loadlexicon(lang):
             else:
                 m.props[p.label] = p.val
         register(m)
+def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c', 'd']]
+    ret = []
+    for s in ch.arg.split(';'):
+        if not s or s.isspace():
+            continue
+        k,v = s.split('=')
+        ret.append([k.strip(), v.strip()])
+    return ret
 def loadlang(lang):
     loadlexicon(lang)
     things = ParseLine.fromfile('langs/%s/lang.txt' % lang)
@@ -333,20 +348,37 @@ def loadlang(lang):
             for ch in th['rule']:
                 tc = ch.fvo('context', lang, blank(lang), '@')
                 tf = ch.fvo('form', lang, None)
-                tr = ch.fvo('result', lang, None)
-                ret.transform.append(Translation(tf, tr, 'transform', context=tc, resultlang=lang, mode='syntax'))
+                if 'set' in ch:
+                    ret.transform.append(Translation(tf, ['set', dict(condlist(ch.first('set')))], 'transform', context=tc, resultlang=lang, mode='syntax'))
+                else:
+                    tr = ch.fvo('result', lang, None)
+                    ret.transform.append(Translation(tf, tr, 'transform', context=tc, resultlang=lang, mode='syntax'))
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)
         if th.label == 'metadata':
             pass
         if th.label == 'lexicon-generation':
             for ch in th.children:
-                d = {'ntype': ch.label, 'conds': [], 'lexicon-in': ch.firstval('in'), 'lexicon-to': ch.firstval('to')}
-                for s in ch.arg.split(';'):
-                    if not s: continue
-                    k,v = s.split('=')
-                    d['conds'].append([k.strip(), v.strip()])
-                ret.lexc_lexicons.append(d)
+                ret.lexc_lexicons.append({'ntype': ch.label, 'conds': condlist(ch), 'lexicon-in': ch.firstval('in'), 'lexicon-to': ch.firstval('to')})
+                if 'regex-match' in ch:
+                    ret.lexc_lexicons[-1]['regex'] = [ch.firstval('regex-match'), ch.firstval('regex-replace')]
+        if th.label == 'tag-order':
+            for ch in th.children:
+                if ch.label == 'split-root':
+                    ret.tags_rootsplit = ch.val
+                    continue
+                tags = {}
+                defaults = {}
+                ls = ch.first('tags').children if 'tags' in ch else []
+                for tg in ls:
+                    if tg.val:
+                        tags[tg.label] = tg.val
+                    else:
+                        tags[tg.label] = []
+                        for cs in tg['case']:
+                            tags[tg.label].append({'conds': condlist(cs), 'tag': cs.val})
+                    defaults[tg.label] = tg.firstval('default')
+                ret.tags.append({'format': ch.firstval('format'), 'tags': tags, 'ntype': ch.label, 'conds': condlist(ch), 'defaults': defaults})
     return ret
 def loadtrans(lfrom, lto):
     fname = 'langs/%s/translate/%s.txt' % (lfrom, lto)

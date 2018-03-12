@@ -1,5 +1,6 @@
 import re, itertools, random, copy
 from collections import defaultdict
+from subprocess import Popen, PIPE
 ###VARIABLES
 class Variable:
     def __init__(self, label, value, cond, lang):
@@ -102,7 +103,7 @@ class Node:
                     vrs[' failed'] = 'failed on child %s with form %s' % (s, f)
             for k in form.props.keys():
                 if isinstance(form.props[k], Variable):
-                    vrs[forms.props[k].label] = self.props[k]
+                    vrs[form.props[k].label] = self.props[k]
                 elif match(self.props[k], form.props[k]):
                     pass
                 else:
@@ -128,13 +129,14 @@ class Node:
         if isinstance(tr.result, Node):
             vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
         elif isinstance(tr.result, list):
+            at = vrs[' ']
             if tr.result[0] == 'setlang':
-                vrs[' '] = Node(tr.result[1], self.ntype, self.children[:], self.props.copy())
+                vrs[' '] = Node(tr.result[1], at.ntype, at.children[:], at.props.copy())
             elif tr.result[0] == 'setdisplay':
-                vrs[' '] = Node(self.lang, self.ntype, self.children[:], self.props.copy())
+                vrs[' '] = Node(at.lang, at.ntype, at.children[:], at.props.copy())
                 vrs[' '].props['display'] = tr.result[1]
             elif tr.result[0] == 'set':
-                vrs[' '] = Node(self.lang, self.ntype, self.children[:], self.props.copy())
+                vrs[' '] = Node(at.lang, at.ntype, at.children[:], at.props.copy())
                 vrs[' '].props.update(tr.result[1])
             else:
                 return []
@@ -171,7 +173,7 @@ class Node:
             s = '[' + ' '.join([str(x) for x in self.children]) + ']'
         else:
             s = str(self.children)
-        return '%s(%s)%s' % (self.ntype, self.lang, s)
+        return '%s(%s)%s%s' % (self.ntype, self.lang, s, str(self.props))
     def __repr__(self):
         return self.__str__()
     def debug(self, depth=0):
@@ -195,11 +197,50 @@ class Node:
             else:
                 l.append(str(c))
         return '[' + ' '.join(l) + ']'
+    def matchcondlist(self, cndls):
+        for c in cndls:
+            if c[0] not in self.props:
+                return False
+            if self.props[c[0]] != c[1]:
+                return False
+        return True
+    def tagify(self):
+        lang = Language.get(self.lang)
+        format = ''
+        tagset = []
+        defaults = {}
+        for typ in lang.tags:
+            if typ['ntype'] != self.ntype:
+                continue
+            if not self.matchcondlist(typ['conds']):
+                continue
+            format = typ['format']
+            tagset = typ['tags']
+            defaults = typ['defaults']
+            break
+        tags = {'root': self.children[0].split(lang.tags_rootsplit)}
+        if 'root' in self.props:
+            tags['root'] = self.props['root'].split(lang.tags_rootsplit)
+        for tg in tagset:
+            if isinstance(tagset[tg], str):
+                if tagset[tg] in self.props:
+                    t = self.props[tagset[tg]]
+                    tags[tg] = '<' + t + '>' if t else ''
+            else:
+                for cs in tagset[tg]:
+                    if self.matchcondlist(cs['conds']):
+                        tags[tg] = cs['tag']
+                        break
+            if tg not in tags:
+                tags[tg] = defaults[tg]
+        return format.format(**tags) or self.children[0]
     def addmode(name, pats):
         Node.__modes[name] = pats
     def display(self, mode='display'):
         if 'audible' in self.props and self.props['audible'] == 'false':
             return ''
+        if mode == 'tags' and isinstance(self.children[0], str):
+            return self.tagify()
         if mode in self.props:
             return self.props[mode]
         l = []
@@ -355,6 +396,8 @@ class Language:
         #Transducer
         self.lexc = ''
         self.lexc_lexicons = []
+        self.tags = []
+        self.tags_rootsplit = '' #for cases where it's easiest to have tags between parts of the root
         Language.__alllangs[lang] = self
     def addmorphopt(self, ntype, struct):
         self.morphology[ntype].append(struct)
@@ -453,3 +496,9 @@ def movementall(sen):
     for s in sens2:
         sens3 += s.transform(pats2) or [s]
     return sens3
+###OUTPUT
+def final_output(tree):
+    proc = Popen(['hfst-lookup', '-q', '-i', 'langs/%d/gen.hfst' % tree.lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+    ls = proc.communicate('\n'.join(tree.display('tags').split()))
+    #print(ls[0])
+    print(' '.join([x.split('\t')[1] for x in ls[0].strip().split('\n\n')]))

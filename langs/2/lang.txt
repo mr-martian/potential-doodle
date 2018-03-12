@@ -50,8 +50,9 @@ tag-order
       plural
         case (plural=false): <sg>
         case (plural=true): <pl>
-      case
-        value-of: case
+        default: <sg>
+      case: case
+        default: <nom>
 #doesn't deal with experiencer verbs
   verb
     format: {root[0]}<v>{type}{aspect}{valency}
@@ -59,10 +60,18 @@ tag-order
       type
         case (transitive=true): <tv>
         case (transitive=false): <iv>
-      aspect
-        value-of: aspect
-      valency
-        value-of: valency
+        default: <tv>
+      aspect: aspect
+        default: <error>
+      valency: valency
+        default: <stat>
+  mood
+    format: {root[0]}<aux>{tense}
+    tags
+      tense: tense
+        default: <error>
+  describer
+    format: {root[0]}<adj>
 lexicon-generation
   noun
     in: NounRoot
@@ -73,30 +82,47 @@ lexicon-generation
   verb (transitive=false)
     in: VerbRoot
     to: VerbInfl-Intransitive
+  mood (vowel=i)
+    in: AuxRoot
+    to: AuxInfl
+    regex-match: _
+    regex-replace: %{Vi%}
+  mood (vowel=ol)
+    in: AuxRoot
+    to: AuxInfl
+    regex-match: _
+    regex-replace: %{Vol%}
+  describer
+    in: AdjRoot
+    to: AdjInfl
 transform
 #possessives
   rule
-    context: @
-    form: |[DP $spec? $mod? determiner=vmeh $comp?]
-    result: |[DP <suffix $spec determiner=vmeh> $mod ~ $comp]
-  rule
-    context: @
-    form: <suffix |[DP $spec? $mod? $head $comp] determiner=vmeh>
-    result: |[DP $spec $mod $head <suffix $comp determiner=vmeh>]
-  rule
-    context: @
-    form: <suffix |[NP $spec? $mod? $head $comp?] determiner=vmeh>
-    result: |[NP $spec $mod <suffix $head determiner=vmeh> $comp]
+    context: |[DP |[DP $dspec? $dmod? $dhead? |[NP $nspec? $nmod? @ $ncomp?]] $mod? determiner=vmeh $comp?]
+    form: $noun:noun
+    set (case=gen)
 #aspect
   rule
-    context: @
-    form: [Ibar [I $tense? $aspect $mood?] |[VP $spec $mod? $head $comp?]]
-    result: [Ibar [I $tense ~ $mood] |[VP $spec $mod <suffix $head $aspect> $comp]]
+    context: [Ibar [I $tense? aspect=feh $mood?] |[VP $spec $mod? @ $comp?]]
+    form: $verb:verb
+    set (aspect=dur)
 #tense + mood
   rule
-    context: @
-    form: [I $tense ~ $mood]
-    result: <aux $mood $tense>
+    context: [I tense=remote-past $aspect? @]
+    form: $mood:mood
+    set (tense=farpst)
+  rule
+    context: [I tense=midpast $aspect? @]
+    form: $mood:mood
+    set (tense=midpst)
+  rule
+    context: [I tense=immediate-past $aspect? @]
+    form: $mood:mood
+    set (tense=nearpst)
+  rule
+    context: [I tense=nonpast $aspect? @]
+    form: $mood:mood
+    set (tense=nonpst)
 #subject position
   rule
     context: @

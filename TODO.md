@@ -19,6 +19,8 @@
   - [ ] document format
   - [ ] more compact notation for common operations
   - [ ] line numbers for error messages?
+  - [x] [make transducers](maketransducer.py)
+    - [x] incorporate twolc
 - [ ] [Translation](gentext.py)
   - [ ] separate from generation
   - [ ] speed up
