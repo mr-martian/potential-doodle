@@ -352,6 +352,9 @@ class Language:
         self.movelex = defaultdict(list)
         self.movesyntax = []
         self.moveconj = defaultdict(list)
+        #Transducer
+        self.lexc = ''
+        self.lexc_lexicons = []
         Language.__alllangs[lang] = self
     def addmorphopt(self, ntype, struct):
         self.morphology[ntype].append(struct)

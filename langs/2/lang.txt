@@ -6,7 +6,6 @@ metadata
       option: Sajem Tan
       option: Common Honey
   creator: Common Honey Tribe
-  transducer: st.lexc
 syntax
   start-with: CP
   node-types
@@ -64,6 +63,16 @@ tag-order
         value-of: aspect
       valency
         value-of: valency
+lexicon-generation
+  noun
+    in: NounRoot
+    to: NounInflNum
+  verb (transitive=true)
+    in: VerbRoot
+    to: VerbInfl-Transitive
+  verb (transitive=false)
+    in: VerbRoot
+    to: VerbInfl-Intransitive
 transform
 #possessives
   rule

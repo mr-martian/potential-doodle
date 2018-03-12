@@ -337,6 +337,16 @@ def loadlang(lang):
                 ret.transform.append(Translation(tf, tr, 'transform', context=tc, resultlang=lang, mode='syntax'))
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)
+        if th.label == 'metadata':
+            pass
+        if th.label == 'lexicon-generation':
+            for ch in th.children:
+                d = {'ntype': ch.label, 'conds': [], 'lexicon-in': ch.firstval('in'), 'lexicon-to': ch.firstval('to')}
+                for s in ch.arg.split(';'):
+                    if not s: continue
+                    k,v = s.split('=')
+                    d['conds'].append([k.strip(), v.strip()])
+                ret.lexc_lexicons.append(d)
     return ret
 def loadtrans(lfrom, lto):
     fname = 'langs/%s/translate/%s.txt' % (lfrom, lto)

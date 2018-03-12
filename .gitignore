@@ -6,3 +6,4 @@ test.sh
 langs/*/*.lisp
 submit/*
 *.hfst
+langs/*/lexicon.lexc
