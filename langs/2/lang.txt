@@ -103,26 +103,14 @@ transform
     set (case=gen)
 #aspect
   rule
-    context: [Ibar [I $tense? aspect=feh $mood?] |[VP $spec $mod? @ $comp?]]
+    context: [Ibar [I $tense? $aspect:aspect $mood?] |[VP $spec? $mod? @ $comp?]]
     form: $verb:verb
-    set (aspect=dur)
+    setprop (aspect): $aspect.aspect
 #tense + mood
   rule
-    context: [I tense=remote-past $aspect? @]
+    context: [I $tns:tense $aspect? @]
     form: $mood:mood
-    set (tense=farpst)
-  rule
-    context: [I tense=midpast $aspect? @]
-    form: $mood:mood
-    set (tense=midpst)
-  rule
-    context: [I tense=immediate-past $aspect? @]
-    form: $mood:mood
-    set (tense=nearpst)
-  rule
-    context: [I tense=nonpast $aspect? @]
-    form: $mood:mood
-    set (tense=nonpst)
+    setprop (tense): $tns.tense
 #subject position
   rule
     context: @

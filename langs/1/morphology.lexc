@@ -26,49 +26,42 @@ Punctuation ;
 VerbRoot ;
 AuxRoot ;
 AdjRoot ;
+DeterminerRoot ;
 
-LEXICON NounInflNum
+LEXICON DeterminerInfl
 
-%<n%>%<sg%>: NounInflCase ;
-%<n%>%<pl%>:ah NounInflCase ;
+%<det%>: # ;
 
-LEXICON NounInflCase
+LEXICON NounInfl
 
-%<nom%>: # ;
-%<gen%>:vmeh # ;
+%<n%>%<SG%>%<nom%>: # ;
+%<n%>%<PL%>%<nom%>:s # ;
 
 LEXICON VerbInfl-Transitive
 
-%<v%>%<tv%>: VerbInflAspect ;
+%<v%>%<tv%>: VerbInflTense ;
 
 LEXICON VerbInfl-Intransitive
 
-%<v%>%<iv%>: VerbInflAspect ;
+%<v%>%<iv%>: VerbInflTense ;
 
-LEXICON VerbInflAspect
+LEXICON VerbInflTense
 
-%<gno%>:um VerbInflValency ;
-%<dur%>:feh VerbInflValency ;
-%<cont%>:sho VerbInflValency ;
-%<perf%>:dah VerbInflValency ;
-%<hab%>:eht VerbInflValency ;
+%<pstprt%>:ed VerbInfl-Person-and-Number-Irrelevant ;
+%<prsprt%>:ed VerbInfl-Person-and-Number-Irrelevant ;
 
-LEXICON VerbInflValency
+LEXICON VerbInfl-Person-and-Number-Irrelevant
 
-%<pass%>:sun # ;
-%<goal%>:jahk # ;
-%<stat%>: # ;
+%<1%>%<SG%>: # ;
+%<1%>%<PL%>: # ;
+%<2%>%<SG%>: # ;
+%<2%>%<PL%>: # ;
+%<3%>%<SG%>: # ;
+%<3%>%<PL%>: # ;
 
 LEXICON AuxInfl
 
-%<aux%>: AuxInflTense ;
-
-LEXICON AuxInflTense
-
-%<farpst%>:%{Tf%} # ;
-%<midpst%>:%{Tm%} # ;
-%<nearpst%>:%{Tn%} # ;
-%<nonpst%>:%{Tp%} # ;
+%<aux%>: VerbInflTense ;
 
 LEXICON AdjInfl
 

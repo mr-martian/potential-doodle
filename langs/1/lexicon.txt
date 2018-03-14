@@ -9,8 +9,10 @@ that (complementizer)
 
 past (tense)
   display: ed
+  tense: pst
 nonpast (tense)
   audible: false
+  tense: nonpst
 durative (aspect)
   audible: false
 habitual (aspect)
@@ -35,8 +37,11 @@ will (mood)
     structure: <suffix <suffix <suffix @ tense=nonpast> $num> $pers>
     form: will
 do (aux)
+  conj: prs
 does (aux)
+  conj: prs
 did (aux)
+  conj: prs
 
 1 (v-pers)
   audible: false
@@ -55,6 +60,7 @@ ed (participle)
 ing (participle)
 #tense-pl-num
 have (aux)
+  conj: pstprt
   conjugation
     structure: <suffix <suffix <suffix @ tense=nonpast> v-num=SG> v-pers=3>
     form: has
@@ -65,6 +71,7 @@ have (aux)
     structure: <suffix @ participle=ed>
     form: had
 be (aux)
+  conj: prsprt
   conjugation
     structure: <suffix <suffix <suffix @ tense=nonpast> $num:v-num> v-pers=2>
     form: are
@@ -99,20 +106,24 @@ a (determiner)
   hasspec: false
   person: 3
   plural: false
+  number: SG
 the (determiner)
   hasspec: false
   person: 3
   plural: false
+  number: SG
 as (determiner)
   hasspec: false
   person: 3
   plural: true
   display: a
+  number: PL
 thes (determiner)
   hasspec: false
   person: 3
   plural: true
   display: the
+  number: PL
 's (determiner)
   plural: false
   hasspec: true
@@ -120,6 +131,7 @@ thes (determiner)
   conjugation
     context: <suffix |[DP $s? $m? $h? |[NP $ns? $nm? <suffix $head plural=s> $nc?]] @>
     form: '
+  number: SG
 'ss (determiner)
   plural: true
   hasspec: true
@@ -128,16 +140,23 @@ thes (determiner)
   conjugation
     context: <suffix |[DP $s? $m? $h? |[NP $ns? $nm? <suffix $head plural=s> $nc?]] @>
     form: '
+  number: PL
 her (determiner)
   plural: false
   hasspec: false
+  number: SG
+  person: 3
 herPL (determiner)
   display: her
   plural: true
   hasspec: false
+  number: PL
+  person: 3
 those (determiner)
   plural: true
   hasspec: false
+  number: PL
+  person: 3
 I (pronoun)
 he (pronoun)
 she (pronoun)

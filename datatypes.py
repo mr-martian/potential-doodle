@@ -123,25 +123,23 @@ class Node:
         vrs = self.getvars(tr.context, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], Node):
             return []
-        subvrs = vrs[' '].getvars(tr.form, {' failed': False})
-        if subvrs[' failed']:
+        vrs = vrs[' '].getvars(tr.form, vrs)
+        if vrs[' failed']:
             return []
-        if isinstance(tr.result, Node):
-            vrs[' '] = copy.deepcopy(tr.result).putvars(subvrs)
-        elif isinstance(tr.result, list):
-            at = vrs[' ']
-            if tr.result[0] == 'setlang':
-                vrs[' '] = Node(tr.result[1], at.ntype, at.children[:], at.props.copy())
-            elif tr.result[0] == 'setdisplay':
-                vrs[' '] = Node(at.lang, at.ntype, at.children[:], at.props.copy())
-                vrs[' '].props['display'] = tr.result[1]
-            elif tr.result[0] == 'set':
-                vrs[' '] = Node(at.lang, at.ntype, at.children[:], at.props.copy())
-                vrs[' '].props.update(tr.result[1])
-            else:
-                return []
-        else:
-            return []
+        if not isinstance(tr.result[0], Node):
+            vrs[' '] = copy.deepcopy(vrs[' '])
+        for act in tr.result:
+            if isinstance(act, Node):
+                vrs[' '] = copy.deepcopy(act).putvars(vrs)
+            elif isinstance(act, list):
+                if act[0] == 'setlang':
+                    vrs[' '].lang = act[1]
+                elif act[0] == 'setdisplay':
+                    vrs[' '].props['display'] = act[1]
+                elif act[0] == 'set':
+                    vrs[' '].props.update(act[1])
+                elif act[0] == 'setprop':
+                    vrs[' '].props[act[1]] = vrs[act[2]].props[act[3]]
         return copy.deepcopy(tr.context).putvars(vrs)
     def transform(self, pats):
         if len(pats) > 0:

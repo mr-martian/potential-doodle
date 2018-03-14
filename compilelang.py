@@ -202,11 +202,12 @@ class ParseLine:
                     p -= 1
                 i += 1
             i += 1
-            r.args = [x.strip() for x in s.split(', ')]
+            r.args = [x.strip() for x in s.split(';') if not x.isspace()]
             r.arg = s.strip()
         if i < len(fstr)-1 and fstr[i] == ':':
             i += 2
             r.val = fstr[i:].strip()
+            r.vals = [x.strip() for x in r.val.split(';') if not x.isspace()]
             i = len(fstr)
         if i != len(fstr):
             raise ParseError('Something is wrong with line %s.\nString was "%s", position: %d' % (num, fstr, i))
@@ -217,7 +218,7 @@ class ParseLine:
         depth = 0
         with open(fname) as f:
             for i, l in enumerate(f):
-                if l.isspace() or l[0] == '#':
+                if l.isspace() or l.lstrip()[0] == '#':
                     continue
                 while not l.startswith('  '*depth):
                     depth -= 1
@@ -272,27 +273,25 @@ def loadlexicon(lang):
                 form = p.fvo('structure', lang, m, '@')
                 for f in p['form']:
                     fm = Node(lang, root.arg, [f.val])
-                    Translation(form, fm, root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [fm], root.label, context=c, resultlang=lang, mode=mode)
                 for f in p['result']:
                     fm = toobj(f.val, lang, None)
-                    Translation(form, fm, root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [fm], root.label, context=c, resultlang=lang, mode=mode)
                 for f in p['setdisplay']:
-                    Translation(form, ['setdisplay', f.val], root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [['setdisplay', f.val]], root.label, context=c, resultlang=lang, mode=mode)
                 for f in p['setprops']:
                     d = {}
                     for prop in f.children:
                         d[prop.label] = prop.val
-                    Translation(form, ['set', d], root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [['set', d]], root.label, context=c, resultlang=lang, mode=mode)
                 if 'blank' in p:
-                    Translation(form, ['setdisplay', ''], root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [['setdisplay', '']], root.label, context=c, resultlang=lang, mode=mode)
             else:
                 m.props[p.label] = p.val
         register(m)
 def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c', 'd']]
     ret = []
-    for s in ch.arg.split(';'):
-        if not s or s.isspace():
-            continue
+    for s in ch.args:
         k,v = s.split('=')
         ret.append([k.strip(), v.strip()])
     return ret
@@ -306,9 +305,8 @@ def loadlang(lang):
                 if ch.label == 'start-with':
                     ret.syntaxstart = ch.val
                 elif ch.label == 'auto-setlang':
-                    for n in ch.val.split(';'):
-                        s = n.strip()
-                        ret.setlang += [s, s[:-1]+'mod', s[:-1]+'bar']
+                    for n in ch.vals:
+                        ret.setlang += [n, n[:-1]+'mod', n[:-1]+'bar']
                 elif ch.label == 'node-types':
                     for ty in ch.children:
                         vrs = [toobj(s, lang) for s in ty.vals('variable')]
@@ -319,7 +317,7 @@ def loadlang(lang):
                         for op in ty['option']:
                             if 'xbar' in op:
                                 line = op.first('xbar')
-                                nodes = line.val.split(';')
+                                nodes = line.vals
                                 if len(nodes) != 3:
                                     ParseError('Wrong number of nodes given to xbar on line %s, expected 4, got %s' % (line.num, len(nodes)))
                                 xargs = []
@@ -337,7 +335,7 @@ def loadlang(lang):
                                 node = toobj(op.firstval('structure'), lang)
                                 for tr in op['translation']:
                                     res = toobj(tr.val, int(tr.arg))
-                                    Translation(node, res, 'syntax', resultlang=int(tr.arg), mode='syntax')
+                                    Translation(node, [res], 'syntax', resultlang=int(tr.arg), mode='syntax')
                             conds.append([toobj(x, lang) for x in op.args])
                             ops.append(node)
                         ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs)
@@ -348,11 +346,22 @@ def loadlang(lang):
             for ch in th['rule']:
                 tc = ch.fvo('context', lang, blank(lang), '@')
                 tf = ch.fvo('form', lang, None)
-                if 'set' in ch:
-                    ret.transform.append(Translation(tf, ['set', dict(condlist(ch.first('set')))], 'transform', context=tc, resultlang=lang, mode='syntax'))
-                else:
-                    tr = ch.fvo('result', lang, None)
-                    ret.transform.append(Translation(tf, tr, 'transform', context=tc, resultlang=lang, mode='syntax'))
+                res = []
+                if 'result' in ch:
+                    res.append(ch.fvo('result', lang, None))
+                for l in ch['set']:
+                    res.append(['set', dict(condlist(l))])
+                for l in ch['setprop']:
+                    res.append(['setprop', l.arg] + l.val[1:].split('.'))
+                #if 'set' in ch:
+                #    ret.transform.append(Translation(tf, ['set', dict(condlist(ch.first('set')))], 'transform', context=tc, resultlang=lang, mode='syntax'))
+                #elif 'setprop' in ch:
+                #    l = ch.first('setprop')
+                #    ret.transform.append(Translation(tf, ['setprop', l.arg] + l.val[1:].split('.'), 'transform', context=tc, resultlang=lang, mode='syntax'))
+                #else:
+                #    tr = ch.fvo('result', lang, None)
+                #    ret.transform.append(Translation(tf, tr, 'transform', context=tc, resultlang=lang, mode='syntax'))
+                ret.transform.append(Translation(tf, res, 'transform', context=tc, resultlang=lang, mode='syntax'))
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)
         if th.label == 'metadata':
@@ -387,15 +396,15 @@ def loadtrans(lfrom, lto):
         for lex in trans:
             m = toobj(lex.label, lfrom, None)
             if lex.val:
-                for g in lex.val.split(';'):
+                for g in lex.vals:
                     d = toobj(g.strip(), lto, m)
-                    Translation(m, d, m.children[0], resultlang=lto, mode='lex')
+                    Translation(m, [d], m.children[0], resultlang=lto, mode='lex')
             for tr in lex.children:
                 if tr.label == 'translate':
                     f = tr.fvo('from', lfrom, m)
                     c = tr.fvo('context', lfrom, blank(lfrom), '@')
                     for t in tr.vals('to'):
-                        Translation(f, toobj(t, lto, m), m.children[0], context=c, resultlang=lto, mode='lex')
+                        Translation(f, [toobj(t, lto, m)], m.children[0], context=c, resultlang=lto, mode='lex')
 def loadlangset(langs):
     for l in langs:
         loadlang(l)

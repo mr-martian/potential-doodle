@@ -1,14 +1,14 @@
 # TODO
 
-- [ ] [Morphology](morphology.php)
+- [ ] [Morphology](interface/morphology.php)
   - [ ] add more features and values (get feedback)
   - [ ] contractions?
   - [ ] simpler input for more agglutinative langs
   - [ ] convert output and pass to [compilelang.py](compilelang.py)
-- [ ] [Syntax](syntax.php)
+- [ ] [Syntax](interface/syntax.php)
   - [ ] restandardize tree structure
   - [ ] convert output and pass to [compilelang.py](compilelang.py)
-- [ ] [WALS](walsfeatures.php)
+- [ ] [WALS](interface/walsfeatures.php)
   - [ ] determine which features are helpful and which can be ignored
   - [ ] create more questions to cover further relevant data
   - [ ] import from WALS
@@ -22,7 +22,7 @@
   - [x] [make transducers](maketransducer.py)
     - [x] incorporate twolc
 - [ ] [Translation](gentext.py)
-  - [ ] separate from generation
+  - [x] separate from generation
   - [ ] speed up
     - port to compiled language?
   - [ ] translation distance
