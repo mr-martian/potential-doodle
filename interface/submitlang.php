@@ -3,7 +3,7 @@
   //langdata (JSON object of updates)
   //mode (string, name of sending page)
   //id (number, language id)
-  $name = tempnam(getcwd().'/submit/', '');
+  $name = tempnam(getcwd().'/../submit/', '');
   $file = fopen($name, "w");
   fwrite($file, $_POST["langdata"]);
   fclose($file);

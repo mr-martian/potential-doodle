@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
     <?php
-      $s = file_get_contents("langs/".$_GET["lang"]."/lang.json");
+      $s = file_get_contents("../langs/".$_GET["lang"]."/lang.json");
       $lang = json_decode($s, true);
       echo "<title>Editting ".htmlspecialchars($lang["display name"])." Syntax</title>";
       echo "<script>var langdata = ".$s.";";

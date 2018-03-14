@@ -4,7 +4,7 @@ print(argv)
 mode = argv[1]
 lang = argv[2]
 langdata = json.load(open(argv[3], encoding='utf-8'))
-f = open('langs/%s/lang.json' % lang, encoding='utf-8')
+f = open('../langs/%s/lang.json' % lang, encoding='utf-8')
 olddata = json.load(f)
 f.close()
 for k in langdata:

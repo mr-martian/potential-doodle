@@ -14,7 +14,7 @@
         $sf = strval($f);
         $st = strval($t);
         $output = array();
-        exec('python3 gentext.py '.$sf.' '.$st, $output);
+        exec('python3 ../gentext.py '.$sf.' '.$st, $output);
         echo "<h2>Sentence:</h2><p>".$output[0]."</p><h2>Translations:</h2><ul>";
         foreach(array_slice($output,1) as $line) {
           echo "<li>".$line."</li>";

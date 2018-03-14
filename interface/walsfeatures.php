@@ -12,7 +12,7 @@
       if ($langid != 0) {
         $sid = strval($langid);
         echo file_get_contents('walsform.html');
-        $jsonstr = file_get_contents("langs/".$sid."/lang.json");
+        $jsonstr = file_get_contents("../langs/".$sid."/lang.json");
         $jsondata = json_decode($jsonstr, true);
         echo '<script type="text/javascript">var data='.$jsonstr.'; var go=true; var lang='.$sid.'</script>';
       } else {

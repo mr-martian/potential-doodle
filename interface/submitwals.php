@@ -1,5 +1,5 @@
 <?php
-  $name = tempnam(getcwd().'/submit/', '');
+  $name = tempnam(getcwd().'/../submit/', '');
   $file = fopen($name, "w");
   fwrite($file, json_encode($_POST));
   fclose($file);

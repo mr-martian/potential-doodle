@@ -7,3 +7,4 @@ langs/*/*.lisp
 submit/*
 *.hfst
 langs/*/lexicon.lexc
+research/*
