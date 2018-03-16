@@ -239,6 +239,17 @@ class Node:
             return ''
         if mode == 'tags' and isinstance(self.children[0], str):
             return self.tagify()
+        if mode == 'linear':
+            if isinstance(self.children[0], str):
+                return [self]
+            else:
+                l = []
+                for c in self.children:
+                    if isinstance(c, Node):
+                        l += c.display('linear')
+                    elif c:
+                        l.append(c)
+                return l
         if mode in self.props:
             return self.props[mode]
         l = []
@@ -496,7 +507,10 @@ def movementall(sen):
     return sens3
 ###OUTPUT
 def final_output(tree):
-    proc = Popen(['hfst-lookup', '-q', '-i', 'langs/%d/gen.hfst' % tree.lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+    proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % tree.lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
     ls = proc.communicate('\n'.join(tree.display('tags').split()))
     #print(ls[0])
+    print('\n')
+    print(ls)
+    print('\n')
     print(' '.join([x.split('\t')[1] for x in ls[0].strip().split('\n\n')]))

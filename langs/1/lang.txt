@@ -63,10 +63,23 @@ tag-order
       number: number
         default: <SG>
   mood
-    format: {root[0]}<aux>{tense}
+    format: {root[0]}<aux>{tense}{person}{number}
     tags
       tense: tense
         default: <error>
+      person: person
+        default: <3>
+      number: number
+        default: <SG>
+  aux
+    format: {root[0]}<aux>{tense}{person}{number}
+    tags
+      tense: tense
+        default: <error>
+      person: person
+        default: <3>
+      number: number
+        default: <SG>
   adjective
     format: {root[0]}<adj>
   determiner
@@ -82,6 +95,9 @@ lexicon-generation
     in: VerbRoot
     to: VerbInfl-Intransitive
   mood
+    in: AuxRoot
+    to: AuxInfl
+  aux
     in: AuxRoot
     to: AuxInfl
   adjective
@@ -103,7 +119,7 @@ transform
     result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ $mod $head $comp]]]
   rule
     context: |[VP $vs? $vm? $aux:aux |[VP $vs2? $vm2? @ $vc?]]
-    form: $verb:verb
+    form: $verb
     setprop (tense): $aux.conj
   rule
     context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
@@ -122,11 +138,11 @@ transform
     setprop (tense): $tense.tense
   rule
     context: |[VP |[DP $ds? $dm? $dh $dc?] $vm? @ $vc?]
-    form: $verb:verb
+    form: $verb
     setprop (number): $dh.number
   rule
     context: |[VP |[DP $ds? $dm? $dh $dc?] $vm? @ $vc?]
-    form: $verb:verb
+    form: $verb
     setprop (person): $dh.person
   rule
     context: |[CP * * complementizer=+Q @]
@@ -155,7 +171,7 @@ transform
 #possession
   rule
     form: |[DP $spec:DP $mod? $head $comp?]
-    result: |[DP <suffix $spec $head> $mod ~ $comp]
+    result: |[DP [GEN $spec $head] $mod ~ $comp]
 #subject position
   rule
     form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]

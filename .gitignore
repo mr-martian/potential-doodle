@@ -8,3 +8,5 @@ submit/*
 *.hfst
 langs/*/lexicon.lexc
 research/*
+langs/*/.generated
+langs/*/.temporary

@@ -48,7 +48,10 @@ LEXICON VerbInfl-Intransitive
 LEXICON VerbInflTense
 
 %<pstprt%>:ed VerbInfl-Person-and-Number-Irrelevant ;
-%<prsprt%>:ed VerbInfl-Person-and-Number-Irrelevant ;
+%<prsprt%>:ing VerbInfl-Person-and-Number-Irrelevant ;
+%<nonpst%>: VerbInfl-Person-and-Number-Irrelevant "weight: 1" ;
+%<nonpst%>%<3%>%<SG%>:s # ;
+%<pst%>:ed  VerbInfl-Person-and-Number-Irrelevant ;
 
 LEXICON VerbInfl-Person-and-Number-Irrelevant
 

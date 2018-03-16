@@ -8,7 +8,7 @@ s (noun-inflection)
 that (complementizer)
 
 past (tense)
-  display: ed
+  audible: false
   tense: pst
 nonpast (tense)
   audible: false
@@ -33,9 +33,7 @@ can't (mood)
 not (mood)
 must (mood)
 will (mood)
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=nonpast> $num> $pers>
-    form: will
+  output (tense=nonpst; person=3; number=SG): will
 do (aux)
   conj: prs
 does (aux)
@@ -43,62 +41,49 @@ does (aux)
 did (aux)
   conj: prs
 
-1 (v-pers)
-  audible: false
-2 (v-pers)
-  audible: false
-3 (v-pers)
-  audible: false
-PL (v-num)
-  audible: false
-SG (v-num)
-  audible: false
-  conjugation
-    context: <suffix <suffix <suffix $v tense=nonpast> @> v-pers=3>
-    form: s
-ed (participle)
-ing (participle)
 #tense-pl-num
 have (aux)
   conj: pstprt
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=nonpast> v-num=SG> v-pers=3>
-    form: has
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=past> $num:v-num> $p:v-pers>
-    form: had
-  conjugation
-    structure: <suffix @ participle=ed>
-    form: had
+  output (tense=pstprt): had
+  output (tense=nonpst; person=3; number=SG): has
+  output (tense=pst; person=1; number=SG): had
+  output (tense=pst; person=2; number=SG): had
+  output (tense=pst; person=3; number=SG): had
+  output (tense=pst; person=1; number=PL): had
+  output (tense=pst; person=2; number=PL): had
+  output (tense=pst; person=3; number=PL): had
 be (aux)
   conj: prsprt
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=nonpast> $num:v-num> v-pers=2>
-    form: are
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=nonpast> v-num=PL> $pers>
-    form: are
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=nonpast> v-num=SG> v-pers=3>
-    form: is
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=nonpast> v-num=SG> v-pers=1>
-    form: am
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=past> $num> v-pers=2>
-    form: were
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=past> v-num=PL> $pers>
-    form: were
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=past> v-num=SG> v-pers=1>
-    form: was
-  conjugation
-    structure: <suffix <suffix <suffix @ tense=past> v-num=SG> v-pers=3>
-    form: was
-  conjugation
-    structure: <suffix @ participle=ed>
-    form: been
+  output (tense=pstprt): been
+  output (tense=nonpst; person=2; number=SG): are
+  output (tense=nonpst; person=2; number=PL): are
+  output (tense=nonpst; person=1; number=PL): are
+  output (tense=nonpst; person=3; number=PL): are
+  output (tense=nonpst; person=3; number=SG): is
+  output (tense=nonpst; person=1; number=SG): am
+  output (tense=nonpst; person=2; number=SG): were
+  output (tense=nonpst; person=2; number=PL): were
+  output (tense=nonpst; person=1; number=PL): were
+  output (tense=nonpst; person=3; number=PL): were
+  output (tense=nonpst; person=3; number=SG): was
+  output (tense=nonpst; person=1; number=SG): was
+be (verb)
+  objects: 1
+  object1: AP
+  conj: prsprt
+  output (tense=pstprt): been
+  output (tense=nonpst; person=2; number=SG): are
+  output (tense=nonpst; person=2; number=PL): are
+  output (tense=nonpst; person=1; number=PL): are
+  output (tense=nonpst; person=3; number=PL): are
+  output (tense=nonpst; person=3; number=SG): is
+  output (tense=nonpst; person=1; number=SG): am
+  output (tense=nonpst; person=2; number=SG): were
+  output (tense=nonpst; person=2; number=PL): were
+  output (tense=nonpst; person=1; number=PL): were
+  output (tense=nonpst; person=3; number=PL): were
+  output (tense=nonpst; person=3; number=SG): was
+  output (tense=nonpst; person=1; number=SG): was
 
 s (plural)
 
@@ -196,9 +181,6 @@ to (preposition)
 towards (preposition)
 with (preposition)
 
-be (verb)
-  objects: 1
-  object1: AP
 borrow (verb)
   objects: 1
   object1: NP
@@ -245,9 +227,7 @@ see (verb)
     form: saw
 mouse (noun)
   usagenotes (1): rodent, often used as example of a small creature
-  conjugation
-    structure: <suffix @ plural=s>
-    form: mice
+  output (number=PL; case=nom): mice
 optimism (noun)
 sandwich (noun)
 so (conjunction)
@@ -324,9 +304,7 @@ charcoal (noun)
 cheese (noun)
 chicken (noun)
 child (noun)
-  conjugation
-    structure: <suffix @ plural=s>
-    form: children
+  output (number=PL; case=nom): children
 chopstick (noun)
 chromesthesia (noun)
 circle (noun)

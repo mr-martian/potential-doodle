@@ -263,6 +263,7 @@ def loadlexicon(lang):
     rootslist = ParseLine.fromfile('langs/%s/lexicon.txt' % lang)
     for root in rootslist:
         m = Node(lang, root.arg, [root.label])
+        m.props['output'] = []
         for p in root.children:
             if p.label in ['form', 'conjugation']:
                 if p.label == 'form':
@@ -286,6 +287,8 @@ def loadlexicon(lang):
                     Translation(form, [['set', d]], root.label, context=c, resultlang=lang, mode=mode)
                 if 'blank' in p:
                     Translation(form, [['setdisplay', '']], root.label, context=c, resultlang=lang, mode=mode)
+            elif p.label == 'output':
+                m.props['output'].append([condlist(p), p.val])
             else:
                 m.props[p.label] = p.val
         register(m)
@@ -353,14 +356,6 @@ def loadlang(lang):
                     res.append(['set', dict(condlist(l))])
                 for l in ch['setprop']:
                     res.append(['setprop', l.arg] + l.val[1:].split('.'))
-                #if 'set' in ch:
-                #    ret.transform.append(Translation(tf, ['set', dict(condlist(ch.first('set')))], 'transform', context=tc, resultlang=lang, mode='syntax'))
-                #elif 'setprop' in ch:
-                #    l = ch.first('setprop')
-                #    ret.transform.append(Translation(tf, ['setprop', l.arg] + l.val[1:].split('.'), 'transform', context=tc, resultlang=lang, mode='syntax'))
-                #else:
-                #    tr = ch.fvo('result', lang, None)
-                #    ret.transform.append(Translation(tf, tr, 'transform', context=tc, resultlang=lang, mode='syntax'))
                 ret.transform.append(Translation(tf, res, 'transform', context=tc, resultlang=lang, mode='syntax'))
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)
