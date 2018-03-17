@@ -36,6 +36,8 @@ LEXICON NounInfl
 
 %<n%>%<SG%>%<nom%>: # ;
 %<n%>%<PL%>%<nom%>:s # ;
+%<n%>%<SG%>%<gen%>:'s # ;
+%<n%>%<PL%>%<gen%>:s' # ;
 
 LEXICON VerbInfl-Transitive
 
@@ -47,13 +49,13 @@ LEXICON VerbInfl-Intransitive
 
 LEXICON VerbInflTense
 
-%<pstprt%>:ed VerbInfl-Person-and-Number-Irrelevant ;
-%<prsprt%>:ing VerbInfl-Person-and-Number-Irrelevant ;
-%<nonpst%>: VerbInfl-Person-and-Number-Irrelevant "weight: 1" ;
+%<pstprt%>:ed VerbInfl-Pers-and-Num ;
+%<prsprt%>:ing VerbInfl-Pers-and-Num ;
+%<nonpst%>: VerbInfl-Pers-and-Num "weight: 1" ;
 %<nonpst%>%<3%>%<SG%>:s # ;
-%<pst%>:ed  VerbInfl-Person-and-Number-Irrelevant ;
+%<pst%>:ed  VerbInfl-Pers-and-Num ;
 
-LEXICON VerbInfl-Person-and-Number-Irrelevant
+LEXICON VerbInfl-Pers-and-Num
 
 %<1%>%<SG%>: # ;
 %<1%>%<PL%>: # ;

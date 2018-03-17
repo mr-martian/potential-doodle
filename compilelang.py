@@ -288,7 +288,12 @@ def loadlexicon(lang):
                 if 'blank' in p:
                     Translation(form, [['setdisplay', '']], root.label, context=c, resultlang=lang, mode=mode)
             elif p.label == 'output':
-                m.props['output'].append([condlist(p), p.val])
+                o = [p.arg, p.val, '#']
+                if '=' in p.arg:
+                    o[0] = condlist(p)
+                if 'lexicon' in p:
+                    o[2] = p.firstval('lexicon')
+                m.props['output'].append(o)
             else:
                 m.props[p.label] = p.val
         register(m)
@@ -355,7 +360,16 @@ def loadlang(lang):
                 for l in ch['set']:
                     res.append(['set', dict(condlist(l))])
                 for l in ch['setprop']:
-                    res.append(['setprop', l.arg] + l.val[1:].split('.'))
+                    a = ['setprop', ' ', l.arg, False, l.val]
+                    if '.' in l.val:
+                        v,p = l.val[1:].split('.')
+                        a[3] = v
+                        a[4] = p
+                    if '.' in l.arg:
+                        v,p = l.arg[1:].split('.')
+                        a[1] = v
+                        a[2] = p
+                    res.append(a)
                 ret.transform.append(Translation(tf, res, 'transform', context=tc, resultlang=lang, mode='syntax'))
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)

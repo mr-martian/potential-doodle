@@ -46,44 +46,31 @@ have (aux)
   conj: pstprt
   output (tense=pstprt): had
   output (tense=nonpst; person=3; number=SG): has
-  output (tense=pst; person=1; number=SG): had
-  output (tense=pst; person=2; number=SG): had
-  output (tense=pst; person=3; number=SG): had
-  output (tense=pst; person=1; number=PL): had
-  output (tense=pst; person=2; number=PL): had
-  output (tense=pst; person=3; number=PL): had
+  output (have<aux><pst>): had
+    lexicon: VerbInfl-Pers-and-Num
 be (aux)
   conj: prsprt
   output (tense=pstprt): been
-  output (tense=nonpst; person=2; number=SG): are
-  output (tense=nonpst; person=2; number=PL): are
-  output (tense=nonpst; person=1; number=PL): are
-  output (tense=nonpst; person=3; number=PL): are
+  output (be<aux><nonpst>): are
+    lexicon: VerbInfl-Pers-and-Num
   output (tense=nonpst; person=3; number=SG): is
   output (tense=nonpst; person=1; number=SG): am
-  output (tense=nonpst; person=2; number=SG): were
-  output (tense=nonpst; person=2; number=PL): were
-  output (tense=nonpst; person=1; number=PL): were
-  output (tense=nonpst; person=3; number=PL): were
-  output (tense=nonpst; person=3; number=SG): was
-  output (tense=nonpst; person=1; number=SG): was
+  output (be<aux><pst>): were
+    lexicon: VerbInfl-Pers-and-Num
+  output (tense=pst; person=3; number=SG): was
+  output (tense=pst; person=1; number=SG): was
 be (verb)
   objects: 1
   object1: AP
-  conj: prsprt
   output (tense=pstprt): been
-  output (tense=nonpst; person=2; number=SG): are
-  output (tense=nonpst; person=2; number=PL): are
-  output (tense=nonpst; person=1; number=PL): are
-  output (tense=nonpst; person=3; number=PL): are
+  output (be<aux><nonpst>): are
+    lexicon: VerbInfl-Pers-and-Num
   output (tense=nonpst; person=3; number=SG): is
   output (tense=nonpst; person=1; number=SG): am
-  output (tense=nonpst; person=2; number=SG): were
-  output (tense=nonpst; person=2; number=PL): were
-  output (tense=nonpst; person=1; number=PL): were
-  output (tense=nonpst; person=3; number=PL): were
-  output (tense=nonpst; person=3; number=SG): was
-  output (tense=nonpst; person=1; number=SG): was
+  output (be<aux><pst>): were
+    lexicon: VerbInfl-Pers-and-Num
+  output (tense=pst; person=3; number=SG): was
+  output (tense=pst; person=1; number=SG): was
 
 s (plural)
 
@@ -102,12 +89,14 @@ as (determiner)
   person: 3
   plural: true
   display: a
+  output: a
   number: PL
 thes (determiner)
   hasspec: false
   person: 3
   plural: true
   display: the
+  output: the
   number: PL
 's (determiner)
   plural: false

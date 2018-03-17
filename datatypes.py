@@ -139,7 +139,10 @@ class Node:
                 elif act[0] == 'set':
                     vrs[' '].props.update(act[1])
                 elif act[0] == 'setprop':
-                    vrs[' '].props[act[1]] = vrs[act[2]].props[act[3]]
+                    if act[3]:
+                        vrs[act[1]].props[act[2]] = vrs[act[3]].props[act[4]]
+                    else:
+                        vrs[act[1]].props[act[2]] = act[4]
         return copy.deepcopy(tr.context).putvars(vrs)
     def transform(self, pats):
         if len(pats) > 0:

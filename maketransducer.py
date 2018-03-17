@@ -25,12 +25,18 @@ def genlexicon(langid):
                         root = sub(rule['regex'][0], rule['regex'][1], root)
                     if 'root' in m.props:
                         root = m.props['root'] + ':' + root
-                    lexs[rule['lexicon-in']].append('%s %s "weight: 1" ;' % (root, rule['lexicon-to']))
+                    lexs[rule['lexicon-in']].append('%s %s "weight: 2" ;' % (root, rule['lexicon-to']))
                     for form in m.props['output']:
-                        for k in form[0]:
-                            m.props[k[0]] = k[1]
-                        s = m.tagify().replace('<', '%<').replace('>', '%>')
-                        lexs[rule['lexicon-in']].append('%s:%s # "weight: 0" ;' % (s, form[1]))
+                        if isinstance(form[0], list):
+                            for k in form[0]:
+                                m.props[k[0]] = k[1]
+                            s = m.tagify()
+                        elif not form[0]:
+                            s = m.tagify()
+                        else:
+                            s = form[0]
+                        s = s.replace('<', '%<').replace('>', '%>')
+                        lexs[rule['lexicon-in']].append('%s:%s %s "weight: %d" ;' % (s, form[1], form[2], 0 if form[2] == '#' else 1))
     f = open('langs/%d/.generated/lexicon.lexc' % langid, 'w')
     for lex in lexs:
         f.write(('LEXICON %s\n' % lex) + '\n'.join(lexs[lex]) + '\n\n')

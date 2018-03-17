@@ -172,6 +172,10 @@ transform
   rule
     form: |[DP $spec:DP $mod? $head $comp?]
     result: |[DP [GEN $spec $head] $mod ~ $comp]
+  rule
+    form: [GEN |[DP $spec? $mod? $d? |[NP $nspec? $nmod? $noun ~]] $gen]
+    result: |[DP $spec $mod $d |[NP $nspec $nmod $noun ~]]
+    setprop ($noun.case): gen
 #subject position
   rule
     form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
