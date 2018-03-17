@@ -91,25 +91,46 @@ def destring(s, lang, at):
         return Node(lang, ntype, ch, d), rest
     elif s[0] == '|[': #xbar Sytnax
         ntype = s[1]
+        sub = [None, None, None, None]
+        name = ntype[:-1]
+        if ntype[0] == '$':
+            name = name[1:]
+            sub = [Variable(name+'spec', '', Unknown(), lang),
+                   Variable(name+'mod',  '', Unknown(), lang),
+                   Variable(name+'head', '', Unknown(), lang),
+                   Variable(name+'comp', '', Unknown(), lang)]
+        if ntype[0] == '?':
+            name = name[1:]
+            sub = [Variable(name+'spec?', '', Unknown(), lang),
+                   Variable(name+'mod?',  '', Unknown(), lang),
+                   Variable(name+'head?', '', Unknown(), lang),
+                   Variable(name+'comp?', '', Unknown(), lang)]
+        if ntype[0] == '*':
+            name = name[1:]
+            sub = [Unknown(), Unknown(), Unknown(), Unknown()]
+        if ntype[0] == '~':
+            name = name[1:]
+            sub = [None, None, None, None]
         rest = s[2:]
         ch = []
         while rest[0] != ']':
             t, rest = destring(rest, lang, at)
             ch.append(t)
+        if len(ch) == 0: #nothing
+            ch.insert(0, sub[2]) #insert head
         if len(ch) == 1: #just head
-            ch.insert(1, None) #insert comp
+            ch.insert(1, sub[3]) #insert comp
         if len(ch) == 2: #head and comp
-            ch.insert(0, None) #insert spec
+            ch.insert(0, sub[0]) #insert spec
         if len(ch) == 3: #spec, head, and comp
-            ch.insert(1, None) #insert mod
-        name = ntype[:-1]
+            ch.insert(1, sub[1]) #insert mod
         bar = Node(lang, name+'bar', ch[2:])
         mod = Node(lang, name+'mod', [ch[1], bar])
         d = {}
         rest.pop(0)
         if rest and rest[0] == '{':
             d, rest = destring(rest, lang, at)
-        return Node(lang, ntype, [ch[0], mod], d), rest
+        return Node(lang, name+'P', [ch[0], mod], d), rest
     elif s[0] == '<': #Morphology
         rest = s[1:]
         l = None

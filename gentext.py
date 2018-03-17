@@ -124,6 +124,8 @@ if __name__ == '__main__':
         sen = make(Language.getormake(fl))
 
     full_process(sen, tl)
+    #print(toobj('[Dbar $head |[?NP @]]', 2))
+    #print(toobj('[Dbar $head |[NP $Nspec? $Nmod? @ $Ncomp?]]', 2))
     #gatdebug(fl, tl, oldsen=sen, args=sys.argv[4:])
     #sen, tr = gen_and_trans(fl, tl)
     #print(sen)
