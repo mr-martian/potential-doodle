@@ -512,8 +512,4 @@ def movementall(sen):
 def final_output(tree):
     proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % tree.lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
     ls = proc.communicate('\n'.join(tree.display('tags').split()))
-    #print(ls[0])
-    print('\n')
-    print(ls)
-    print('\n')
-    print(' '.join([x.split('\t')[1] for x in ls[0].strip().split('\n\n')]))
+    return ' '.join([x.split('\t')[1] for x in ls[0].strip().split('\n\n')])

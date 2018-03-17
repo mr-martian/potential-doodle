@@ -40,7 +40,7 @@ syntax
         xbar: DP; adverb?; $head; ~
       option ($head(objects=1); $head(object1=CP))
         xbar: DP; adverb?; $head; CP
-tag-order
+lexc
   split-root: _
   noun
     format: {root[0]}<n>{plural}{case}
@@ -49,6 +49,8 @@ tag-order
         default: <SG>
       case: case
         default: <nom>
+    in: NounRoot
+    to: NounInfl
   verb
     format: {root[0]}<v>{type}{tense}{person}{number}
     tags
@@ -62,6 +64,13 @@ tag-order
         default: <3>
       number: number
         default: <SG>
+    lexicon
+      case (objects=1)
+        in: VerbRoot
+        to: VerbInfl-Transitive
+      case (objects=0)
+        in: VerbRoot
+        to: VerbInfl-Intransitive
   mood
     format: {root[0]}<aux>{tense}{person}{number}
     tags
@@ -71,6 +80,8 @@ tag-order
         default: <3>
       number: number
         default: <SG>
+    in: AuxRoot
+    to: AuxInfl
   aux
     format: {root[0]}<aux>{tense}{person}{number}
     tags
@@ -80,32 +91,32 @@ tag-order
         default: <3>
       number: number
         default: <SG>
+    in: AuxRoot
+    to: AuxInfl
   adjective
     format: {root[0]}<adj>
-  determiner
-    format: {root[0]}<det>
-lexicon-generation
-  noun
-    in: NounRoot
-    to: NounInfl
-  verb (objects=1)
-    in: VerbRoot
-    to: VerbInfl-Transitive
-  verb (objects=0)
-    in: VerbRoot
-    to: VerbInfl-Intransitive
-  mood
-    in: AuxRoot
-    to: AuxInfl
-  aux
-    in: AuxRoot
-    to: AuxInfl
-  adjective
     in: AdjRoot
     to: AdjInfl
   determiner
+    format: {root[0]}<det>
     in: DeterminerRoot
     to: DeterminerInfl
+  pronoun
+    format: {root[0]}<prn>
+    in: PronounRoot
+    to: PronounInfl
+  preposition
+    format: {root[0]}<prep>
+    in: PrepRoot
+    to: PrepInfl
+  conjunction
+    format: {root[0]}<conj>
+    in: ConjRoot
+    to: ConjInfl
+  adverb
+    format: {root[0]}<adv>
+    in: AdvRoot
+    to: AdvInfl
 transform
 #TAM + agreement
   rule
@@ -122,6 +133,10 @@ transform
     form: $verb
     setprop (tense): $aux.conj
   rule
+    context: [Ibar [I $tense? $aspect? $mood] |[VP $vs? $vm? @ $vc?]]
+    form: $verb
+    setprop (tense): $mood.conj
+  rule
     context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
     form: [Ibar [I $tense ~ $mood] |[VP $subj $mod $head $comp]]
     result: [Ibar [I $tense ~ ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
@@ -137,13 +152,15 @@ transform
     form: $head
     setprop (tense): $tense.tense
   rule
-    context: |[VP |[DP $ds? $dm? $dh $dc?] $vm? @ $vc?]
+    context: |[VP |[DP $ds? $dm? $dh(is-rel=false) $dc?] $vm? @ $vc?]
     form: $verb
     setprop (number): $dh.number
+    setprop (person): $dh.person
   rule
-    context: |[VP |[DP $ds? $dm? $dh $dc?] $vm? @ $vc?]
+    context: |[DP $ds? $dm? $dh |[NP $ns? $nm? $nh? |[CP $cs? $cm? $ch? |[IP $is? $im? $ih? |[VP |[DP $s:rel-pronoun] $vm? @ $vc?]]]]]
     form: $verb
     setprop (person): $dh.person
+    setprop (number): $dh.number
   rule
     context: |[CP * * complementizer=+Q @]
     form: |[IP ~ $mod $I |[VP $subj $vmod $head:aux $comp]]
@@ -180,5 +197,9 @@ transform
   rule
     form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
     result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]
+#conjunction-modifier order
+  rule
+    form: |[conjP $s? $m? $h? $c?]
+    result: |[conjP $s $h $m $c]
 #rotations
   rotate: Vmod

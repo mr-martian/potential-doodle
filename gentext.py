@@ -40,6 +40,32 @@ def gen(pats, tree, depth, setvars):
 def make(lang):
     p = lang.getpats()
     return gen(p, p[lang.syntaxstart], 1, {})
+def out(sen, traceopen='w'):
+    lang = Language.getormake(sen.lang)
+    m = movement1(sen)
+    f = open('trace.txt', traceopen)
+    f.write(sen.writecompile() + '\n\n' + str(sen) + '\n\n')
+    f.write(m.writecompile() + '\n\n' + str(m) + '\n\n')
+    f.write(str(m.display('tags')) + '\n\n' + str(m.display('linear')) + '\n\n')
+    r = final_output(m)
+    f.write(m.display() + '\n\n' + r + '\n\n')
+    f.close()
+    return r
+def outls(sens, traceopen='a'):
+    if sens:
+        out(sens[0], traceopen)
+        f = open('trace.txt', traceopen)
+        f.write('\n\n'.join([str(s) for s in sens[1:]]) + '\n\n')
+        f.close()
+    return [final_output(s) for s in sens]
+def trans(sen, tlang):
+    tr = LangLink.getormake(sen.lang, tlang).translate(sen)
+    return [movement1(s) for s in tr if s.alllang(tlang)]
+def full_process(sen, tlang):
+    print(out(sen))
+    l = outls(trans(sen, tlang))
+    for s in l:
+        print(s)
 def gen_and_trans(flang, tlang):
     loadlangset([flang, tlang])
     sen = make(Language.getormake(flang))
@@ -57,7 +83,7 @@ def gatdebug(flang, tlang, oldsen=None, args=[]):
     m = movement1(sen)
     f.write(str(m))
     print(m.display('tags'))
-    final_output(m)
+    print(final_output(m))
     f.write('\n\n' + m.display() + '\n\n\n=====================================\n\n\n')
     tr = LangLink.getormake(flang, tlang).translate(sen)
     foundany = False
@@ -87,14 +113,18 @@ if __name__ == '__main__':
     if len(sys.argv) > 3:
         if sys.argv[3] == 'reuse':
             f = open('trace.txt')
-            s = toobj(f.readline(), fl)
+            sen = toobj(f.readline(), fl)
             f.close()
         elif os.path.isfile(sys.argv[3]):
             f = open(sys.argv[3])
             sen = toobj(f.readline(), fl)
             f.close()
+    loadlangset([fl, tl])
+    if not sen:
+        sen = make(Language.getormake(fl))
 
-    gatdebug(fl, tl, oldsen=sen, args=sys.argv[4:])
+    full_process(sen, tl)
+    #gatdebug(fl, tl, oldsen=sen, args=sys.argv[4:])
     #sen, tr = gen_and_trans(fl, tl)
     #print(sen)
     #print(sen.display())

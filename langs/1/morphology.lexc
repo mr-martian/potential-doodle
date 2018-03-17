@@ -27,6 +27,26 @@ VerbRoot ;
 AuxRoot ;
 AdjRoot ;
 DeterminerRoot ;
+PronounRoot ;
+PrepRoot ;
+AdvRoot ;
+ConjRoot ;
+
+LEXICON AdvInfl
+
+%<adv%>: # ;
+
+LEXICON ConjInfl
+
+%<conj%>: # ;
+
+LEXICON PrepInfl
+
+%<prep%>: # ;
+
+LEXICON PronounInfl
+
+%<prn%>: # ;
 
 LEXICON DeterminerInfl
 
@@ -51,6 +71,7 @@ LEXICON VerbInflTense
 
 %<pstprt%>:ed VerbInfl-Pers-and-Num ;
 %<prsprt%>:ing VerbInfl-Pers-and-Num ;
+%<inf%>: VerbInfl-Pers-and-Num ;
 %<nonpst%>: VerbInfl-Pers-and-Num "weight: 1" ;
 %<nonpst%>%<3%>%<SG%>:s # ;
 %<pst%>:ed  VerbInfl-Pers-and-Num ;

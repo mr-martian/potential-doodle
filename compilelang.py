@@ -375,16 +375,20 @@ def loadlang(lang):
                 ret.rotate.append(ch.val)
         if th.label == 'metadata':
             pass
-        if th.label == 'lexicon-generation':
-            for ch in th.children:
-                ret.lexc_lexicons.append({'ntype': ch.label, 'conds': condlist(ch), 'lexicon-in': ch.firstval('in'), 'lexicon-to': ch.firstval('to')})
-                if 'regex-match' in ch:
-                    ret.lexc_lexicons[-1]['regex'] = [ch.firstval('regex-match'), ch.firstval('regex-replace')]
-        if th.label == 'tag-order':
+        if th.label == 'lexc':
             for ch in th.children:
                 if ch.label == 'split-root':
                     ret.tags_rootsplit = ch.val
                     continue
+                cases = []
+                if 'lexicon' not in ch:
+                    cases = [ch]
+                else:
+                    cases = ch.first('lexicon').children
+                for cs in cases:
+                    ret.lexc_lexicons.append({'ntype': ch.label, 'conds': condlist(cs), 'lexicon-in': cs.firstval('in'), 'lexicon-to': cs.firstval('to')})
+                    if 'regex-match' in cs:
+                        ret.lexc_lexicons[-1]['regex'] = [cs.firstval('regex-match'), cs.firstval('regex-replace')]
                 tags = {}
                 defaults = {}
                 ls = ch.first('tags').children if 'tags' in ch else []

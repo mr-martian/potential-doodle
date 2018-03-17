@@ -34,6 +34,7 @@ not (mood)
 must (mood)
 will (mood)
   output (tense=nonpst; person=3; number=SG): will
+  conj: inf
 do (aux)
   conj: prs
 does (aux)
@@ -79,11 +80,16 @@ a (determiner)
   person: 3
   plural: false
   number: SG
+  is-rel: false
+  linear-text
+    1: /^[aeiou]/
+    form: an
 the (determiner)
   hasspec: false
   person: 3
   plural: false
   number: SG
+  is-rel: false
 as (determiner)
   hasspec: false
   person: 3
@@ -91,6 +97,10 @@ as (determiner)
   display: a
   output: a
   number: PL
+  is-rel: false
+  linear-text
+    1: /^[aeiou]/
+    form: an
 thes (determiner)
   hasspec: false
   person: 3
@@ -98,6 +108,7 @@ thes (determiner)
   display: the
   output: the
   number: PL
+  is-rel: false
 's (determiner)
   plural: false
   hasspec: true
@@ -106,6 +117,7 @@ thes (determiner)
     context: <suffix |[DP $s? $m? $h? |[NP $ns? $nm? <suffix $head plural=s> $nc?]] @>
     form: '
   number: SG
+  is-rel: false
 'ss (determiner)
   plural: true
   hasspec: true
@@ -115,30 +127,59 @@ thes (determiner)
     context: <suffix |[DP $s? $m? $h? |[NP $ns? $nm? <suffix $head plural=s> $nc?]] @>
     form: '
   number: PL
+  is-rel: false
 her (determiner)
   plural: false
   hasspec: false
   number: SG
   person: 3
+  is-rel: false
 herPL (determiner)
   display: her
+  output: her
   plural: true
   hasspec: false
   number: PL
   person: 3
+  is-rel: false
 those (determiner)
   plural: true
   hasspec: false
   number: PL
   person: 3
+  is-rel: false
 I (pronoun)
+  number: SG
+  person: 1
+  is-rel: false
 he (pronoun)
+  number: SG
+  person: 3
+  is-rel: false
 she (pronoun)
+  number: SG
+  person: 3
+  is-rel: false
 it (pronoun)
+  number: SG
+  person: 3
+  is-rel: false
 we (pronoun)
+  number: PL
+  person: 1
+  is-rel: false
 us (pronoun)
+  number: PL
+  person: 1
+  is-rel: false
 they (pronoun)
+  number: PL
+  person: 3
+  is-rel: false
 you (pronoun)
+  number: SG
+  person: 2
+  is-rel: false
 #cases?
 not (quantifier)
 many (quantifier)
@@ -148,11 +189,15 @@ that (rel-pronoun)
 3S (null-pro)
   person: 3
   plural: false
+  number: SG
   audible: false
+  is-rel: true
 3PL (null-pro)
   person: 3
   plural: true
+  number: PL
   audible: false
+  is-rel: true
 
 and (conjunction)
 but (conjunction)
@@ -161,6 +206,7 @@ for (conjunction)
 at (preposition)
 because-of (preposition)
   display: because of
+  output: because+of
 between (preposition)
 for (preposition)
 from (preposition)
