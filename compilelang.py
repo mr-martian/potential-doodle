@@ -1,5 +1,6 @@
 from datatypes import *
 from os.path import isfile
+from re import compile
 UNKNOWN_MORPH = "ERROR"
 #what to do when parser encounters a morpheme that isn't in the lexicon
 #options: "ERROR", "CREATE", "CREATE_AND_LOG"
@@ -315,6 +316,19 @@ def loadlexicon(lang):
                 if 'lexicon' in p:
                     o[2] = p.firstval('lexicon')
                 m.props['output'].append(o)
+            elif p.label == 'linear':
+                con = []
+                for ch in p.children:
+                    con.append([int(ch.label), toobj(ch.val, lang, None)])
+                Translation(m, toobj(p.val, lang, None), root.label, context=con, resultlang=lang, mode='linear')
+            elif p.label == 'linear-text':
+                con = []
+                for ch in p.children:
+                    if ch.val[0] == '/' and ch.val[-1] == '/':
+                        con.append([int(ch.label), compile(ch.val[1:-1])])
+                    else:
+                        con.append([int(ch.label), ch.val])
+                Translation(m, p.val, root.label, context=con, resultlang=lang, mode='linear-text')
             else:
                 m.props[p.label] = p.val
         register(m)
@@ -407,9 +421,19 @@ def loadlang(lang):
                 else:
                     cases = ch.first('lexicon').children
                 for cs in cases:
-                    ret.lexc_lexicons.append({'ntype': ch.label, 'conds': condlist(cs), 'lexicon-in': cs.firstval('in'), 'lexicon-to': cs.firstval('to')})
+                    ap = {'ntype': ch.label, 'conds': condlist(cs)}
+                    if 'bland' in cs:
+                        ap['lexicon-in'] = ch.label + 'Root'
+                        ap['lexicon-to'] = ch.label + 'Infl'
+                        ap['bland'] = cs.firstval('bland')
+                        ch.children.append(ParseLine(-1, 'format', '', '{root[0]}'+ap['bland'], []))
+                    else:
+                        ap['lexicon-in'] = cs.firstval('in')
+                        ap['lexicon-to'] = cs.firstval('to')
+                        ap['bland'] = False
                     if 'regex-match' in cs:
-                        ret.lexc_lexicons[-1]['regex'] = [cs.firstval('regex-match'), cs.firstval('regex-replace')]
+                        ap['regex'] = [cs.firstval('regex-match'), cs.firstval('regex-replace')]
+                    ret.lexc_lexicons.append(ap)
                 tags = {}
                 defaults = {}
                 ls = ch.first('tags').children if 'tags' in ch else []

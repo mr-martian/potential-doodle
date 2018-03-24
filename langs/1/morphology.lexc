@@ -25,32 +25,7 @@ NounRoot ;
 Punctuation ;
 VerbRoot ;
 AuxRoot ;
-AdjRoot ;
-DeterminerRoot ;
-PronounRoot ;
-PrepRoot ;
-AdvRoot ;
-ConjRoot ;
-
-LEXICON AdvInfl
-
-%<adv%>: # ;
-
-LEXICON ConjInfl
-
-%<conj%>: # ;
-
-LEXICON PrepInfl
-
-%<prep%>: # ;
-
-LEXICON PronounInfl
-
-%<prn%>: # ;
-
-LEXICON DeterminerInfl
-
-%<det%>: # ;
+Bland ;
 
 LEXICON NounInfl
 
@@ -88,10 +63,6 @@ LEXICON VerbInfl-Pers-and-Num
 LEXICON AuxInfl
 
 %<aux%>: VerbInflTense ;
-
-LEXICON AdjInfl
-
-%<adj%>: # ;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!                          L E X I C O N                                  !!!

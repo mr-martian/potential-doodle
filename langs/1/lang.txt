@@ -94,29 +94,23 @@ lexc
     in: AuxRoot
     to: AuxInfl
   adjective
-    format: {root[0]}<adj>
-    in: AdjRoot
-    to: AdjInfl
+    bland: <adj>
   determiner
-    format: {root[0]}<det>
-    in: DeterminerRoot
-    to: DeterminerInfl
+    bland: <det>
   pronoun
-    format: {root[0]}<prn>
-    in: PronounRoot
-    to: PronounInfl
+    bland: <prn>
   preposition
-    format: {root[0]}<prep>
-    in: PrepRoot
-    to: PrepInfl
+    bland: <prep>
   conjunction
-    format: {root[0]}<conj>
-    in: ConjRoot
-    to: ConjInfl
+    bland: <conj>
   adverb
-    format: {root[0]}<adv>
-    in: AdvRoot
-    to: AdvInfl
+    bland: <adv>
+  quantifier
+    bland: <quant>
+  complementizer
+    bland: <comp>
+  rel-pronoun
+    bland: <prn>
 transform
 #TAM + agreement
   rule

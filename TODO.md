@@ -26,15 +26,16 @@
   - [ ] speed up
     - port to compiled language?
   - [ ] translation distance
+  - [ ] list untranslated words
 - [x] [Generation](gentext.py)
 - [ ] Language data
   - [x] fix display/form
-  - [ ] traces?
+  - [x] traces?
   - [ ] theta roles?
   - [ ] conjunctions
   - [x] modifiers
   - [x] post-movement lexical transforms
-  - [ ] form based on preceding or following word
+  - [x] form based on preceding or following word
   - [x] rules involving contents of morphemes
   - [ ] [English](langs/1)
     - [ ] auxiliary not

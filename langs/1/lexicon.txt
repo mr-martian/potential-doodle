@@ -1,6 +1,3 @@
-a (article)
-  definite: false
-s (noun-inflection)
 -Q (complementizer)
   audible: false
 +Q (complementizer)
@@ -73,17 +70,14 @@ be (verb)
   output (tense=pst; person=3; number=SG): was
   output (tense=pst; person=1; number=SG): was
 
-s (plural)
-
 a (determiner)
   hasspec: false
   person: 3
   plural: false
   number: SG
   is-rel: false
-  linear-text
+  linear-text: an
     1: /^[aeiou]/
-    form: an
 the (determiner)
   hasspec: false
   person: 3
@@ -98,9 +92,8 @@ as (determiner)
   output: a
   number: PL
   is-rel: false
-  linear-text
+  linear-text: an
     1: /^[aeiou]/
-    form: an
 thes (determiner)
   hasspec: false
   person: 3
@@ -113,9 +106,6 @@ thes (determiner)
   plural: false
   hasspec: true
   person: 3
-  conjugation
-    context: <suffix |[DP $s? $m? $h? |[NP $ns? $nm? <suffix $head plural=s> $nc?]] @>
-    form: '
   number: SG
   is-rel: false
 'ss (determiner)
@@ -123,9 +113,6 @@ thes (determiner)
   hasspec: true
   person: 3
   display: 's
-  conjugation
-    context: <suffix |[DP $s? $m? $h? |[NP $ns? $nm? <suffix $head plural=s> $nc?]] @>
-    form: '
   number: PL
   is-rel: false
 her (determiner)
@@ -206,6 +193,7 @@ for (conjunction)
 at (preposition)
 because-of (preposition)
   display: because of
+  linear-text: because of
   output: because+of
 between (preposition)
 for (preposition)

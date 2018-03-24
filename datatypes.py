@@ -237,6 +237,27 @@ class Node:
         return format.format(**tags) or self.children[0]
     def addmode(name, pats):
         Node.__modes[name] = pats
+    def linear(self):
+        if isinstance(self.children[0], str):
+            return [self]
+        else:
+            rev = self.ntype in Language.get(self.lang).rotate
+            #print(rev)
+            l = []
+            for c in self.children:
+                if isinstance(c, Node):
+                    l.append(c.linear())
+                elif c:
+                    l.append([c])
+            #print(self.ntype)
+            #print(Language.get(self.lang).rotate)
+            if self.ntype in Language.get(self.lang).rotate:
+            #    print(self.ntype)
+                l.reverse()
+            r = []
+            for c in l:
+                r += c
+            return r
     def display(self, mode='display'):
         if 'audible' in self.props and self.props['audible'] == 'false':
             return ''
@@ -366,6 +387,10 @@ class Translation:
                 l.movesyntax.append(self)
             elif mode == 'conj':
                 l.moveconj[category].append(self)
+            elif mode == 'linear':
+                l.linear[category].append(self)
+            elif mode == 'linear-text':
+                l.lineartext[category].append(self)
             else:
                 x = len(l.movelex[category])
                 l.movelex[category].append(self)
@@ -405,6 +430,8 @@ class Language:
         self.movelex = defaultdict(list)
         self.movesyntax = []
         self.moveconj = defaultdict(list)
+        self.linear = defaultdict(list)
+        self.lineartext = defaultdict(list)
         #Transducer
         self.lexc = ''
         self.lexc_lexicons = []
@@ -508,8 +535,49 @@ def movementall(sen):
     for s in sens2:
         sens3 += s.transform(pats2) or [s]
     return sens3
-###OUTPUT
-def final_output(tree):
-    proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % tree.lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
-    ls = proc.communicate('\n'.join(tree.display('tags').split()))
-    return ' '.join([x.split('\t')[1] for x in ls[0].strip().split('\n\n')])
+def hfst(tagstrs, lang):
+    proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+    ls = proc.communicate('\n'.join(tagstrs))
+    return [x.split('\t')[1] for x in ls[0].strip().split('\n\n')]
+def dolinear(sen):
+    lin = sen.linear()
+    lang = Language.getormake(sen.lang)
+    for i, m in enumerate(lin):
+        for pat in lang.linear[m.children[0]]:
+            if not match(m, pat.form):
+                continue
+            ok = True
+            if isinstance(pat.context, list):
+                for d, p in pat.context:
+                    if i+d < 0 or i+d >= len(lin):
+                        ok = False
+                        break
+                    if not match(lin[i+d], p):
+                        ok = False
+                        break
+            if ok:
+                lin[i] = pat.result
+    lintxt = hfst([x.tagify() for x in lin], sen.lang)
+    for i, m in enumerate(lin):
+        for pat in lang.lineartext[m.children[0]]:
+            ok = True
+            if isinstance(pat.context, list):
+                for d, p in pat.context:
+                    if i+d < 0 or i+d >= len(lintxt):
+                        ok = False
+                        break
+                    if isinstance(p, str) and lintxt[i+d] != p:
+                        ok = False
+                        break
+                    if not isinstance(p, str) and not p.match(lintxt[i+d]):
+                        ok = False
+                        break
+            if ok:
+                lintxt[i] = pat.result
+    final = []
+    for i, m in enumerate(lin):
+        if 'audible' in m.props and m.props['audible'] == 'false':
+            continue
+        else:
+            final.append(lintxt[i])
+    return ' '.join(final)

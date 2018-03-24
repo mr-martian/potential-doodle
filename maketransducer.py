@@ -3,6 +3,8 @@ from compilelang import loadlang
 from collections import defaultdict
 from re import sub
 
+def lexcescape(s):
+    return s.replace('<', '%<').replace('>', '%>')
 def genlexicon(langid):
     lang = loadlang(langid)
     lexs = defaultdict(list)
@@ -35,8 +37,12 @@ def genlexicon(langid):
                             s = m.tagify()
                         else:
                             s = form[0]
-                        s = s.replace('<', '%<').replace('>', '%>')
+                        s = lexcescape(s)
                         lexs[rule['lexicon-in']].append('%s:%s %s "weight: %d" ;' % (s, form[1], form[2], 0 if form[2] == '#' else 1))
+    for r in lang.lexc_lexicons:
+        if r['bland']:
+            lexs['Bland'].append(r['lexicon-in'] + ' ;')
+            lexs[r['lexicon-to']].append(lexcescape(r['bland']) + ': # ;')
     f = open('langs/%d/.generated/lexicon.lexc' % langid, 'w')
     for lex in lexs:
         f.write(('LEXICON %s\n' % lex) + '\n'.join(lexs[lex]) + '\n\n')

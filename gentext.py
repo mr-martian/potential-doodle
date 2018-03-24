@@ -47,7 +47,7 @@ def out(sen, traceopen='w'):
     f.write(sen.writecompile() + '\n\n' + str(sen) + '\n\n')
     f.write(m.writecompile() + '\n\n' + str(m) + '\n\n')
     f.write(str(m.display('tags')) + '\n\n' + str(m.display('linear')) + '\n\n')
-    r = final_output(m)
+    r = dolinear(m)
     f.write(m.display() + '\n\n' + r + '\n\n')
     f.close()
     return r
@@ -57,7 +57,7 @@ def outls(sens, traceopen='a'):
         f = open('trace.txt', traceopen)
         f.write('\n\n'.join([str(s) for s in sens[1:]]) + '\n\n')
         f.close()
-    return [final_output(s) for s in sens]
+    return [dolinear(s) for s in sens]
 def trans(sen, tlang):
     tr = LangLink.getormake(sen.lang, tlang).translate(sen)
     return [movement1(s) for s in tr if s.alllang(tlang)]
@@ -66,45 +66,6 @@ def full_process(sen, tlang):
     l = outls(trans(sen, tlang))
     for s in l:
         print(s)
-def gen_and_trans(flang, tlang):
-    loadlangset([flang, tlang])
-    sen = make(Language.getormake(flang))
-    tr = LangLink.getormake(flang, tlang).translate(sen)
-    ret = [movement1(s) for s in tr if s.alllang(tlang)]
-    return movement1(sen), ret
-def gatdebug(flang, tlang, oldsen=None, args=[]):
-    loadlangset([flang, tlang])
-    sen = oldsen or make(Language.getormake(flang))
-    f = open('trace.txt', 'w')
-    f.write(sen.writecompile())
-    f.write('\n\n')
-    f.write(str(sen))
-    f.write('\n\n')
-    m = movement1(sen)
-    f.write(str(m))
-    print(m.display('tags'))
-    print(final_output(m))
-    f.write('\n\n' + m.display() + '\n\n\n=====================================\n\n\n')
-    tr = LangLink.getormake(flang, tlang).translate(sen)
-    foundany = False
-    for t in tr:
-        if t.alllang(tlang):
-            foundany = True
-            m = movement1(t)
-            f.write(str(m) + '\n' + m.display() + '\n\n')
-            print(m.display())
-    if 'todo' in args and not foundany:
-        ls = []
-        for t in tr:
-            for n in t.iternest():
-                if isinstance(n, Node) and n.lang == flang:
-                    if isinstance(n.children[0], str):
-                        ls.append(n.children[0])
-                    f.write(str(n) + '\n')
-        s = str(list(sorted(list(set(ls)))))
-        f.write('TODO: %s' % s)
-        print(s)
-    f.close()
 if __name__ == '__main__':
     import sys
     fl = int(sys.argv[1])
@@ -124,11 +85,3 @@ if __name__ == '__main__':
         sen = make(Language.getormake(fl))
 
     full_process(sen, tl)
-    #print(toobj('[Dbar $head |[?NP @]]', 2))
-    #print(toobj('[Dbar $head |[NP $Nspec? $Nmod? @ $Ncomp?]]', 2))
-    #gatdebug(fl, tl, oldsen=sen, args=sys.argv[4:])
-    #sen, tr = gen_and_trans(fl, tl)
-    #print(sen)
-    #print(sen.display())
-    #for t in tr:
-    #    print(t.display())

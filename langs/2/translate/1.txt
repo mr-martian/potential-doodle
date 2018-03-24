@@ -11,7 +11,7 @@ mood=d_c
 mood=g_m: mood=must
 determiner=null: determiner=a; determiner=the
 determiner=vmeh: determiner='s
-noun/noun=ah: noun-inflection=s
+#noun/noun=ah: noun-inflection=s
 aspect=feh: aspect=durative
 verb=danec: verb=borrow; verb=copy; verb=imitate
 describer=dasnan: adjective=cosmic
