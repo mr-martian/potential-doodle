@@ -123,26 +123,34 @@ transform
     form: [Ibar [I $tense aspect=perfect $mood?] |[VP $subj $mod? $head $comp?]]
     result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ $mod $head $comp]]]
   rule
-    context: [Vbar $aux:aux |[?VP @]]
+    form: [Ibar [I $tense? $aspect? $mood] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense $aspect ~] |[VP $subj $mood |[VP ~ $mod $head $comp]]]
+    #setprop ($head.tense): $mood.conj
+  #rule
+  #  context: [Ibar [I $tense? $aspect? $mood] |[?VP @]]
+  #  form: $verb
+  #  setprop (tense): $mood.conj
+  rule
+    context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
+    form: [Ibar [I $tense? aspect=durative ~] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense aspect=durative ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
+  rule
+    context: [Vbar $aux |[?VP @]]
     form: $verb
     setprop (tense): $aux.conj
   rule
-    context: [Ibar [I $tense? $aspect? $mood] |[?VP @]]
+    context: [Vbar $aux:mood |[?VP @]]
     form: $verb
-    setprop (tense): $mood.conj
+    setprop (tense): $aux.conj
+  #rule
+  #  context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
+  #  form: [Ibar [I $tense ~ $mood] |[VP $subj $mod $head $comp]]
+  #  result: [Ibar [I $tense ~ ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
+  #rule
+  #  form: [Ibar [I $t? $a? $mood] |[VP $subj $mod? $head $comp?]]
+  #  result: [Ibar [I $t $a ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
   rule
-    context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
-    form: [Ibar [I $tense ~ $mood] |[VP $subj $mod $head $comp]]
-    result: [Ibar [I $tense ~ ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
-  rule
-    context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
-    form: [Ibar [I $tense aspect=durative ~] |[VP $subj $mod $head:verb $comp]]
-    result: [Ibar [I $tense aspect=durative ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
-  rule
-    form: [Ibar [I $t? $a? $mood] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I $t $a ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
-  rule
-    context: [Ibar [I $tense $aspect? $mood?] |[?VP @]]
+    context: [Ibar [I $tense $aspect? ~] |[?VP @]]
     form: $head
     setprop (tense): $tense.tense
   rule
@@ -184,8 +192,10 @@ transform
     form: |[DP $spec:DP $mod? $head $comp?]
     result: |[DP [GEN $spec $head] $mod ~ $comp]
   rule
-    form: [GEN |[?DP $d? |[?NP $noun ~]] $gen]
-    result: |[$DP $d |[$NP $noun ~]]
+    #form: [GEN |[?DP $d? |[?NP $noun ~]] $gen]
+    #result: |[$DP $d |[$NP $noun ~]]
+    form: [GEN |[DP $ds? $dm? $dh? |[NP $ns? $nm? $noun ~]] $gen]
+    result: |[DP $ds $dm $dh |[NP $ns $nm $noun ~ ]]
     setprop ($noun.case): gen
 #subject position
   rule

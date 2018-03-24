@@ -8,6 +8,7 @@ metadata
   creator: Common Honey Tribe
 syntax
   start-with: CP
+  auto-setlang: AP; CP; IP; NP; PP; DP; VP
   node-types
     AP
       xbar (1): ~; ~; describer; ~
@@ -42,7 +43,7 @@ morphology
     re: _
     re: \\1
     re: .*
-tag-order
+lexc
   split-root: _
   noun
     format: {root[0]}<n>{plural}{case}
@@ -53,9 +54,13 @@ tag-order
         default: <sg>
       case: case
         default: <nom>
+    in: NounRoot
+    to: NounInflNum
 #doesn't deal with experiencer verbs
-  verb
-    format: {root[0]}<v>{type}{aspect}{valency}
+  verb (transitive=true)
+    in: VerbRoot
+    to: VerbInfl-Transitive
+    format: {root[0]}<v><tv>{aspect}{valency}
     tags
       type
         case (transitive=true): <tv>
@@ -65,34 +70,35 @@ tag-order
         default: <error>
       valency: valency
         default: <stat>
-  mood
+  verb (transitive=false)
+    in: VerbRoot
+    to: VerbInfl-Intransitive
+    format: {root[0]}<v><iv>{aspect}{valency}
+    tags
+      aspect: aspect
+        default: <error>
+      valency: valency
+        default: <stat>
+  mood (vowel=i)
     format: {root[0]}<aux>{tense}
     tags
       tense: tense
         default: <error>
-  describer
-    format: {root[0]}<adj>
-lexicon-generation
-  noun
-    in: NounRoot
-    to: NounInflNum
-  verb (transitive=true)
-    in: VerbRoot
-    to: VerbInfl-Transitive
-  verb (transitive=false)
-    in: VerbRoot
-    to: VerbInfl-Intransitive
-  mood (vowel=i)
     in: AuxRoot
     to: AuxInfl
     regex-match: _
     regex-replace: %{Vi%}
   mood (vowel=ol)
+    format: {root[0]}<aux>{tense}
+    tags
+      tense: tense
+        default: <error>
     in: AuxRoot
     to: AuxInfl
     regex-match: _
     regex-replace: %{Vol%}
   describer
+    format: {root[0]}<adj>
     in: AdjRoot
     to: AdjInfl
 transform

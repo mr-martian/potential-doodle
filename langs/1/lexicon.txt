@@ -18,17 +18,23 @@ perfect (aspect)
 continuous (aspect)
 perfect-continuous (aspect)
 could (mood)
+  conj: inf
 couldn't (mood)
+  conj: inf
 can (mood)
+  conj: inf
   form
     structure: [I tense=past $aspect @]
     result: [I tense=past $aspect mood=could]
 can't (mood)
+  conj: inf
   form
     structure: [I tense=past $aspect @]
     result: [I tense=past $aspect mood=couldn't]
 not (mood)
+  conj: inf
 must (mood)
+  conj: inf
 will (mood)
   output (tense=nonpst; person=3; number=SG): will
   conj: inf

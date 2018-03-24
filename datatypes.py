@@ -130,7 +130,8 @@ class Node:
             vrs[' '] = copy.deepcopy(vrs[' '])
         for act in tr.result:
             if isinstance(act, Node):
-                vrs[' '] = copy.deepcopy(act).putvars(vrs)
+                try: vrs[' '] = copy.deepcopy(act).putvars(vrs)
+                except: print(tr)
             elif isinstance(act, list):
                 if act[0] == 'setlang':
                     vrs[' '].lang = act[1]
@@ -480,7 +481,7 @@ class LangLink:
         LangLink.__alllinks['%s-%s' % (fromlang, tolang)] = self
         sl = Language.getormake(fromlang).setlang
         for s in sl:
-            Translation(Variable('node', s, Unknown(), fromlang), ['setlang', tolang], 'syntax', resultlang=tolang, mode='syntax')
+            Translation(Variable('node', s, Unknown(), fromlang), [['setlang', tolang]], 'syntax', resultlang=tolang, mode='syntax')
     def find(self, roots):
         s = set(roots)
         ret = []

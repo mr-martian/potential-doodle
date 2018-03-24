@@ -91,28 +91,32 @@ def destring(s, lang, at):
             d, rest = destring(rest, lang, at)
         return Node(lang, ntype, ch, d), rest
     elif s[0] == '|[': #xbar Sytnax
-        ntype = s[1]
-        sub = [None, None, None, None]
-        name = ntype[:-1]
-        if ntype[0] == '$':
-            name = name[1:]
-            sub = [Variable(name+'spec', '', Unknown(), lang),
-                   Variable(name+'mod',  '', Unknown(), lang),
-                   Variable(name+'head', '', Unknown(), lang),
-                   Variable(name+'comp', '', Unknown(), lang)]
-        if ntype[0] == '?':
-            name = name[1:]
+        s.pop(0)
+        if isinstance(s[0], Unknown):
+            mode = '*'
+            s.pop(0)
+            sub = [Unknown(), Unknown(), Unknown(), Unknown()]
+            name = s.pop(0)[:-1]
+        elif isinstance(s[0], str) and len(s[0]) > 1 and s[0][0] == '?':
+            name = s.pop(0)[1:-1]
             sub = [Variable(name+'spec?', '', Unknown(), lang),
                    Variable(name+'mod?',  '', Unknown(), lang),
                    Variable(name+'head?', '', Unknown(), lang),
                    Variable(name+'comp?', '', Unknown(), lang)]
-        if ntype[0] == '*':
-            name = name[1:]
-            sub = [Unknown(), Unknown(), Unknown(), Unknown()]
-        if ntype[0] == '~':
-            name = name[1:]
+        elif s[0] == '$':
+            mode = s.pop(0)
+            name = s.pop(0)[:-1]
+            sub = [Variable(name+'spec', '', Unknown(), lang),
+                   Variable(name+'mod',  '', Unknown(), lang),
+                   Variable(name+'head', '', Unknown(), lang),
+                   Variable(name+'comp', '', Unknown(), lang)]
+        else:
+            mode = '~'
             sub = [None, None, None, None]
-        rest = s[2:]
+            if s[0] == None:
+                s.pop(0)
+            name = s.pop(0)[:-1]
+        rest = s
         ch = []
         while rest[0] != ']':
             t, rest = destring(rest, lang, at)
