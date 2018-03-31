@@ -1,2 +1,45 @@
 noun=lady: noun=mujer
 pronoun=I: pronoun=yo
+complementizer=-Q: complementizer=-Q
+preposition=from: preposition=de
+determiner=the: determiner=el
+noun=elder: noun=viejo
+  #that's an adjective -- fix later
+preposition=to: preposition=a
+determiner=a: determiner=un
+adjective=elect: adjective=electado
+  #that's a participle -- fix later
+conjunction=and: conjunction=and
+determiner=herPL: determiner=sus-f
+noun=child: noun=hijo
+tense=nonpast: tense=present
+aspect=habitual: aspect=habitual
+preposition=in: preposition=en
+noun=truth: noun=verdad
+verb=love: verb=amar
+rel-pronoun=who: rel-pronoun=quien
+quantifier=not: quantifier=no
+adjective=alone: adjective=solo
+adverb=also: adverb=tambien
+conjunction=but: conjunction=pero
+quantifier=all
+  translate
+    from: |[DP quantifier=all $d:DP]
+    to: |[DP determiner=null |[NP noun=todo |[PP preposition=de $d]]]
+determiner=those: determiner=esos
+verb=know: verb=saber
+preposition=because+of: preposition=porque+de
+rel-pronoun=that: rel-pronoun=que
+verb=reside: verb=vivir
+pronoun=us: pronoun=nosotros
+mood=will: mood=WILL
+  translate
+    from: [I tense=nonpast $asp @]
+    to: [I tense=future $asp ~]
+null-pro=3S: null-pro=3S
+adverb=forever
+  translate
+    from: @
+    to: |[PP preposition=para |[DP determiner=null |[NP noun=siempre]]]
+verb=be: verb=estar
+preposition=with: preposition=con

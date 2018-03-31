@@ -539,7 +539,7 @@ def movementall(sen):
 def hfst(tagstrs, lang):
     proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
     ls = proc.communicate('\n'.join(tagstrs))
-    return [x.split('\t')[1] for x in ls[0].strip().split('\n\n')]
+    return [x.split('\t')[1].replace('+', ' ') for x in ls[0].strip().split('\n\n')]
 def dolinear(sen):
     lin = sen.linear()
     lang = Language.getormake(sen.lang)

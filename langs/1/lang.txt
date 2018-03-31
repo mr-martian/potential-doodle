@@ -4,7 +4,7 @@ metadata
   creator: Natlang
 syntax
   start-with: CP
-  auto-setlang: AP; CP; IP; NP; PP; DP; VP
+  auto-setlang: AP; CP; IP; NP; PP; DP; VP; conjP; I
   node-types
     AP
       xbar: ~; ~; adjective; ~
@@ -17,11 +17,7 @@ syntax
     PP
       xbar: ~; ~; preposition; DP
     I
-      variable: $t:tense
-      variable: $a:aspect
-      variable: $m:mood?
-      structure: [I $t $a $m]
-      translation (2): [I $t $a $m]
+      structure: [I tense aspect mood?]
     DP
       variable: $head:determiner
       option ($head(hasspec=true))

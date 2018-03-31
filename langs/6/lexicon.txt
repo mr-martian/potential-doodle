@@ -1,2 +1,48 @@
+-Q (complementizer)
+  audible: false
+  
+yo (pronoun)
+  number: SG
+  person: 1
+
 mujer (noun)
   gender: feminine
+  
+WILL (mood)
+  
+preposition=de
+preposition=de
+determiner=el
+noun=viejo
+preposition=a
+determiner=un
+adjective=electado
+conjunction=and
+determiner=sus-f
+noun=hijo
+tense=present
+aspect=habitual
+preposition=en
+noun=verdad
+verb=amar
+rel-pronoun=quien
+quantifier=no
+adjective=solo
+adverb=tambien
+conjunction=pero
+determiner=null
+noun=todo
+preposition=de
+determiner=esos
+verb=saber
+preposition=porque+de
+rel-pronoun=que
+verb=vivir
+pronoun=nosotros
+tense=future
+null-pro=3S
+preposition=para
+determiner=null
+noun=siempre
+verb=estar
+preposition=con

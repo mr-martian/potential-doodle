@@ -197,10 +197,7 @@ but (conjunction)
 for (conjunction)
 
 at (preposition)
-because-of (preposition)
-  display: because of
-  linear-text: because of
-  output: because+of
+because+of (preposition)
 between (preposition)
 for (preposition)
 from (preposition)

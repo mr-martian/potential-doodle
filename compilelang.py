@@ -1,7 +1,7 @@
 from datatypes import *
 from os.path import isfile
 from re import compile
-UNKNOWN_MORPH = "ERROR"
+UNKNOWN_MORPH = "CREATE_AND_LOG"
 #what to do when parser encounters a morpheme that isn't in the lexicon
 #options: "ERROR", "CREATE", "CREATE_AND_LOG"
 #"ERROR" is default because loading twice leads to copies that represent the same morpheme, but with different properties. -D.S. 2018-02-11
@@ -181,7 +181,7 @@ def destring(s, lang, at):
                     f = open('missing_morphemes.txt', 'a')
                     f.write(str(lang) + ': ' + s[0] + '=' + s[2] + '\n')
                     f.close()
-                if UNKNOWN_MORPH == "CREATE":
+                elif UNKNOWN_MORPH == "CREATE":
                     r = Node(lang, s[0], [s[2]])
                 else: #UNKNOWN_MORPH == "ERROR"
                     raise ParseError('Unknown lang %d morpheme %s=%s' % (lang, s[0], s[2]))
@@ -353,7 +353,10 @@ def loadlang(lang):
                     ret.syntaxstart = ch.val
                 elif ch.label == 'auto-setlang':
                     for n in ch.vals:
-                        ret.setlang += [n, n[:-1]+'mod', n[:-1]+'bar']
+                        if n[-1] == 'P':
+                            ret.setlang += [n, n[:-1]+'mod', n[:-1]+'bar']
+                        else:
+                            ret.setlang.append(n)
                 elif ch.label == 'node-types':
                     for ty in ch.children:
                         vrs = [toobj(s, lang) for s in ty.vals('variable')]

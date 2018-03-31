@@ -1,0 +1,94 @@
+! Morphological Transducer for Sajem Tan
+
+Multichar_Symbols
+
+! Part of speech categories
+%<n%>     ! Noun
+
+! Other symbols
+%>      ! Morpheme boundary
+%{Vi%}
+%{Vol%}
+%{Tf%}
+%{Tm%}
+%{Tn%}
+%{Tp%}
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!                       M O R P H O T A C T I C S                         !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+LEXICON Root
+
+NounRoot ;
+Punctuation ;
+VerbRoot ;
+AuxRoot ;
+Bland ;
+
+LEXICON NounInfl
+
+%<n%>%<SG%>%<nom%>: # ;
+%<n%>%<PL%>%<nom%>:s # ;
+%<n%>%<SG%>%<gen%>:'s # ;
+%<n%>%<PL%>%<gen%>:s' # ;
+
+LEXICON VerbInfl-Transitive
+
+%<v%>%<tv%>: VerbInflTense ;
+
+LEXICON VerbInfl-Intransitive
+
+%<v%>%<iv%>: VerbInflTense ;
+
+LEXICON VerbInflTense
+
+%<pstprt%>:ed VerbInfl-Pers-and-Num ;
+%<prsprt%>:ing VerbInfl-Pers-and-Num ;
+%<inf%>: VerbInfl-Pers-and-Num ;
+%<nonpst%>: VerbInfl-Pers-and-Num "weight: 1" ;
+%<nonpst%>%<3%>%<SG%>:s # ;
+%<pst%>:ed  VerbInfl-Pers-and-Num ;
+
+LEXICON VerbInfl-Pers-and-Num
+
+%<1%>%<SG%>: # ;
+%<1%>%<PL%>: # ;
+%<2%>%<SG%>: # ;
+%<2%>%<PL%>: # ;
+%<3%>%<SG%>: # ;
+%<3%>%<PL%>: # ;
+
+LEXICON AuxInfl
+
+%<aux%>: VerbInflTense ;
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!                          L E X I C O N                                  !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+LEXICON Punctuation
+
+.%<sent%>:. # ;
+..%<sent%>:.. # ;
+...%<sent%>:... # ;
+%;%<sent%>:%; # ;
+%:%<sent%>:%: # ;
+%!%<sent%>:%! # ;
+%-%<guio%>:%- # ;
+%—%<guio%>:%— # ;
+,%<cm%>:, # ;
+%?%<sent%>:%? # ;
+%'%<apos%>:%' # ;
+%"%<sent%>:%" # ;
+%«%<lquot%>:%« # ;
+%»%<rquot%>:%» # ;
+%”%<rquot%>:%” # ;
+%“%<lquot%>:%“ # ;
+%(%<lpar%>:%( # ;
+%]%<rpar%>:%] # ;
+%[%<lpar%>:%[ # ;
+%)%<rpar%>:%) # ;
+\%<sent%>:\ # ;
+/%<sent%>:/ # ;

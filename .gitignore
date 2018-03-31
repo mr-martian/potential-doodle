@@ -10,3 +10,4 @@ langs/*/lexicon.lexc
 research/*
 langs/*/.generated
 langs/*/.temporary
+missing_morphemes.txt
