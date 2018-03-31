@@ -7,12 +7,14 @@ Multichar_Symbols
 
 ! Other symbols
 %>      ! Morpheme boundary
-%{Vi%}
-%{Vol%}
-%{Tf%}
-%{Tm%}
-%{Tn%}
-%{Tp%}
+%{pst%}
+%{prs%}
+%{fut%}
+%{1%}
+%{2%}
+%{3%}
+%{sg%}
+%{pl%}
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -44,21 +46,20 @@ LEXICON VerbInfl-Intransitive
 
 LEXICON VerbInflTense
 
-%<pstprt%>:ed VerbInfl-Pers-and-Num ;
-%<prsprt%>:ing VerbInfl-Pers-and-Num ;
-%<inf%>: VerbInfl-Pers-and-Num ;
-%<nonpst%>: VerbInfl-Pers-and-Num "weight: 1" ;
-%<nonpst%>%<3%>%<SG%>:s # ;
-%<pst%>:ed  VerbInfl-Pers-and-Num ;
+%<pst%>:%{pst%} VerbInflPerson ;
+%<prs%>:%{prs%} VerbInflPerson ;
+%<fut%>:%{fut%} VerbInflPerson ;
 
-LEXICON VerbInfl-Pers-and-Num
+LEXICON VerbInflPerson
 
-%<1%>%<SG%>: # ;
-%<1%>%<PL%>: # ;
-%<2%>%<SG%>: # ;
-%<2%>%<PL%>: # ;
-%<3%>%<SG%>: # ;
-%<3%>%<PL%>: # ;
+%<1%>:%{1%} VerbInflNumber ;
+%<2%>:%{2%} VerbInflNumber ;
+%<3%>:%{3%} VerbInflNumber ;
+
+LEXICON VerbInflNumber
+
+%<sg%>:%{sg%} # ;
+%<pl%>:%{pl%} # ;
 
 LEXICON AuxInfl
 

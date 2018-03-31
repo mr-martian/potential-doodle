@@ -1,24 +1,23 @@
 Alphabet
  A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
  a b c d e f g h i j k l m n o p q r s t u v w x y z
- %{Tf%}:0
- %{Tm%}:0
- %{Tn%}:0
- %{Tp%}:0
- %{Vi%}:i
- %{Vol%}:ol ;
+ %{pst%}:0
+ %{prs%}:0
+ %{fut%}:0
+ %{1%}:0
+ %{2%}:0
+ %{3%}:0
+ %{sg%}:0
+ %{pl%}:0 ;
 
 Sets
 
 FinalCons = t k m n c ;
+P2or3 = %{2%} %{3%} ;
 
 Rules
 
-"Far-past tense"
-VMP:Vx <=> _ :FinalCons %{Tf%}: ; where VMP in (%{Vi%} %{Vol%}) Vx in (ul uh) matched ;
-"Mid-past tense"
-VMP:Vx <=> _ :FinalCons %{Tm%}: ; where VMP in (%{Vi%} %{Vol%}) Vx in (a y) matched ;
-"Near-past tense"
-VMP:Vx <=> _ :FinalCons %{Tn%}: ; where VMP in (%{Vi%} %{Vol%}) Vx in (e el) matched ;
-"Non-past tense"
-VMP:Vx <=> _ :FinalCons %{Tp%}: ; where VMP in (%{Vi%} %{Vol%}) Vx in (i ol) matched ;
+"3S present"
+r:0 <=> _ %{prs%}: %{3%}: %{sg%}: ;
+"3S present ir"
+i:e <=> _ r: %{prs%}: P2or3: ;

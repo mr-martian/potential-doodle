@@ -557,7 +557,11 @@ def dolinear(sen):
                         ok = False
                         break
             if ok:
-                lin[i] = pat.result
+                for d, r in pat.result:
+                    if r == 'inaudible':
+                        lin[i+d].props['audible'] = 'false'
+                    else:
+                        lin[i+d] = r
     lintxt = hfst([x.tagify() for x in lin], sen.lang)
     for i, m in enumerate(lin):
         for pat in lang.lineartext[m.children[0]]:

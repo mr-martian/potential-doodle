@@ -4,7 +4,7 @@ from collections import defaultdict
 from re import sub
 
 def lexcescape(s):
-    return s.replace('<', '%<').replace('>', '%>')
+    return s.replace('<', '%<').replace('>', '%>').replace(' ', '+')
 def genlexicon(langid):
     lang = loadlang(langid)
     lexs = defaultdict(list)

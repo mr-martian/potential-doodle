@@ -56,11 +56,11 @@ lexc
         case (objects=0): <iv>
         default: <tv>
       tense: tense
-        default: <nonpst>
+        default: <prs>
       person: person
         default: <3>
       number: number
-        default: <SG>
+        default: <sg>
     lexicon
       case (objects=1)
         in: VerbRoot
@@ -108,6 +108,8 @@ lexc
     bland: <comp>
   rel-pronoun
     bland: <prn>
+  contraction
+    bland: <c't>
 transform
 #TAM + agreement
 

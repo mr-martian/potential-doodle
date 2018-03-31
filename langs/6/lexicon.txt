@@ -1,48 +1,74 @@
 -Q (complementizer)
   audible: false
   
+WILL (mood)
+habitual (aspect)
+  audible: false
+
+del (contraction)
+al (contraction)
+
+el (determiner)
+  linear: contraction=del
+    -1: preposition=de
+      inaudible
+      to: ~
+esos (determiner)
+null (determiner)
+  audible: false
+sus-f (determiner)
+  display: sus
+un (determiner)
+
+3S (null-pro)
+  audible: false
+
+nosotros (pronoun)
 yo (pronoun)
   number: SG
   person: 1
 
+no (quantifier)
+que (rel-pronoun)
+quien (rel-pronoun)
+future (tense)
+  audible: false
+present (tense)
+  audible: false
+past (tense)
+  audible: false
+
+# LEXICON
+  
+electado (adjective)
+solo (adjective)
+
+tambien (adverb)
+
+and (conjunction)
+pero (conjunction)
+  
+hijo (noun)
 mujer (noun)
   gender: feminine
-  
-WILL (mood)
-  
-preposition=de
-preposition=de
-determiner=el
-noun=viejo
-preposition=a
-determiner=un
-adjective=electado
-conjunction=and
-determiner=sus-f
-noun=hijo
-tense=present
-aspect=habitual
-preposition=en
-noun=verdad
-verb=amar
-rel-pronoun=quien
-quantifier=no
-adjective=solo
-adverb=tambien
-conjunction=pero
-determiner=null
-noun=todo
-preposition=de
-determiner=esos
-verb=saber
-preposition=porque+de
-rel-pronoun=que
-verb=vivir
-pronoun=nosotros
-tense=future
-null-pro=3S
-preposition=para
-determiner=null
-noun=siempre
-verb=estar
-preposition=con
+siempre (noun)
+todo (noun)
+verdad (noun)
+viejo (noun)
+
+a (preposition)
+con (preposition)
+de (preposition)
+de (preposition)
+en (preposition)
+para (preposition)
+porque+de (preposition)
+
+amar (verb)
+  objects: 1
+estar (verb)
+  objects: 1
+saber (verb)
+  objects: 1
+vivir (verb)
+  objects: 0

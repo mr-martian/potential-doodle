@@ -322,16 +322,26 @@ def loadlexicon(lang):
                 m.props['output'].append(o)
             elif p.label == 'linear':
                 con = []
+                res = []
+                if p.val:
+                    res.append([0, toobj(p.val, lang, None)])
                 for ch in p.children:
-                    con.append([int(ch.label), toobj(ch.val, lang, None)])
-                Translation(m, toobj(p.val, lang, None), root.label, context=con, resultlang=lang, mode='linear')
+                    try: idx = int(ch.label)
+                    except: continue
+                    con.append([idx, toobj(ch.val, lang, None)])
+                    if 'inaudible' in ch:
+                        res.append([idx, 'inaudible'])
+                    elif 'to' in ch:
+                        res.append([idx, toobj(ch.fvo('to', lang, None))])
+                Translation(m, res, root.label, context=con, resultlang=lang, mode='linear')
             elif p.label == 'linear-text':
                 con = []
                 for ch in p.children:
-                    if ch.val[0] == '/' and ch.val[-1] == '/':
-                        con.append([int(ch.label), compile(ch.val[1:-1])])
-                    else:
-                        con.append([int(ch.label), ch.val])
+                    if ch.label.isnumeric():
+                        if ch.val[0] == '/' and ch.val[-1] == '/':
+                            con.append([int(ch.label), compile(ch.val[1:-1])])
+                        else:
+                            con.append([int(ch.label), ch.val])
                 Translation(m, p.val, root.label, context=con, resultlang=lang, mode='linear-text')
             else:
                 m.props[p.label] = p.val
