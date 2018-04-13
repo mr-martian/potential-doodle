@@ -1,6 +1,6 @@
 Alphabet
  A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
- a b c d e f g h i j k l m n o p q r s t u v w x y z
+ a:a b c d e:e f g h i:i j k l m n o:o p q r:r s t u v w x y z
  %{pst%}:0
  %{prs%}:0
  %{fut%}:0
@@ -8,16 +8,39 @@ Alphabet
  %{2%}:0
  %{3%}:0
  %{sg%}:0
- %{pl%}:0 ;
+ %{pl%}:0 
+ %{ie%}:0
+ %{V%!o%}:0
+ %{Vae%}:0
+ %{V%}:0
+ %{Vie%}:0
+ %{Va%}:a
+ %{Ve%}:e
+ %{Vi%}:e ;
 
 Sets
 
-FinalCons = t k m n c ;
+PreRVow = a e i ;
 P2or3 = %{2%} %{3%} ;
+Person = %{1%} %{2%} %{3%} ;
+RootVow = %{Va%} %{Ve%} %{Vi%} ;
 
 Rules
 
-"3S present"
-r:0 <=> _ %{prs%}: %{3%}: %{sg%}: ;
-"3S present ir"
-i:e <=> _ r: %{prs%}: P2or3: ;
+"No root vowel (a) in 1S"
+%{Va%}:0 <=> _ o ;
+"No root vowel (e) in 1S"
+%{Ve%}:0 <=> _ o ;
+"No root vowel (i) in 1S"
+%{Vi%}:0 <=> _ o ;
+
+"ir -> er"
+i:e <=> _ r: %{Vae%}: ;
+"drop r before %{Vae%}"
+r:0 <=> _ %{Vae%}: ;
+"delete o when prs paradigm is copied to other tenses"
+o:0 <=> %{V%!o%}: _ ;
+"1S v"
+PreRVow:0 <=> _ r: %{V%}: ;
+"1S r"
+r:0 <=> _ %{V%}: ;

@@ -2,6 +2,9 @@
   audible: false
   
 WILL (mood)
+ir (mood)
+  output (tense=prs; person=3; number=sg): va+a
+  conj: inf
 habitual (aspect)
   audible: false
 
@@ -13,30 +16,48 @@ el (determiner)
     -1: preposition=de
       inaudible
       to: ~
+  number: sg
 esos (determiner)
+  number: pl
+  person: 3
 null (determiner)
   audible: false
+  number: sg
 sus-f (determiner)
   display: sus
+  output: sus
+  number: pl
 un (determiner)
+  number: sg
+  person: 3
 
 3S (null-pro)
   audible: false
+  number: sg
+  person: 3
+  is-rel: false
 
 nosotros (pronoun)
-yo (pronoun)
-  number: SG
   person: 1
+  number: pl
+  is-rel: false
+yo (pronoun)
+  number: sg
+  person: 1
+  is-rel: false
 
 no (quantifier)
 que (rel-pronoun)
 quien (rel-pronoun)
 future (tense)
   audible: false
+  tense: fut
 present (tense)
   audible: false
+  tense: prs
 past (tense)
   audible: false
+  tense: pst
 
 # LEXICON
   
@@ -45,7 +66,7 @@ solo (adjective)
 
 tambien (adverb)
 
-and (conjunction)
+y (conjunction)
 pero (conjunction)
   
 hijo (noun)

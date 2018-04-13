@@ -22,12 +22,13 @@ def genlexicon(langid):
                         break
                 if ok:
                     added = True
+                    disp = m.children[0]
                     root = m.children[0]
                     if 'regex' in rule:
                         root = sub(rule['regex'][0], rule['regex'][1], root)
                     if 'root' in m.props:
-                        root = m.props['root'] + ':' + root
-                    lexs[rule['lexicon-in']].append('%s %s "weight: 2" ;' % (root, rule['lexicon-to']))
+                        disp = m.props['root'] + ':' + root
+                    lexs[rule['lexicon-in']].append('%s:%s %s "weight: 2" ;' % (disp, root, rule['lexicon-to']))
                     for form in m.props['output']:
                         if isinstance(form[0], list):
                             for k in form[0]:

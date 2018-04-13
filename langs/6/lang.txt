@@ -40,10 +40,11 @@ syntax
 lexc
   split-root: _
   noun
-    format: {root[0]}<n>{plural}{case}
+    #format: {root[0]}<n>{plural}{case}
+    format: {root[0]}<n>{plural}
     tags
       plural: number
-        default: <SG>
+        default: <sg>
       case: case
         default: <nom>
     in: NounRoot
@@ -65,18 +66,23 @@ lexc
       case (objects=1)
         in: VerbRoot
         to: VerbInfl-Transitive
+        regex-match: ^(.*)([aei])r$
+        regex-replace: \1%{V\2%}
       case (objects=0)
         in: VerbRoot
         to: VerbInfl-Intransitive
+        regex-match: ^(.*)([aei])r$
+        regex-replace: \1%{V\2%}
   mood
     format: {root[0]}<aux>{tense}{person}{number}
     tags
       tense: tense
         default: <error>
       person: person
-        default: <3>
+        #default: <3>
+        default: <7>
       number: number
-        default: <SG>
+        default: <sg>
     in: AuxRoot
     to: AuxInfl
   aux
@@ -87,7 +93,7 @@ lexc
       person: person
         default: <3>
       number: number
-        default: <SG>
+        default: <sg>
     in: AuxRoot
     to: AuxInfl
   adjective
@@ -112,6 +118,48 @@ lexc
     bland: <c't>
 transform
 #TAM + agreement
+  rule
+    form: [Ibar [I $tense? $aspect? $mood] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense $aspect ~] |[VP $subj $mood |[VP ~ $mod $head $comp]]]
+    setprop ($head.tense): $mood.conj
+  rule
+    context: [Ibar [I $tense $aspect? ~] |[?VP @]]
+    form: $head
+    setprop (tense): $tense.tense
+  rule
+    context: |[VP |[DP $ds? $dm? $dh(is-rel=false) $dc?] $vm? @ $vc?]
+    form: $verb
+    setprop (number): $dh.number
+    setprop (person): $dh.person
+  rule
+    context: |[?DP $dh |[?NP $nh? |[?CP $ch? |[?IP $ih? |[?VP |[?DP $s:rel-pronoun] @ $vc?]]]]]
+    form: $verb
+    setprop (person): $dh.person
+    setprop (number): $dh.number
+#plurality
+  rule
+    context: [Dbar $head |[?NP @]]
+    form: $noun
+    setprop (number): $head.number
+#relative clauses
+  rule
+    form: |[IP ~ $imod? $i? [VP |[DP $subj:rel-pronoun] $rest?]]
+    result: |[IP |[DP $subj] $imod $i [VP ~ $rest]]
+  rule
+    form: |[IP ~ $imod? $i? |[VP $subj? $vmod? $v? |[DP $obj:rel-pronoun]]]
+    result: |[IP |[DP $obj] $imod? $i? |[VP $subj? $vmod? $v? ~]]
+  rule
+    context: [Nbar $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q [IP |[DP $rel:rel-pronoun] $rest]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q [IP ~ $rest]]
+  rule
+    context: [Nbar $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q |[conjP [IP |[DP $rel:rel-pronoun] $rest] $jmod? $j? $jbar?]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q |[conjP [IP ~ $rest] $jmod $j $jbar]]
+#subject position
+  rule
+    form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
+    result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]
 
 #rotations
   rotate: Vmod

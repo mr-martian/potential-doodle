@@ -15,6 +15,9 @@ Multichar_Symbols
 %{3%}
 %{sg%}
 %{pl%}
+%{Va%}
+%{Ve%}
+%{Vi%}
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -31,10 +34,8 @@ Bland ;
 
 LEXICON NounInfl
 
-%<n%>%<SG%>%<nom%>: # ;
-%<n%>%<PL%>%<nom%>:s # ;
-%<n%>%<SG%>%<gen%>:'s # ;
-%<n%>%<PL%>%<gen%>:s' # ;
+%<n%>%<sg%>: # ;
+%<n%>%<pl%>:s # ;
 
 LEXICON VerbInfl-Transitive
 
@@ -46,9 +47,29 @@ LEXICON VerbInfl-Intransitive
 
 LEXICON VerbInflTense
 
+%<pret%>%<3%>%<pl%>:%{Vie%}on # ;
+%<pst%>:ía VerbInfl-Present "weight: 1" ;
+%<pst%>%<1%>%<sg%>:ía # "weight: 0" ;
 %<pst%>:%{pst%} VerbInflPerson ;
-%<prs%>:%{prs%} VerbInflPerson ;
+%<prs%>: VerbInfl-Present ;
 %<fut%>:%{fut%} VerbInflPerson ;
+%<inf%>:r VerbInflPerson-Inf ;
+
+LEXICON VerbInfl-Present
+%<1%>%<sg%>:o #;
+%<1%>%<pl%>:mos #;
+%<2%>%<sg%>:s #;
+%<2%>%<pl%>:s #;
+%<3%>%<sg%>: #;
+%<3%>%<pl%>:n #;
+
+LEXICON VerbInflPerson-Inf
+%<1%>: VerbInflNumber-Inf ;
+%<2%>: VerbInflNumber-Inf ;
+%<3%>: VerbInflNumber-Inf ;
+LEXICON VerbInflNumber-Inf
+%<sg%>: # ;
+%<pl%>: # ;
 
 LEXICON VerbInflPerson
 

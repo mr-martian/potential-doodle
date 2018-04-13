@@ -9,7 +9,7 @@ preposition=to: preposition=a
 determiner=a: determiner=un
 adjective=elect: adjective=electado
   #that's a participle -- fix later
-conjunction=and: conjunction=and
+conjunction=and: conjunction=y
 determiner=herPL: determiner=sus-f
 noun=child: noun=hijo
 tense=nonpast: tense=present
@@ -32,7 +32,7 @@ preposition=because+of: preposition=porque+de
 rel-pronoun=that: rel-pronoun=que
 verb=reside: verb=vivir
 pronoun=us: pronoun=nosotros
-mood=will: mood=WILL
+mood=will: mood=ir
   translate
     from: [I tense=nonpast $asp @]
     to: [I tense=future $asp ~]
