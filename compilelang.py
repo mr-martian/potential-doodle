@@ -40,17 +40,19 @@ def tokenize(s):
     return ret
 def toobj(s, lang, loc, at=None):
     assert(isinstance(lang, int))
-    def destring(s):
+    rest = tokenize(s)
+    def destring():
+        nonlocal rest
+        cur = rest.pop(0)
         def ok(th):
             return isinstance(th, str) and th[0] not in '[]<>$:(){}=@|'
-        if not isinstance(s[0], str):
-            return s[0], s[1:]
-        elif s[0].isnumeric(): #number
-            return int(s[0]), s[1:]
-        elif s[0] == '@':
-            return at, s[1:]
-        elif s[0] == '$': #Variable
-            rest = s[1:]
+        if not isinstance(cur, str):
+            return cur
+        elif cur.isnumeric(): #number
+            return int(cur)
+        elif cur == '@':
+            return at
+        elif cur == '$': #Variable
             l = None
             if len(rest) >= 3 and rest[0] == '(' and rest[1].isnumeric() and rest[2] == ')':
                 l = int(rest[1])
@@ -73,54 +75,47 @@ def toobj(s, lang, loc, at=None):
                     cond = [rest[0], rest[2]]
                     rest = rest[4:]
                 else:
-                    cond, rest = destring(rest)
+                    cond = destring()
                     if rest[0] != ')':
                         raise ParseError('Badly formed variable condition on line %s.' % loc)
                     rest.pop(0)
-            return Variable(label, value, cond, l or lang), rest
-        elif s[0] == '[': #Syntax
-            rest = s[1:]
+            return Variable(label, value, cond, l or lang)
+        elif cur == '[': #Syntax
             ntype = rest.pop(0)
             ch = []
             while rest[0] != ']':
-                t, rest = destring(rest)
-                ch.append(t)
+                ch.append(destring())
             d = {}
             rest.pop(0)
             if rest and rest[0] == '{':
-                d, rest = destring(rest)
-            return Node(lang, ntype, ch, d), rest
-        elif s[0] == '|[': #xbar Sytnax
-            s.pop(0)
-            if isinstance(s[0], Unknown):
-                mode = '*'
-                s.pop(0)
+                d = destring()
+            return Node(lang, ntype, ch, d)
+        elif cur == '|[': #xbar Sytnax
+            if isinstance(rest[0], Unknown):
+                rest.pop(0)
                 sub = [Unknown(), Unknown(), Unknown(), Unknown()]
-                name = s.pop(0)[:-1]
-            elif isinstance(s[0], str) and len(s[0]) > 1 and s[0][0] == '?':
-                name = s.pop(0)[1:-1]
+                name = rest.pop(0)[:-1]
+            elif isinstance(rest[0], str) and len(rest[0]) > 1 and rest[0][0] == '?':
+                name = rest.pop(0)[1:-1]
                 sub = [Variable(name+'spec?', '', Unknown(), lang),
                        Variable(name+'mod?',  '', Unknown(), lang),
                        Variable(name+'head?', '', Unknown(), lang),
                        Variable(name+'comp?', '', Unknown(), lang)]
-            elif s[0] == '$':
-                mode = s.pop(0)
-                name = s.pop(0)[:-1]
+            elif rest[0] == '$':
+                rest.pop(0)
+                name = rest.pop(0)[:-1]
                 sub = [Variable(name+'spec', '', Unknown(), lang),
                        Variable(name+'mod',  '', Unknown(), lang),
                        Variable(name+'head', '', Unknown(), lang),
                        Variable(name+'comp', '', Unknown(), lang)]
             else:
-                mode = '~'
                 sub = [None, None, None, None]
-                if s[0] == None:
-                    s.pop(0)
-                name = s.pop(0)[:-1]
-            rest = s
+                if rest[0] == None:
+                    rest.pop(0)
+                name = rest.pop(0)[:-1]
             ch = []
             while rest[0] != ']':
-                t, rest = destring(rest)
-                ch.append(t)
+                ch.append(destring())
             if len(ch) == 0: #nothing
                 ch.insert(0, sub[2]) #insert head
             if len(ch) == 1: #just head
@@ -134,61 +129,61 @@ def toobj(s, lang, loc, at=None):
             d = {}
             rest.pop(0)
             if rest and rest[0] == '{':
-                d, rest = destring(rest)
-            return Node(lang, name+'P', [ch[0], mod], d), rest
-        elif s[0] == '<': #Morphology
-            rest = s[1:]
+                d = destring()
+            return Node(lang, name+'P', [ch[0], mod], d)
+        elif cur == '<': #Morphology
             l = None
             if rest[0] == '(':
                 rest.pop(0)
                 l = int(rest.pop(0))
                 assert(rest.pop(0) == ')')
             mode = rest.pop(0)
-            a, rest = destring(rest)
+            a = destring()
             if rest[0] == '>':
                 rest.pop(0)
-                return Node(l or lang, mode, [a, None]), rest
-            b, rest = destring(rest)
+                return Node(l or lang, mode, [a, None])
+            b = destring()
             if rest[0] != '>':
                 raise ParseError('Morphology Node with too many elements on line %s. %s' % (loc, rest))
             rest.pop(0)
-            return Node(l or lang, mode, [a, b]), rest
-        elif s[0] == '{': #props pattern
-            rest = s[1:]
+            return Node(l or lang, mode, [a, b])
+        elif cur == '{': #props pattern
             d = {}
             while rest[0] != '}':
                 p = rest.pop(0)
                 assert(rest.pop(0) == '=')
-                d[p], rest = destring(rest)
+                d[p] = destring()
             rest.pop(0)
-            return d, rest
-        elif s[0] == '(':
+            return d
+        elif cur == '(':
             l = Option()
-            rest = s[1:]
             while rest[0] != ')':
-                o, rest = destring(rest)
-                l.append(o)
+                l.append(destring())
             rest.pop(0)
-            return l, rest
+            return l
         else:
-            if s[1] == '=': #Morpheme
+            if rest[0] == '=': #Morpheme
+                pos = cur
+                root = rest.pop(1)
+                rest.pop(0)
                 if lang not in AllMorphemes:
                     loadlexicon(lang)
-                r = AllMorphemes[lang][s[0]][s[2]]
+                r = AllMorphemes[lang][pos][root]
                 if r == None:
                     if UNKNOWN_MORPH == "CREATE_AND_LOG":
-                        r = Node(lang, s[0], [s[2]])
+                        r = Node(lang, pos, [root])
                         f = open('missing_morphemes.txt', 'a')
-                        f.write(str(lang) + ': ' + s[0] + '=' + s[2] + '\n')
+                        f.write(str(lang) + ': ' + pos + '=' + root + '\n')
                         f.close()
                     elif UNKNOWN_MORPH == "CREATE":
-                        r = Node(lang, s[0], [s[2]])
+                        r = Node(lang, pos, [root])
                     else: #UNKNOWN_MORPH == "ERROR"
-                        raise ParseError('Unknown lang %d morpheme %s=%s on line %s' % (lang, s[0], s[2], loc))
-                return r, s[3:]
+                        raise ParseError('Unknown lang %d morpheme %s=%s on line %s' % (lang, pos, root, loc))
+                return r
             else:
-                return destring(['$', ':'] + s)
-    ret, rest = destring(tokenize(s))
+                rest = ['$', ':'] + rest
+                return destring()
+    ret = destring()
     assert(rest == [])
     return ret
 ###FILES
