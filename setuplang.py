@@ -60,7 +60,7 @@ f.write('some-noun (noun)\n  display: monkey')
 f.close()
 
 f = open(pth+'morphology.lexc', 'w')
-f.write('''! Morphological Transducer for Sajem Tan
+f.write('''! Morphological Transducer for {}
 
 Multichar_Symbols
 
@@ -103,7 +103,7 @@ LEXICON Punctuation
 %[%<lpar%>:%[ # ;
 %)%<rpar%>:%) # ;
 \%<sent%>:\ # ;
-/%<sent%>:/ # ;''' % sys.argv[2])
+/%<sent%>:/ # ;'''.format(sys.argv[2]))
 f.close()
 
 f = open(pth+'morphology.twol', 'w')
