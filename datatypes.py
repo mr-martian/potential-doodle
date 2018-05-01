@@ -438,6 +438,7 @@ class Language:
         self.lexc_lexicons = []
         self.tags = []
         self.tags_rootsplit = '' #for cases where it's easiest to have tags between parts of the root
+        self.morph_mode = '' #hfst of lttoolbox
         Language.__alllangs[lang] = self
     def addmorphopt(self, ntype, struct):
         self.morphology[ntype].append(struct)
@@ -537,9 +538,20 @@ def movementall(sen):
         sens3 += s.transform(pats2) or [s]
     return sens3
 def hfst(tagstrs, lang):
-    proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
-    ls = proc.communicate('\n'.join(tagstrs))
-    return [x.split('\t')[1].replace('+', ' ') for x in ls[0].strip().split('\n\n')]
+    mode = Language.getormake(lang).morph_mode
+    if mode == 'hfst':
+        proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+        ls = proc.communicate('\n'.join(tagstrs))
+        ret = [x.split('\t')[1].replace('+', ' ') for x in ls[0].strip().split('\n\n')]
+    elif mode == 'lttoolbox':
+        print(tagstrs)
+        proc = Popen(['lt-proc', '-g', 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+        ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]
+        ret = ls.split('\n')
+    else:
+        raise Exception('Unknown morphology mode %s' % mode)
+    return ret
+    #return [x.split('\t')[1].replace('+', ' ') for x in ls[0].strip().split('\n\n')]
 def dolinear(sen):
     lin = sen.linear()
     lang = Language.getormake(sen.lang)
@@ -583,6 +595,8 @@ def dolinear(sen):
     for i, m in enumerate(lin):
         if 'audible' in m.props and m.props['audible'] == 'false':
             continue
+        elif 'display' in m.props:
+            final.append(m.props['display'])
         else:
             final.append(lintxt[i])
     return ' '.join(final)

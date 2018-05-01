@@ -37,7 +37,7 @@ syntax
         xbar: DP; adverb?; $head; ~
       option ($head(objects=1); $head(object1=CP))
         xbar: DP; adverb?; $head; CP
-lexc
+lexc: hfst
   split-root: _
   noun
     #format: {root[0]}<n>{plural}{case}

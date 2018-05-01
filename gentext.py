@@ -78,7 +78,7 @@ if __name__ == '__main__':
             f.close()
         elif os.path.isfile(sys.argv[3]):
             f = open(sys.argv[3])
-            sen = toobj(f.readline(), fl)
+            sen = toobj(f.readline(), fl, '1 of %s' % sys.argv[3])
             f.close()
     loadlangset([fl, tl])
     if not sen:

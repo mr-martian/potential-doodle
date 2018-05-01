@@ -43,7 +43,7 @@ morphology
     re: _
     re: \\1
     re: .*
-lexc
+lexc: hfst
   split-root: _
   noun
     format: {root[0]}<n>{plural}{case}

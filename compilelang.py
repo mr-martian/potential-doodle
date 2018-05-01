@@ -423,6 +423,7 @@ def loadlang(lang):
         if th.label == 'metadata':
             pass
         if th.label == 'lexc':
+            ret.morph_mode = th.val
             for ch in th.children:
                 if ch.label == 'split-root':
                     ret.tags_rootsplit = ch.val

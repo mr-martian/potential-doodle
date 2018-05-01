@@ -9,11 +9,26 @@ habitual (aspect)
   audible: false
 
 del (contraction)
+  display: del
 al (contraction)
+  display: al
+
+a (preposition)
+  display: a
+con (preposition)
+de (preposition)
+  display: de
+en (preposition)
+para (preposition)
+porque+de (preposition)
 
 el (determiner)
   linear: contraction=del
     -1: preposition=de
+      inaudible
+      to: ~
+  linear: contraction=al
+    -1: preposition=a
       inaudible
       to: ~
   number: sg
@@ -47,6 +62,7 @@ yo (pronoun)
   is-rel: false
 
 no (quantifier)
+  display: no
 que (rel-pronoun)
 quien (rel-pronoun)
 future (tense)
@@ -67,23 +83,18 @@ solo (adjective)
 tambien (adverb)
 
 y (conjunction)
+  display: y
 pero (conjunction)
   
 hijo (noun)
+  gender: m
 mujer (noun)
-  gender: feminine
+  gender: f
 siempre (noun)
 todo (noun)
 verdad (noun)
+  gender: f
 viejo (noun)
-
-a (preposition)
-con (preposition)
-de (preposition)
-de (preposition)
-en (preposition)
-para (preposition)
-porque+de (preposition)
 
 amar (verb)
   objects: 1
