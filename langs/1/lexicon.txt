@@ -39,11 +39,11 @@ will (mood)
   output (tense=nonpst; person=3; number=SG): will
   conj: inf
 do (aux)
-  conj: prs
+  conj: inf
 does (aux)
-  conj: prs
+  conj: inf
 did (aux)
-  conj: prs
+  conj: inf
 
 #tense-pl-num
 have (aux)
@@ -53,21 +53,14 @@ have (aux)
   output (have<aux><pst>): had
     lexicon: VerbInfl-Pers-and-Num
 be (aux)
+  altpos: verb
+  objects: 1
+  object1: AP
   conj: prsprt
   output (tense=pstprt): been
   output (be<aux><nonpst>): are
     lexicon: VerbInfl-Pers-and-Num
-  output (tense=nonpst; person=3; number=SG): is
-  output (tense=nonpst; person=1; number=SG): am
-  output (be<aux><pst>): were
-    lexicon: VerbInfl-Pers-and-Num
-  output (tense=pst; person=3; number=SG): was
-  output (tense=pst; person=1; number=SG): was
-be (verb)
-  objects: 1
-  object1: AP
-  output (tense=pstprt): been
-  output (be<aux><nonpst>): are
+  output (be<aux><inf>): be
     lexicon: VerbInfl-Pers-and-Num
   output (tense=nonpst; person=3; number=SG): is
   output (tense=nonpst; person=1; number=SG): am

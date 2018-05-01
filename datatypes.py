@@ -58,18 +58,11 @@ class Option(list):
     pass
 ###DATA STRUCTURES
 class Node:
-    __modes = defaultdict(lambda: [], {
-        'prefix': ['^', '(.*)', '\\1'],
-        'suffix': ['$', '(.*)', '\\1'],
-        'tri-cons': ['^(.*?)_(.*?)_(.*?)$', '^(.*?)-(.*?)$', '\\\\1\\1\\\\2\\2\\\\3']
-    })
     def __init__(self, lang, ntype, children, props=None):
         self.lang = lang
         self.ntype = ntype
         self.children = children
-        self.props = props
-        if not props:
-            self.props = {}
+        self.props = props or {}
     def swapchildren(self, ls):
         return Node(self.lang, self.ntype, ls, self.props.copy())
     def getvars(self, form, vrs={' failed': False}):
@@ -130,8 +123,7 @@ class Node:
             vrs[' '] = copy.deepcopy(vrs[' '])
         for act in tr.result:
             if isinstance(act, Node):
-                try: vrs[' '] = copy.deepcopy(act).putvars(vrs)
-                except: print(tr)
+                vrs[' '] = copy.deepcopy(act).putvars(vrs)
             elif isinstance(act, list):
                 if act[0] == 'setlang':
                     vrs[' '].lang = act[1]
@@ -236,67 +228,38 @@ class Node:
             if tg not in tags:
                 tags[tg] = defaults[tg]
         return format.format(**tags) or self.children[0]
-    def addmode(name, pats):
-        Node.__modes[name] = pats
+    def tagify_all(self):
+        if isinstance(self.children[0], str):
+            return [self.tagify()]
+        else:
+            rev = self.ntype in Language.get(self.lang).rotate
+            ret = []
+            for c in self.children:
+                if isinstance(c, Node):
+                    a = c.tagify_all()
+                else:
+                    a = [c] if c else []
+                if rev:
+                    ret = a + ret
+                else:
+                    ret += a
+            return ret
     def linear(self):
         if isinstance(self.children[0], str):
             return [self]
         else:
-            rev = self.ntype in Language.get(self.lang).rotate
-            #print(rev)
             l = []
             for c in self.children:
                 if isinstance(c, Node):
                     l.append(c.linear())
                 elif c:
                     l.append([c])
-            #print(self.ntype)
-            #print(Language.get(self.lang).rotate)
             if self.ntype in Language.get(self.lang).rotate:
-            #    print(self.ntype)
                 l.reverse()
             r = []
             for c in l:
                 r += c
             return r
-    def display(self, mode='display'):
-        if 'audible' in self.props and self.props['audible'] == 'false':
-            return ''
-        if mode == 'tags' and isinstance(self.children[0], str):
-            return self.tagify()
-        if mode == 'linear':
-            if isinstance(self.children[0], str):
-                return [self]
-            else:
-                l = []
-                for c in self.children:
-                    if isinstance(c, Node):
-                        l += c.display('linear')
-                    elif c:
-                        l.append(c)
-                return l
-        if mode in self.props:
-            return self.props[mode]
-        l = []
-        for c in self.children:
-            if isinstance(c, Node):
-                d = c.display(mode)
-                if d: l.append(d)
-            elif not c:
-                pass
-            else:
-                l.append(str(c))
-        mode = Node.__modes[self.ntype]
-        if not mode or len(l) != (len(mode) - 1):
-            if self.ntype in Language.get(self.lang).rotate:
-                l.reverse()
-            return ' '.join(l)
-        i = len(l) - 1
-        s = re.sub(mode[i], mode[i+1], l[i])
-        while i > 0:
-            i -= 1
-            s = re.sub(mode[i], s, l[i])
-        return s
     def iternest(self):
         yield self
         for ch in self.children:
@@ -356,9 +319,15 @@ def match(a, b):
         return a == b
 AllMorphemes = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
 def register(morph):
-    AllMorphemes[morph.lang][morph.ntype][morph.children[0]] = morph
+    roots = [morph.children[0]]
     if 'searchkey' in morph.props:
-        AllMorphemes[morph.lang][morph.ntype][morph.props['searchkey']] = morph
+        roots.append(morph.props['searchkey'])
+    pos = [morph.ntype]
+    if 'altpos' in morph.props:
+        pos.append(morph.props['altpos'])
+    for p in pos:
+        for r in roots:
+            AllMorphemes[morph.lang][p][r] = morph
 ###TRANSFORMATIONS
 class Translation:
     def __init__(self, form, result, category, context=None, resultlang=None, mode='syntax'):
@@ -542,9 +511,8 @@ def hfst(tagstrs, lang):
     if mode == 'hfst':
         proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(tagstrs))
-        ret = [x.split('\t')[1].replace('+', ' ') for x in ls[0].strip().split('\n\n')]
+        ret = [x.split('\t')[1] for x in ls[0].strip().split('\n\n')]
     elif mode == 'lttoolbox':
-        print(tagstrs)
         proc = Popen(['lt-proc', '-g', 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]
         ret = ls.split('\n')
@@ -599,4 +567,4 @@ def dolinear(sen):
             final.append(m.props['display'])
         else:
             final.append(lintxt[i])
-    return ' '.join(final)
+    return ' '.join(final).replace('+', ' ').replace('- -', '').replace('- ', '').replace(' -', '')

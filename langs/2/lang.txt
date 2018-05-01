@@ -38,11 +38,6 @@ syntax
         xbar (1): DP; ~; $head; DP
       option ($head(transitive=false))
         xbar (1): DP; ~; $head; ~
-morphology
-  aux
-    re: _
-    re: \\1
-    re: .*
 lexc: hfst
   split-root: _
   noun

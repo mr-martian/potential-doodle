@@ -17,7 +17,7 @@ syntax
     PP
       xbar: ~; ~; preposition; DP
     I
-      structure: [I tense aspect mood?]
+      structure: [I $t:tense $a:aspect $m:mood?]
     DP
       variable: $head:determiner
       option ($head(hasspec=true))

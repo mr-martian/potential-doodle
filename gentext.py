@@ -33,8 +33,7 @@ def gen(pats, tree, depth, setvars):
                     break
             if ad:
                 il.append(i)
-        try: return gen(pats, tree.opts[random.choice(il)], depth, vrs)
-        except: print("error with generating tree %s at depth %s" % (tree, depth))
+        return gen(pats, tree.opts[random.choice(il)], depth, vrs)
     else:
         return tree
 def make(lang):
@@ -46,9 +45,8 @@ def out(sen, traceopen='w'):
     f = open('trace.txt', traceopen)
     f.write(sen.writecompile() + '\n\n' + str(sen) + '\n\n')
     f.write(m.writecompile() + '\n\n' + str(m) + '\n\n')
-    f.write(str(m.display('tags')) + '\n\n' + str(m.display('linear')) + '\n\n')
     r = dolinear(m)
-    f.write(m.display() + '\n\n' + r + '\n\n')
+    f.write(' '.join(m.tagify_all()) + '\n\n' + str(m.linear()) + '\n\n' + r + '\n\n')
     f.close()
     return r
 def outls(sens, traceopen='a'):
@@ -74,7 +72,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 3:
         if sys.argv[3] == 'reuse':
             f = open('trace.txt')
-            sen = toobj(f.readline(), fl)
+            sen = toobj(f.readline(), fl, '1 of trace.txt')
             f.close()
         elif os.path.isfile(sys.argv[3]):
             f = open(sys.argv[3])

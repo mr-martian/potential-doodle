@@ -260,7 +260,7 @@ class ParseLine:
             if ch.label == key:
                 return True
         return False
-    def vals(self, key):
+    def child_vals(self, key):
         for ch in self[key]:
             yield ch.val
     def first(self, key):
@@ -363,7 +363,7 @@ def loadlang(lang):
                             ret.setlang.append(n)
                 elif ch.label == 'node-types':
                     for ty in ch.children:
-                        vrs = [toobj(s, lang, ty.num) for s in ty.vals('variable')]
+                        vrs = [toobj(s, lang, ty.num) for s in ty.child_vals('variable')]
                         if not list(ty['option']):
                             ty.children = [ParseLine(-1, 'option', [], '', ty.children)]
                         conds = []
@@ -375,16 +375,12 @@ def loadlang(lang):
                                 if len(nodes) != 3:
                                     ParseError('Wrong number of nodes given to xbar on line %s, expected 4, got %s' % (line.num, len(nodes)))
                                 xargs = []
-                                for s_, arg in zip(nodes, ['spec', 'mod', 'head', 'comp']):
-                                    s = s_.strip()
-                                    if s[0] == '$':
+                                for s, arg in zip(nodes, ['spec', 'mod', 'head', 'comp']):
+                                    if s[0] == '$' or s == '~':
                                         xargs.append(s)
-                                    elif s == '~':
-                                        xargs.append('~')
                                     else:
                                         xargs.append('$%s:%s'%(arg,s))
-                                name = ty.label[:-1] #drop P
-                                node = toobj('|[%sP %s]' % (name, ' '.join(xargs)), lang, line.num)
+                                node = toobj('|[%s %s]' % (ty.label, ' '.join(xargs)), lang, line.num)
                             else:
                                 st = op.first('structure')
                                 node = toobj(st.val, lang, st.num)
@@ -394,9 +390,6 @@ def loadlang(lang):
                             conds.append([toobj(x, lang, op.num) for x in op.args])
                             ops.append(node)
                         ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs)
-        if th.label == 'morphology':
-            for ch in th.children:
-                Node.addmode(ch.label, list(ch.vals('re')))
         if th.label == 'transform':
             for ch in th['rule']:
                 tc = ch.fvo('context', lang, blank(lang), '@')
@@ -474,7 +467,7 @@ def loadtrans(lfrom, lto):
                 if tr.label == 'translate':
                     f = tr.fvo('from', lfrom, m)
                     c = tr.fvo('context', lfrom, blank(lfrom), '@')
-                    for t in tr.vals('to'):
+                    for t in tr.child_vals('to'):
                         Translation(f, [toobj(t, lto, tr.num, m)], m.children[0], context=c, resultlang=lto, mode='lex')
 def loadlangset(langs):
     for l in langs:
