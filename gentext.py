@@ -58,7 +58,7 @@ def outls(sens, traceopen='a'):
     return [dolinear(s) for s in sens]
 def trans(sen, tlang):
     tr = LangLink.getormake(sen.lang, tlang).translate(sen)
-    return [movement1(s) for s in tr if s.alllang(tlang)]
+    return [movement1(s) for s in tr ]#if s.alllang(tlang)]
 def full_process(sen, tlang):
     print(out(sen))
     l = outls(trans(sen, tlang))

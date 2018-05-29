@@ -1,0 +1,234 @@
+metadata
+  name
+    local: ???
+    1: Arabic
+  creator: Natlang
+syntax
+  start-with: CP
+  auto-setlang: AP; CP; IP; NP; PP; DP; VP; conjP; I
+  node-types
+    AP
+      xbar: ~; ~; adjective; ~
+    CP
+      xbar: ~; ~; complementizer; IP
+    IP
+      xbar: ~; ~; I; VP
+    NP
+      xbar: ~; AP?; noun; ~
+    PP
+      xbar: ~; ~; preposition; DP
+    I
+      structure: [I tense aspect mood]
+    DP
+      variable: $head:determiner
+      option ($head(hasspec=true))
+        xbar: DP; ~; $head; NP
+      option ($head(hasspec=false))
+        xbar: ~; ~; $head; NP
+    VP
+      variable: $head:verb
+      option ($head(objects=1); $head(object1=NP))
+        xbar: DP; adverb?; $head; DP
+      option ($head(objects=1); $head(object1=PP))
+        xbar: DP; adverb?; $head; PP
+      option ($head(objects=1); $head(object1=AP))
+        xbar: DP; adverb?; $head; AP
+      option ($head(objects=0))
+        xbar: DP; adverb?; $head; ~
+      option ($head(objects=1); $head(object1=CP))
+        xbar: DP; adverb?; $head; CP
+lexc: lttoolbox
+  split-root: _
+  noun
+    format: {root[0]}<n>{gender}{animacy}{plural}{case}{pos}
+    tags
+      plural: number
+        default: <sg>
+      animacy: animacy
+        default: <aa>
+      gender: gender
+        default: <m>
+      case: case
+        default: <nom>
+      pos: pos
+        default: _
+    in: NounRoot
+    to: NounInfl
+  verb
+    format: {root[0]}<vblex>{transitivity}{voice}{tense}{person}{gender}{number}
+    tags
+      transitivity: transitivity
+        default: <tv>
+      voice: voice
+        default: <actv>
+      tense: tense
+        default: <past>
+      person: person
+        default: <p3>
+      gender: gender
+        default: <m>
+      number: number
+        default: <sg>
+    in: VerbRoot
+    to: VerbInfl
+#  mood
+#    format: {root[0]}<aux>{tense}{person}{number}
+#    tags
+#      tense: tense
+#        default: <error>
+#      person: person
+#        #default: <3>
+#        default: <7>
+#      number: number
+#        default: <sg>
+#    in: AuxRoot
+#    to: AuxInfl
+  aux
+    format: {root[0]}<aux>{tense}{person}{number}
+    tags
+      tense: tense
+        default: <error>
+      person: person
+        default: <3>
+      number: number
+        default: <sg>
+    in: AuxRoot
+    to: AuxInfl
+  adjective
+    format: {root[0]}<adj>{gender}{case}
+    tags
+      gender: gender
+        default: <m>
+      case: case
+        default: <nom>
+    in: adjRoot
+    to: adjInfl
+  determiner
+    format: {root[0]}<det>{def}
+    tags
+      def: def
+        default: <error>
+    in: detRoot
+    to: detInfl
+  pronoun
+    format: prpers<prn>{person}{gender}{number}
+    tags
+      person: person
+        default: <p4>
+      gender: gender
+        default: <mf>
+      number: number
+        default: <sg>
+    in: prnRoot
+    to: prnInfl
+  preposition
+    bland: <pr>
+  conjunction
+    bland: <cnjcoo>
+  conj-adv
+    bland: <cnjadv>
+  adverb
+    bland: <adv>
+  quantifier
+    bland: <quant>
+  complementizer
+    bland: <comp>
+  rel-pronoun
+    format: {root[0]}<rel><an><f><sg>
+    #FIX THIS
+    in: relROot
+    to: relInfl
+  contraction
+    bland: <c't>
+transform
+#case
+  rule
+    context: |[VP |[?DP $d? |[?NP @]] $mod? $head? $comp?]
+    form: $noun
+    setprop (case): nom
+  rule
+    context: |[?PP $p? |[?DP $d? |[?NP @]]]
+    form: $noun
+    setprop (case): nom
+  rule
+    context: |[?PP $p? |[?conjP $c? |[?DP $d? |[?NP @]]]]
+    form: $noun
+    setprop (case): nom
+  rule
+    context: |[?PP $p? |[?conjP |[?DP $d? |[?NP @]] $h? $c?]]
+    form: $noun
+    setprop (case): nom
+#TAM + agreement
+  rule
+    form: [Ibar [I $tense? $aspect? $mood] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense $aspect ~] |[VP $subj $mood |[VP ~ $mod $head $comp]]]
+    setprop ($head.tense): $mood.conj
+  rule
+    context: [Ibar [I $tense $aspect? ~] |[?VP @]]
+    form: $head
+    setprop (tense): $tense.tense
+  rule
+    context: |[VP |[DP $ds? $dm? $dh(is-rel=false) $dc?] $vm? @ $vc?]
+    form: $verb
+    setprop (number): $dh.number
+    setprop (person): $dh.person
+  rule
+    context: |[?DP $dh |[?NP $nh? |[?CP $ch? |[?IP $ih? |[?VP |[?DP $s:rel-pronoun] @ $vc?]]]]]
+    form: $verb
+    setprop (person): $dh.person
+    setprop (number): $dh.number
+#plurality
+  rule
+    context: [Dbar $head |[?NP @]]
+    form: $noun
+    setprop (number): $head.number
+#relative clauses
+  rule
+    form: |[IP ~ $imod? $i? [VP |[DP $subj:rel-pronoun] $rest?]]
+    result: |[IP |[DP $subj] $imod $i [VP ~ $rest]]
+  rule
+    form: |[IP ~ $imod? $i? |[VP $subj? $vmod? $v? |[DP $obj:rel-pronoun]]]
+    result: |[IP |[DP $obj] $imod? $i? |[VP $subj? $vmod? $v? ~]]
+  rule
+    context: [Nbar $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q [IP |[DP $rel:rel-pronoun] $rest]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q [IP ~ $rest]]
+  rule
+    context: [Nbar $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q |[conjP [IP |[DP $rel:rel-pronoun] $rest] $jmod? $j? $jbar?]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q |[conjP [IP ~ $rest] $jmod $j $jbar]]
+#subject position (guess VSO)
+  rule
+    form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
+    result: |[IP $head $imod $ihead |[VP $subj $mod ~ $comp]]
+#adjective agreement
+  rule
+    context: |[NP $ns |[AP @] $nh $nc]
+    form: $a:adjective
+    setprop (number): $nh.number
+    setprop (case): $nh.case
+  rule
+    context: |[?DP determiner=ال |[NP $s? @ $h? $c?]]
+    form: |[AP ~ $mod $adj $comp]
+    result: |[AP determiner=ال $mod $adj $comp]
+#construct
+  rule
+    form: |[DP $ds? $dm? $d:pronoun |[NP $ns? $nm? $n $nc?]]
+    result: |[DP $ds $dm ~ |[NP $ns $nm $n $nc]]
+    setprop ($n.pos): $d.pos
+  rule
+    form: |[NP $ns? |[PP preposition=constr |[DP $d:pronoun]] $nh $nc?]
+    result: |[NP $ns ~ $nh $nc]
+    setprop ($nh.pos): $d.pos
+  rule
+    form: |[NP $ns? |[PP preposition=constr $n] $nh $nc?]
+    result: |[NP $ns ~ [constr $nh $n] $nc]
+    setprop ($nh.pos): constr
+  rule
+    form: [constr $n |[DP $pro]]
+    result: $n
+    setprop ($n.pos): $pro.pos
+
+#rotations
+  rotate: Vmod
+  rotate: Nmod

@@ -1,0 +1,47 @@
+noun=lady: noun=مرأة
+pronoun=I: pronoun=أنا
+complementizer=-Q: complementizer=-Q
+preposition=from: preposition=من
+determiner=the: determiner=ال
+noun=elder: noun=زعيم
+preposition=to: preposition=إلى
+determiner=a: determiner=indef-sg
+adjective=elect: adjective=مختارة
+conjunction=and: conjunction=و
+determiner=herPL
+  translate
+    from: |[DP ~ ~ @ |[NP $ns? ~ $nh $nc?]]
+    #deal with modifiers later
+    to: |[DP ~ ~ determiner=indef-pl |[NP $ns |[PP preposition=constr |[DP pronoun=3Sf]] $nh $nc]]
+noun=child: noun=طفل
+tense=nonpast: tense=present
+aspect=habitual: aspect=habitual
+preposition=in: preposition=في
+noun=truth: noun=حقيقة
+verb=love: verb=أحب
+rel-pronoun=who: rel-pronoun=التي
+quantifier=not: quantifier=ليس
+adjective=alone: adjective=فقط
+adverb=also: adverb=أيضا
+conjunction=but: conj-adv=ولكن
+quantifier=all
+  translate
+    from: |[DP $s? $m? quantifier=all $d:DP]
+    to: |[DP $s $m determiner=indef-pl |[NP noun=كل |[PP preposition=constr $d]]]
+determiner=those: determiner=هم
+verb=know: verb=عرف
+preposition=because+of: preposition=بسبب
+rel-pronoun=that: rel-pronoun=التي
+verb=reside: verb=عاش
+pronoun=us: pronoun=نحن
+mood=will
+  translate
+    from: [I tense=nonpast $asp @]
+    to: [I tense=future $asp ~]
+null-pro=3S: null-pro=3S
+adverb=forever
+  translate
+    from: @
+    to: |[PP preposition=إلى |[DP determiner=ال |[NP noun=أبد]]]
+verb=be: verb=كان
+preposition=with: preposition=مع

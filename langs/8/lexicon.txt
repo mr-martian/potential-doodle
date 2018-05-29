@@ -1,0 +1,97 @@
+-Q (complementizer)
+  audible: false
+
+habitual (aspect)
+  audible: false
+
+de (preposition)
+
+future (tense)
+  audible: false
+  tense: fut
+present (tense)
+  audible: false
+  tense: pres
+past (tense)
+  audible: false
+  tense: pst
+
+3Sf (pronoun)
+  pos: px3sg_f
+  #audible: false
+
+constr (preposition)
+  audible: false
+
+# LEXICON
+  
+amar (verb)
+  objects: 1
+estar (verb)
+  objects: 1
+saber (verb)
+  objects: 1
+vivir (verb)
+  objects: 0
+مرأة (noun)
+  gender: f
+أنا (pronoun)
+  person: p1
+من (preposition)
+ال (determiner)
+  number: sg
+  person: 3
+  def: def
+  display: ال-
+زعيم (noun)
+إلى (preposition)
+indef-sg (determiner)
+  def: ind
+  number: sg
+  audible: false
+indef-pl (determiner)
+  def: ind
+  number: pl
+  audible: false
+مختارة (adjective)
+  #participle (cheating)
+  display: مختارة
+و (conjunction)
+طفل (noun)
+في (preposition)
+حقيقة (noun)
+  animacy: nn
+  gender: f
+أحب (verb)
+  objects: 1
+التي (rel-pronoun)
+  display: التي
+ليس (quantifier)
+  display: ليس
+فقط (adjective)
+أيضا (adverb)
+ولكن (conj-adv)
+null (determiner)
+  def: ind
+كل (noun)
+  animacy: nn
+هم (determiner)
+  person: 3
+  number: pl
+  def: def
+عرف (verb)
+  objects: 1
+بسبب (preposition)
+عاش (verb)
+  objects: 0
+  transitivity: iv
+نحن (pronoun)
+  person: p1
+  number: pl
+  gender: mf
+3S (null-pro)
+إلى (preposition)
+أبد (noun)
+كان (verb)
+  objects: 1
+مع (preposition)

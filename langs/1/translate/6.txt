@@ -24,8 +24,8 @@ adverb=also: adverb=tambien
 conjunction=but: conjunction=pero
 quantifier=all
   translate
-    from: |[DP quantifier=all $d:DP]
-    to: |[DP determiner=null |[NP noun=todo |[PP preposition=de $d]]]
+    from: |[DP ~ $mod? quantifier=all $d:DP]
+    to: |[DP ~ $mod determiner=null |[NP noun=todo |[PP preposition=de $d]]]
 determiner=those: determiner=esos
 verb=know: verb=saber
 preposition=because+of: preposition=porque+de

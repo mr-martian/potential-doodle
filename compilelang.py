@@ -414,7 +414,15 @@ def loadlang(lang):
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)
         if th.label == 'metadata':
-            pass
+            if 'creator' in th:
+                ret.creator = th.firstval('creator')
+            if 'name' in th:
+                for ch in th.first('name').children:
+                    if ch.label == 'local':
+                        ret.name = ch.val
+                        ret.names[lang] = ch.val
+                    else:
+                        ret.names[int(ch.label)] = ch.val
         if th.label == 'lexc':
             ret.morph_mode = th.val
             for ch in th.children:
@@ -451,6 +459,8 @@ def loadlang(lang):
                         for cs in tg['case']:
                             tags[tg.label].append({'conds': condlist(cs), 'tag': cs.val})
                     defaults[tg.label] = tg.firstval('default')
+                    if defaults[tg.label] == '_':
+                        defaults[tg.label] = ''
                 ret.tags.append({'format': ch.firstval('format'), 'tags': tags, 'ntype': ch.label, 'conds': condlist(ch), 'defaults': defaults})
     return ret
 def loadtrans(lfrom, lto):

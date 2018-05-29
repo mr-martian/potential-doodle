@@ -197,9 +197,5 @@ transform
   rule
     form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
     result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]
-#conjunction-modifier order
-  rule
-    form: |[conjP $s? $m? $h? $c?]
-    result: |[conjP $s $h $m $c]
 #rotations
   rotate: Vmod

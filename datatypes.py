@@ -133,7 +133,11 @@ class Node:
                     vrs[' '].props.update(act[1])
                 elif act[0] == 'setprop':
                     if act[3]:
-                        vrs[act[1]].props[act[2]] = vrs[act[3]].props[act[4]]
+                        try:
+                            vrs[act[1]].props[act[2]] = vrs[act[3]].props[act[4]]
+                        except KeyError as e:
+                            print('%s does not have key %s' % (vrs[act[3]], act[4]))
+                            raise e
                     else:
                         vrs[act[1]].props[act[2]] = act[4]
         return copy.deepcopy(tr.context).putvars(vrs)
@@ -389,6 +393,11 @@ class SyntaxPat:
 class Language:
     __alllangs = {}
     def __init__(self, lang):
+        #Metadata
+        self.name = ''
+        self.names = {}
+        self.creator = ''
+        #General
         self.lang = lang
         self.syntax = {}
         self.morphology = defaultdict(list)
@@ -441,6 +450,8 @@ class Language:
                 if p.rootset < s:
                     ret.append(p)
         return ret
+    def allnames():
+        return [(x, Language.__alllangs[x].name) for x in sorted(Language.__alllangs.keys())]
 class LangLink:
     __alllinks = {}
     def __init__(self, fromlang, tolang):
@@ -516,6 +527,7 @@ def hfst(tagstrs, lang):
         proc = Popen(['lt-proc', '-g', 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]
         ret = ls.split('\n')
+        print(list(zip(tagstrs, ret)))
     else:
         raise Exception('Unknown morphology mode %s' % mode)
     return ret
