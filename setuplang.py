@@ -1,7 +1,7 @@
 import sys, os
 pth = 'langs/%s/' % sys.argv[1]
 os.mkdir(pth)
-os.mkdir(pth+'trans/')
+os.mkdir(pth+'translate/')
 os.mkdir(pth+'.generated/')
 os.mkdir(pth+'.temporary/')
 f = open(pth+'lang.txt', 'w')
@@ -41,6 +41,17 @@ syntax
         xbar: DP; adverb?; $head; DP
       option ($head(objects=0))
         xbar: DP; adverb?; $head; ~
+lexc: hfst
+  split-root: _
+  noun
+    format: {root[0]}<n>{number}{case}
+    tags
+      number: number
+        default: <sg>
+      case: case
+        default: <nom>
+    in: NounRoot
+    to: NounInfl
 transform
 #possession
   rule
@@ -56,7 +67,7 @@ transform
 f.close()
 
 f = open(pth+'lexicon.txt', 'w')
-f.write('some-noun (noun)\n  display: monkey')
+f.write('-Q (complementizer)\n\nsome-noun (noun)\n  display: monkey')
 f.close()
 
 f = open(pth+'morphology.lexc', 'w')
@@ -66,6 +77,9 @@ Multichar_Symbols
 
 ! Part of speech categories
 %<n%>     ! Noun
+%<sg%>    ! singular
+%<pl%>    ! plural
+%<nom%>   ! nominative
 
 ! Other symbols
 %>      ! Morpheme boundary
@@ -77,8 +91,8 @@ Punctuation ;
 
 LEXICON NounInfl
 
-%<n%>%<SG%>%<nom%>: # ;
-%<n%>%<PL%>%<nom%>:s # ;
+%<n%>%<sg%>%<nom%>: # ;
+%<n%>%<pl%>%<nom%>:s # ;
 
 LEXICON Punctuation
 
@@ -121,3 +135,4 @@ Rules
 "{Tf} becomes 'HA' before FinalCons"
 %{Tf%}:HA <=> _ :FinalCons ;''')
 f.close()
+os.system('python3 maketransducer.py %s' % sys.argv[1])

@@ -284,6 +284,14 @@ class Node:
             if isinstance(n, Node) and n.lang != lang:
                 return False
         return True
+    def nodelang(self, lang): #DESTRUCTIVE
+        if self.children and isinstance(self.children[0], str):
+            pass
+        else:
+            self.lang = lang
+            for c in self.children:
+                if c:
+                    c.nodelang(lang)
 def match(a, b):
     #a is thing, b is pattern
     #only matters for nodes, where b's properties must be a subset of a's
@@ -527,11 +535,10 @@ def hfst(tagstrs, lang):
         proc = Popen(['lt-proc', '-g', 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]
         ret = ls.split('\n')
-        print(list(zip(tagstrs, ret)))
     else:
         raise Exception('Unknown morphology mode %s' % mode)
+    #print(list(zip(tagstrs, ret)))
     return ret
-    #return [x.split('\t')[1].replace('+', ' ') for x in ls[0].strip().split('\n\n')]
 def dolinear(sen):
     lin = sen.linear()
     lang = Language.getormake(sen.lang)

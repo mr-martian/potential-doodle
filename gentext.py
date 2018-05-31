@@ -1,6 +1,7 @@
 import random, itertools, copy, os.path
 from compilelang import loadlang, loadlangset, toobj
 from datatypes import *
+NORMALIZE_NODES = True # True: .lang of non-lexical nodes is ignored
 def gen(pats, tree, depth, setvars):
     if isinstance(tree, Node):
         r = copy.copy(tree)
@@ -58,7 +59,13 @@ def outls(sens, traceopen='a'):
     return [dolinear(s) for s in sens]
 def trans(sen, tlang):
     tr = LangLink.getormake(sen.lang, tlang).translate(sen)
-    return [movement1(s) for s in tr ]#if s.alllang(tlang)]
+    ret = []
+    for s in tr:
+        if NORMALIZE_NODES:
+            s.nodelang(tlang)
+        if s.alllang(tlang):
+            ret.append(movement1(s))
+    return ret
 def full_process(sen, tlang):
     print(out(sen))
     l = outls(trans(sen, tlang))

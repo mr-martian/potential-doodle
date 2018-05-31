@@ -21,8 +21,16 @@ de (preposition)
 en (preposition)
 para (preposition)
 porque+de (preposition)
+  linear-text: porque+d-
+    1: /^el$/
 
+la (det-form)
+  number: sg
+  display: la
 el (determiner)
+  form
+    context: |[?DP @ |[?NP $noun(gender=f)]]
+    result: det-form=la
   linear: contraction=del
     -1: preposition=de
       inaudible

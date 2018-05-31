@@ -1,0 +1,47 @@
+! Morphological Transducer for Biblical Hebrew
+
+Multichar_Symbols
+
+! Part of speech categories
+%<n%>     ! Noun
+%<sg%>    ! singular
+%<pl%>    ! plural
+%<nom%>   ! nominative
+
+! Other symbols
+%>      ! Morpheme boundary
+
+LEXICON Root
+
+NounRoot ;
+Punctuation ;
+
+LEXICON NounInfl
+
+%<n%>%<sg%>%<nom%>: # ;
+%<n%>%<pl%>%<nom%>:s # ;
+
+LEXICON Punctuation
+
+.%<sent%>:. # ;
+..%<sent%>:.. # ;
+...%<sent%>:... # ;
+%;%<sent%>:%; # ;
+%:%<sent%>:%: # ;
+%!%<sent%>:%! # ;
+%-%<guio%>:%- # ;
+%—%<guio%>:%— # ;
+,%<cm%>:, # ;
+%?%<sent%>:%? # ;
+%'%<apos%>:%' # ;
+%"%<sent%>:%" # ;
+%«%<lquot%>:%« # ;
+%»%<rquot%>:%» # ;
+%”%<rquot%>:%” # ;
+%“%<lquot%>:%“ # ;
+%(%<lpar%>:%( # ;
+%]%<rpar%>:%] # ;
+%[%<lpar%>:%[ # ;
+%)%<rpar%>:%) # ;
+\%<sent%>:\ # ;
+/%<sent%>:/ # ;

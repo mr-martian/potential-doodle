@@ -653,3 +653,27 @@ writing-system (noun)
 
 #PROPER NOUNS
 Obadiah (noun)
+
+
+#Generated from missing_morphemes.txt
+Judah (noun)
+Moab (noun)
+famine (noun)
+field (noun)
+land (noun)
+man (noun)
+son (noun)
+two (noun)
+wife (noun)
+woman (noun)
+of (preposition)
+dwell (verb)
+  objects: 1
+  object1: PP
+go (verb)
+  objects: 2
+  object1: PP
+  object2: PP
+judge (verb)
+  objects: 1
+  object1: NP

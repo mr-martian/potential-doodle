@@ -1,0 +1,59 @@
+metadata
+  name
+    local: Biblical Hebrew
+  creator: Natlang
+syntax
+  start-with: CP
+  auto-setlang: AP; CP; IP, NP, PP, DP, VP, conjP, vP
+  node-types
+    AP
+      xbar: ~; ~; adjective; ~
+    CP
+      xbar: ~; ~; complementizer; IP
+    IP
+      xbar: ~; ~; I; VP
+    NP
+      xbar: ~; AP?; noun; ~
+    PP
+      xbar: ~; ~; preposition; DP
+    I
+      variable: $t:tense
+      variable: $a:aspect
+      variable: $m:mood?
+      structure: [I $t $a $m]
+      translation (1): [I $t $a $m]
+    DP
+      variable: $head:determiner
+      option ($head(hasspec=true))
+        xbar: DP; ~; $head; NP
+      option ($head(hasspec=false))
+        xbar: ~; ~; $head; NP
+    VP
+      variable: $head:verb
+      option ($head(objects=1))
+        xbar: DP; adverb?; $head; DP
+      option ($head(objects=0))
+        xbar: DP; adverb?; $head; ~
+lexc: hfst
+  split-root: _
+  noun
+    format: {root[0]}<n>{number}{case}
+    tags
+      number: number
+        default: <sg>
+      case: case
+        default: <nom>
+    in: NounRoot
+    to: NounInfl
+transform
+#possession
+  rule
+    form: |[DP $spec:DP $mod? $head $comp?]
+    result: |[DP [GEN $spec $head] $mod ~ $comp]
+#subject position
+  rule
+    form: |[IP ~ $imod? $ihead |[VP $subj $mod? $head $comp?]]
+    result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]
+#rotations
+  rotate: Vmod
+  rotate: Nmod

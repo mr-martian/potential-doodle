@@ -45,7 +45,7 @@ def genlexicon(langid):
             lexs['Bland'].append(r['lexicon-in'] + ' ;')
             lexs[r['lexicon-to']].append(lexcescape(r['bland']) + ': # ;')
     f = open('langs/%d/.generated/lexicon.lexc' % langid, 'w')
-    for lex in lexs:
+    for lex in sorted(lexs.keys()):
         f.write(('LEXICON %s\n' % lex) + '\n'.join(lexs[lex]) + '\n\n')
     f.close()
 if __name__ == '__main__':

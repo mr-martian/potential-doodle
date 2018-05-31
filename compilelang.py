@@ -1,7 +1,7 @@
 from datatypes import *
 from os.path import isfile
 from re import compile
-UNKNOWN_MORPH = "ERROR"
+UNKNOWN_MORPH = "CREATE_AND_LOG"
 #what to do when parser encounters a morpheme that isn't in the lexicon
 #options: "ERROR", "CREATE", "CREATE_AND_LOG"
 #"ERROR" is default because loading twice leads to copies that represent the same morpheme, but with different properties. -D.S. 2018-02-11
