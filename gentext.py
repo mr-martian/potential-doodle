@@ -63,7 +63,7 @@ def trans(sen, tlang):
     for s in tr:
         if NORMALIZE_NODES:
             s.nodelang(tlang)
-        if s.alllang(tlang):
+        if True:#s.alllang(tlang):
             ret.append(movement1(s))
     return ret
 def full_process(sen, tlang):

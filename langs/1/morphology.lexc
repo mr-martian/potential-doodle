@@ -1,4 +1,4 @@
-! Morphological Transducer for Sajem Tan
+! Morphological Transducer for English
 
 Multichar_Symbols
 
@@ -34,13 +34,9 @@ LEXICON NounInfl
 %<n%>%<SG%>%<gen%>:'s # ;
 %<n%>%<PL%>%<gen%>:s' # ;
 
-LEXICON VerbInfl-Transitive
+LEXICON VerbInfl
 
-%<v%>%<tv%>: VerbInflTense ;
-
-LEXICON VerbInfl-Intransitive
-
-%<v%>%<iv%>: VerbInflTense ;
+%<v%>: VerbInflTense ;
 
 LEXICON VerbInflTense
 

@@ -141,7 +141,7 @@ class Node:
                     else:
                         vrs[act[1]].props[act[2]] = act[4]
         return copy.deepcopy(tr.context).putvars(vrs)
-    def transform(self, pats):
+    def transform(self, pats, returnself=True):
         if len(pats) > 0:
             chs = []
             for c in self.children:
@@ -164,8 +164,10 @@ class Node:
                 if not added:
                     ret.append(n)
             return ret
-        else:
+        elif returnself:
             return [self]
+        else:
+            return []
     def __str__(self):
         if isinstance(self.children, list):
             s = '[' + ' '.join([str(x) for x in self.children]) + ']'
@@ -290,7 +292,7 @@ class Node:
         else:
             self.lang = lang
             for c in self.children:
-                if c:
+                if isinstance(c, Node):
                     c.nodelang(lang)
 def match(a, b):
     #a is thing, b is pattern
@@ -342,13 +344,11 @@ def register(morph):
             AllMorphemes[morph.lang][p][r] = morph
 ###TRANSFORMATIONS
 class Translation:
-    def __init__(self, form, result, category, context=None, resultlang=None, mode='syntax'):
+    def __init__(self, form, result, category, langs, context=None, mode='syntax', stage=0):
         self.form = form
         self.result = result
-        if resultlang:
-            self.langs = [form.lang, resultlang]
-        else:
-            self.langs = [form.lang, result.lang]
+        self.stage = stage
+        self.langs = langs
         self.category = category
         self.roots = [] #roots of all morphemes in form
         if isinstance(form, Node):
@@ -470,27 +470,47 @@ class LangLink:
         LangLink.__alllinks['%s-%s' % (fromlang, tolang)] = self
         sl = Language.getormake(fromlang).setlang
         for s in sl:
-            Translation(Variable('node', s, Unknown(), fromlang), [['setlang', tolang]], 'syntax', resultlang=tolang, mode='syntax')
-    def find(self, roots):
+            Translation(Variable('node', s, Unknown(), fromlang), [['setlang', tolang]], 'syntax', [fromlang, tolang], mode='syntax')
+    #def find(self, roots):
+    #    s = set(roots)
+    #    ret = []
+    #    for r in roots:
+    #        for p in self.pats[r]:
+    #            if p.rootset < s:
+    #                ret.append(p)
+    #    return ret
+    def find(self, _roots):
+        roots = _roots + ['']
         s = set(roots)
-        ret = []
+        ret = defaultdict(list)
         for r in roots:
             for p in self.pats[r]:
                 if p.rootset < s:
-                    ret.append(p)
-        return ret
+                    ret[p.stage].append(p)
+        return [ret[k] for k in sorted(ret.keys())]
     def getormake(fromlang, tolang):
         s = '%s-%s' % (fromlang, tolang)
         if s in LangLink.__alllinks:
             return LangLink.__alllinks[s]
         else:
             return LangLink(fromlang, tolang)
+    #def translate(self, sen):
+    #    tr = sen.transform(self.find(sen.roots()))
+    #    ret = []
+    #    for s in tr:
+    #        ret += s.transform(self.syntax)
+    #    return ret
     def translate(self, sen):
-        tr = sen.transform(self.find(sen.roots()))
-        ret = []
-        for s in tr:
-            ret += s.transform(self.syntax)
-        return ret
+        pats = self.find(sen.roots())
+        #pats.append(self.syntax) #unnecessary due to sen.nodelang()
+        tr = [sen]
+        for p in pats:
+            ntr = []
+            for s in tr:
+                ntr += s.transform(p, False)
+            if ntr:
+                tr = ntr
+        return tr
 ###MOVEMENT
 def movement1(sen):
     roots = sen.roots()

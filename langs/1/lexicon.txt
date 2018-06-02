@@ -128,6 +128,20 @@ herPL (determiner)
   number: PL
   person: 3
   is-rel: false
+his (determiner)
+  plural: false
+  hasspec: false
+  number: SG
+  person: 3
+  is-rel: false
+hisPL (determiner)
+  display: his
+  output: his
+  plural: true
+  hasspec: false
+  number: PL
+  person: 3
+  is-rel: false
 those (determiner)
   plural: true
   hasspec: false

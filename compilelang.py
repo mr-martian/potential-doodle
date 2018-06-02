@@ -1,7 +1,7 @@
 from datatypes import *
 from os.path import isfile
 from re import compile
-UNKNOWN_MORPH = "CREATE_AND_LOG"
+UNKNOWN_MORPH = "ERROR"
 #what to do when parser encounters a morpheme that isn't in the lexicon
 #options: "ERROR", "CREATE", "CREATE_AND_LOG"
 #"ERROR" is default because loading twice leads to copies that represent the same morpheme, but with different properties. -D.S. 2018-02-11
@@ -294,19 +294,19 @@ def loadlexicon(lang):
                 form = p.fvo('structure', lang, m, '@')
                 for f in p['form']:
                     fm = Node(lang, root.arg, [f.val])
-                    Translation(form, [fm], root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [fm], root.label, [lang, lang], context=c, mode=mode)
                 for f in p['result']:
                     fm = toobj(f.val, lang, f.num, None)
-                    Translation(form, [fm], root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [fm], root.label, [lang, lang], context=c, mode=mode)
                 for f in p['setdisplay']:
-                    Translation(form, [['setdisplay', f.val]], root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [['setdisplay', f.val]], root.label, [lang, lang], context=c, mode=mode)
                 for f in p['setprops']:
                     d = {}
                     for prop in f.children:
                         d[prop.label] = prop.val
-                    Translation(form, [['set', d]], root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [['set', d]], root.label, [lang, lang], context=c, mode=mode)
                 if 'blank' in p:
-                    Translation(form, [['setdisplay', '']], root.label, context=c, resultlang=lang, mode=mode)
+                    Translation(form, [['setdisplay', '']], root.label, [lang, lang], context=c, mode=mode)
             elif p.label == 'output':
                 o = [p.arg, p.val, '#']
                 if '=' in p.arg:
@@ -327,7 +327,7 @@ def loadlexicon(lang):
                         res.append([idx, 'inaudible'])
                     elif 'to' in ch:
                         res.append([idx, ch.fvo('to', lang, None)])
-                Translation(m, res, root.label, context=con, resultlang=lang, mode='linear')
+                Translation(m, res, root.label, [lang, lang], context=con, mode='linear')
             elif p.label == 'linear-text':
                 con = []
                 for ch in p.children:
@@ -336,7 +336,7 @@ def loadlexicon(lang):
                             con.append([int(ch.label), compile(ch.val[1:-1])])
                         else:
                             con.append([int(ch.label), ch.val])
-                Translation(m, p.val, root.label, context=con, resultlang=lang, mode='linear-text')
+                Translation(m, p.val, root.label, [lang, lang], context=con, mode='linear-text')
             else:
                 m.props[p.label] = p.val
         register(m)
@@ -386,7 +386,7 @@ def loadlang(lang):
                                 node = toobj(st.val, lang, st.num)
                                 for tr in op['translation']:
                                     res = toobj(tr.val, int(tr.arg), tr.num)
-                                    Translation(node, [res], 'syntax', resultlang=int(tr.arg), mode='syntax')
+                                    Translation(node, [res], 'syntax', [lang, int(tr.arg)], mode='syntax')
                             conds.append([toobj(x, lang, op.num) for x in op.args])
                             ops.append(node)
                         ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs)
@@ -410,7 +410,7 @@ def loadlang(lang):
                         a[1] = v
                         a[2] = p
                     res.append(a)
-                ret.transform.append(Translation(tf, res, 'transform', context=tc, resultlang=lang, mode='syntax'))
+                ret.transform.append(Translation(tf, res, 'transform', [lang, lang], context=tc, mode='syntax'))
             for ch in th['rotate']:
                 ret.rotate.append(ch.val)
         if th.label == 'metadata':
@@ -467,18 +467,32 @@ def loadtrans(lfrom, lto):
     fname = 'langs/%s/translate/%s.txt' % (lfrom, lto)
     if isfile(fname):
         trans = ParseLine.fromfile(fname)
-        for lex in trans:
-            m = toobj(lex.label, lfrom, lex.num, None)
-            if lex.val:
-                for g in lex.vals:
-                    d = toobj(g.strip(), lto, lex.num, m)
-                    Translation(m, [d], m.children[0], resultlang=lto, mode='lex')
-            for tr in lex.children:
-                if tr.label == 'translate':
-                    f = tr.fvo('from', lfrom, m)
-                    c = tr.fvo('context', lfrom, blank(lfrom), '@')
-                    for t in tr.child_vals('to'):
-                        Translation(f, [toobj(t, lto, tr.num, m)], m.children[0], context=c, resultlang=lto, mode='lex')
+        if trans and trans[0].label != 'stage':
+            trans = [ParseLine(-1, 'stage', [], '', trans)]
+        for i, stage in enumerate(trans):
+            for lex in stage.children:
+                if lex.label == 'rule':
+                    c = lex.fvo('context', lfrom, blank(lfrom), '@')
+                    f = lex.fvo('form', lfrom, None)
+                    if 'anylang' in lex and isinstance(f, Node):
+                        f.nodelang(Unknown())
+                    lgs = [lfrom, lto]
+                    if 'samelang' in lex:
+                        lgs[1] = lfrom
+                    r = lex.fvo('result', lgs[1], None)
+                    Translation(f, [r], '', lgs, context=c, mode='lex', stage=i)
+                else:
+                    m = toobj(lex.label, lfrom, lex.num, None)
+                    if lex.val:
+                        for g in lex.vals:
+                            d = toobj(g.strip(), lto, lex.num, m)
+                            Translation(m, [d], m.children[0], [lfrom, lto], mode='lex', stage=i)
+                    for tr in lex.children:
+                        if tr.label == 'translate':
+                            f = tr.fvo('from', lfrom, m)
+                            c = tr.fvo('context', lfrom, blank(lfrom), '@')
+                            for t in tr.child_vals('to'):
+                                Translation(f, [toobj(t, lto, tr.num, m)], m.children[0], [lfrom, lto], context=c, mode='lex', stage=i)
 def loadlangset(langs):
     for l in langs:
         loadlang(l)

@@ -1,17 +1,25 @@
 -Q (complementizer)
 ו (conjunction)
 PL (determiner)
+  number: pl
+  def: indef
 def (determiner)
+  number: sg
+  def: def
 defPL (determiner)
+  number: pl
+  def: def
 אִישׁ (noun)
 אִשָׁה (noun)
 אֶרֶץ (noun)
 בֵנ (noun)
 בַּיִת (noun)
 יְהוּדָה (noun)
+  proper: true
 יֹומ (noun)
 לֶחֶם (noun)
 מוֹאָב (noun)
+  proper: true
 רָעָב (noun)
 שְׁתָּיִמ (noun)
 שָׂדֶה (noun)

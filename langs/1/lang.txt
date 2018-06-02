@@ -48,25 +48,16 @@ lexc: hfst
     in: NounRoot
     to: NounInfl
   verb
-    format: {root[0]}<v>{type}{tense}{person}{number}
+    format: {root[0]}<v>{tense}{person}{number}
     tags
-      type
-        case (objects=1): <tv>
-        case (objects=0): <iv>
-        default: <tv>
       tense: tense
         default: <nonpst>
       person: person
         default: <3>
       number: number
         default: <SG>
-    lexicon
-      case (objects=1)
-        in: VerbRoot
-        to: VerbInfl-Transitive
-      case (objects=0)
-        in: VerbRoot
-        to: VerbInfl-Intransitive
+    in: VerbRoot
+    to: VerbInfl
   mood
     format: {root[0]}<aux>{tense}{person}{number}
     tags
