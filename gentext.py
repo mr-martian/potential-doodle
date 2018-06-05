@@ -43,7 +43,7 @@ def make(lang):
 def out(sen, traceopen='w'):
     lang = Language.getormake(sen.lang)
     m = movement1(sen)
-    f = open('trace.txt', traceopen)
+    f = open(DATA_PATH + 'trace.txt', traceopen)
     f.write(sen.writecompile() + '\n\n' + str(sen) + '\n\n')
     f.write(m.writecompile() + '\n\n' + str(m) + '\n\n')
     r = dolinear(m)
@@ -53,7 +53,7 @@ def out(sen, traceopen='w'):
 def outls(sens, traceopen='a'):
     if sens:
         out(sens[0], traceopen)
-        f = open('trace.txt', traceopen)
+        f = open(DATA_PATH + 'trace.txt', traceopen)
         f.write('\n\n'.join([str(s) for s in sens[1:]]) + '\n\n')
         f.close()
     return [dolinear(s) for s in sens]
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     sen = None
     if len(sys.argv) > 3:
         if sys.argv[3] == 'reuse':
-            f = open('trace.txt')
+            f = open(DATA_PATH + 'trace.txt')
             sen = toobj(f.readline(), fl, '1 of trace.txt')
             f.close()
         elif os.path.isfile(sys.argv[3]):

@@ -1,6 +1,7 @@
-import re, itertools, random, copy
+import re, itertools, random, copy, os
 from collections import defaultdict
 from subprocess import Popen, PIPE
+DATA_PATH = os.path.abspath(__file__)[:-12]
 ###VARIABLES
 class Variable:
     def __init__(self, label, value, cond, lang):
@@ -548,11 +549,11 @@ def movementall(sen):
 def hfst(tagstrs, lang):
     mode = Language.getormake(lang).morph_mode
     if mode == 'hfst':
-        proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+        proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', DATA_PATH + 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(tagstrs))
         ret = [x.split('\t')[1] for x in ls[0].strip().split('\n\n')]
     elif mode == 'lttoolbox':
-        proc = Popen(['lt-proc', '-g', 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+        proc = Popen(['lt-proc', '-g', DATA_PATH + 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]
         ret = ls.split('\n')
     else:

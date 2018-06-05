@@ -172,7 +172,7 @@ def toobj(s, lang, loc, at=None):
                 if r == None:
                     if UNKNOWN_MORPH == "CREATE_AND_LOG":
                         r = Node(lang, pos, [root])
-                        f = open('missing_morphemes.txt', 'a')
+                        f = open(DATA_PATH + 'missing_morphemes.txt', 'a')
                         f.write(str(lang) + ': ' + pos + '=' + root + '\n')
                         f.close()
                     elif UNKNOWN_MORPH == "CREATE":
@@ -280,7 +280,7 @@ class ParseLine:
 def blank(l): #for blank contexts
     return Variable(' ', None, Unknown(), l)
 def loadlexicon(lang):
-    rootslist = ParseLine.fromfile('langs/%s/lexicon.txt' % lang)
+    rootslist = ParseLine.fromfile(DATA_PATH + 'langs/%s/lexicon.txt' % lang)
     for root in rootslist:
         m = Node(lang, root.arg, [root.label])
         m.props['output'] = []
@@ -348,7 +348,7 @@ def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c',
     return ret
 def loadlang(lang):
     loadlexicon(lang)
-    things = ParseLine.fromfile('langs/%s/lang.txt' % lang)
+    things = ParseLine.fromfile(DATA_PATH + 'langs/%s/lang.txt' % lang)
     ret = Language.getormake(lang)
     for th in things:
         if th.label == 'syntax':
@@ -464,7 +464,7 @@ def loadlang(lang):
                 ret.tags.append({'format': ch.firstval('format'), 'tags': tags, 'ntype': ch.label, 'conds': condlist(ch), 'defaults': defaults})
     return ret
 def loadtrans(lfrom, lto):
-    fname = 'langs/%s/translate/%s.txt' % (lfrom, lto)
+    fname = DATA_PATH + 'langs/%s/translate/%s.txt' % (lfrom, lto)
     if isfile(fname):
         trans = ParseLine.fromfile(fname)
         if trans and trans[0].label != 'stage':
