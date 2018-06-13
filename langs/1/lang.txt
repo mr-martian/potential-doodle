@@ -8,22 +8,30 @@ syntax
   node-types
     AP
       xbar: ~; ~; adjective; ~
+      require: adjective
     CP
       xbar: ~; ~; complementizer; IP
     IP
       xbar: ~; ~; I; VP
     NP
       xbar: ~; AP?; noun; ~
+      require: noun
     PP
       xbar: ~; ~; preposition; DP
+      require: preposition
     I
       structure: [I $t:tense $a:aspect $m:mood?]
     DP
-      variable: $head:determiner
+      variable: $head:determiner?
       option ($head(hasspec=true))
         xbar: DP; ~; $head; NP
+        require: determiner
       option ($head(hasspec=false))
         xbar: ~; ~; $head; NP
+        require: determiner
+      option ($head!)
+        xbar: ~; ~; $pro:pronoun; ~
+        require: pronoun
     VP
       variable: $head:verb
       option ($head(objects=1); $head(object1=NP))
@@ -31,6 +39,10 @@ syntax
       option ($head(objects=1); $head(object1=PP))
         xbar: DP; adverb?; $head; PP
       option ($head(objects=1); $head(object1=AP))
+        xbar: DP; adverb?; $head; AP
+      option ($head(objects=1); $head(object1=NP/AP))
+        xbar: DP; adverb?; $head; NP
+      option ($head(objects=1); $head(object1=NP/AP))
         xbar: DP; adverb?; $head; AP
       option ($head(objects=0))
         xbar: DP; adverb?; $head; ~

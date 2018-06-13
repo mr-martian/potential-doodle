@@ -40,6 +40,66 @@ def gen(pats, tree, depth, setvars):
 def make(lang):
     p = lang.getpats()
     return gen(p, p[lang.syntaxstart], 1, {})
+class LimitList:
+    def __init__(self, few, many):
+        self.few = few
+        self.many = many
+    def each(self):
+        for i, x in enumerate(self.few):
+            yield x, LimitList(self.few[:i]+self.few[i+1:], self.many)
+        for x in self.many:
+            yield x, self
+    def __len__(self):
+        return len(self.few)+len(self.many)
+def genall(pats, tree, setvars):
+    #print('genall(pats, %s, %s)' % (tree, setvars))
+    if isinstance(tree, Node):
+        rc = [genall(pats, c, setvars) for c in tree.children]
+        for ch in itertools.product(*rc):
+            yield tree.swapchildren(ch)
+    elif isinstance(tree, list):
+        for x in tree:
+            yield x
+    elif isinstance(tree, Variable):
+        if tree.label in setvars:
+            yield setvars[tree.label]
+        elif isinstance(pats[tree.value], LimitList):
+            old = pats[tree.value]
+            for r, l in old.each():
+                pats[tree.value] = l
+                yield r
+            pats[tree.value] = old
+        else:
+            for x in genall(pats, pats[tree.value], setvars):
+                yield x
+        if tree.opt:
+            yield None
+    elif isinstance(tree, SyntaxPat):
+        idx = []
+        for i, req in enumerate(tree.require):
+            if all(len(pats[x]) > 0 for x in req):
+                idx.append(i)
+        if idx:
+            vals = [genall(pats, v, {}) for v in tree.vrs]
+            labs = [v.label for v in tree.vrs]
+            for vrs in itertools.product(*vals):
+                dct = dict(zip(labs, vrs))
+                for i in idx:
+                    if all(c.check(dct) for c in tree.conds[i]):
+                        for x in genall(pats, tree.opts[i], dct):
+                            yield x
+    else:
+        yield tree
+def makeall(words):
+    lang = Language.getormake(words[0].lang)
+    p = lang.getpats()
+    for k in p:
+        if isinstance(p[k], list):
+            many = [x for x in p[k] if 'audible' in x.props and x.props['audible'] == 'false']
+            few = [x for x in words if x.ntype == k]
+            p[k] = LimitList(few, many)
+    for x in genall(p, p[lang.syntaxstart], {}):
+        yield x
 def out(sen, traceopen='w'):
     lang = Language.getormake(sen.lang)
     m = movement1(sen)

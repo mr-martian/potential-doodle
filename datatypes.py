@@ -9,6 +9,7 @@ class Variable:
         self.value = value
         self.opt = False
         self.lang = lang
+        self.cond = cond
         if self.value and self.value[-1] == '?':
             self.opt = True
             self.value = self.value[:-1]
@@ -19,12 +20,11 @@ class Variable:
         if self.label and self.label[-1] == '?':
             self.opt = True
             self.label = self.label[:-1]
-        self.cond = cond
     def check(self, vrs):
         v = vrs[self.label]
         valmatch = (not self.value) or (isinstance(v, Node) and v.ntype == self.value)
         if v == None:
-            return self.opt
+            return self.cond == None or self.opt
         elif not isinstance(v, Node):
             return False
         elif isinstance(self.cond, Unknown):
@@ -205,7 +205,7 @@ class Node:
             if self.props[c[0]] != c[1]:
                 return False
         return True
-    def tagify(self):
+    def tagify(self, regex=False):
         lang = Language.get(self.lang)
         format = ''
         tagset = []
@@ -233,8 +233,14 @@ class Node:
                         tags[tg] = cs['tag']
                         break
             if tg not in tags:
-                tags[tg] = defaults[tg]
-        return format.format(**tags) or self.children[0]
+                if regex:
+                    tags[tg] = '<[^<>]*>'
+                else:
+                    tags[tg] = defaults[tg]
+        ret = format.format(**tags) or self.children[0]
+        if regex:
+            ret = ret.replace('+', '\\+')
+        return ret
     def tagify_all(self):
         if isinstance(self.children[0], str):
             return [self.tagify()]
@@ -390,11 +396,12 @@ class Translation:
         return self.__str__()
 ###GENERATION
 class SyntaxPat:
-    def __init__(self, name, conds, opts, vrs):
+    def __init__(self, name, conds, opts, vrs, require):
         self.name = name
         self.conds = conds
         self.opts = opts
         self.vrs = vrs
+        self.require = require
     def __str__(self):
         return 'SyntaxPat(%s, %s, %s, %s)' % (self.name, self.conds, self.opts, self.vrs)
     def __repr__(self):
@@ -551,7 +558,10 @@ def hfst(tagstrs, lang):
     if mode == 'hfst':
         proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', DATA_PATH + 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(tagstrs))
-        ret = [x.split('\t')[1] for x in ls[0].strip().split('\n\n')]
+        if ls[0]:
+            ret = [x.split('\t')[1] for x in ls[0].strip().split('\n\n')]
+        else:
+            ret = []
     elif mode == 'lttoolbox':
         proc = Popen(['lt-proc', '-g', DATA_PATH + 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]

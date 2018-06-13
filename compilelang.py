@@ -1,6 +1,7 @@
 from datatypes import *
 from os.path import isfile
 from re import compile
+import copy
 UNKNOWN_MORPH = "ERROR"
 #what to do when parser encounters a morpheme that isn't in the lexicon
 #options: "ERROR", "CREATE", "CREATE_AND_LOG"
@@ -11,7 +12,7 @@ def tokenize(s):
     add = False
     digraph = False
     for c in s:
-        if c in '[]<>$:(){}=@':
+        if c in '[]<>$:(){}=@%':
             if digraph:
                 ret[-1] += c
                 digraph = False
@@ -45,7 +46,7 @@ def toobj(s, lang, loc, at=None):
         nonlocal rest
         cur = rest.pop(0)
         def ok(th):
-            return isinstance(th, str) and th[0] not in '[]<>$:(){}=@|'
+            return isinstance(th, str) and th[0] not in '[]<>$:(){}=@|%'
         if not isinstance(cur, str):
             return cur
         elif cur.isnumeric(): #number
@@ -77,7 +78,7 @@ def toobj(s, lang, loc, at=None):
                 else:
                     cond = destring()
                     if rest[0] != ')':
-                        raise ParseError('Badly formed variable condition on line %s.' % loc)
+                        raise ParseError('Badly formed variable condition on line %s (remainder was %s).' % (loc, rest))
                     rest.pop(0)
             return Variable(label, value, cond, l or lang)
         elif cur == '[': #Syntax
@@ -131,6 +132,40 @@ def toobj(s, lang, loc, at=None):
             if rest and rest[0] == '{':
                 d = destring()
             return Node(lang, name+'P', [ch[0], mod], d)
+        elif cur == '%': #Text entry
+            nodes = []
+            while True:
+                add = defaultdict(lambda: None)
+                add['name'] = rest.pop(0)[:-1]
+                add[' props'] = []
+                if rest[0] == '(':
+                    rest.pop(0)
+                    while rest[0] != ')':
+                        p = rest.pop(0)
+                        v = destring()
+                        if p == 's':
+                            add['spec'] = v
+                        elif p == 'm':
+                            add['mod'] = v
+                        else:
+                            add[p] = v
+                            add[' props'].append(p)
+                    rest.pop(0)
+                add['head'] = destring()
+                nodes.append(add)
+                if not rest or rest[0] != '>':
+                    break
+                else:
+                    rest.pop(0)
+            ret = None
+            while nodes:
+                n = nodes.pop()
+                ret = Node(lang, n['name']+'bar', [n['head'], ret])
+                ret = Node(lang, n['name']+'mod', [n['mod'], ret])
+                ret = Node(lang, n['name']+'P', [n['spec'], ret])
+                for k in n[' props']:
+                    ret.props[k] = n[k]
+            return ret
         elif cur == '<': #Morphology
             l = None
             if rest[0] == '(':
@@ -184,6 +219,8 @@ def toobj(s, lang, loc, at=None):
                 rest = ['$', ':'] + rest
                 return destring()
     ret = destring()
+    if rest != []:
+        print('problem on line %s, unparsed remainder was %s' % (loc, rest))
     assert(rest == [])
     return ret
 ###FILES
@@ -340,6 +377,12 @@ def loadlexicon(lang):
             else:
                 m.props[p.label] = p.val
         register(m)
+        for pos in root['altpos']:
+            m2 = copy.deepcopy(m)
+            m2.ntype = pos.val
+            for l in pos.children:
+                m2.props[l.label] = l.val
+            register(m2)
 def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c', 'd']]
     ret = []
     for s in ch.args:
@@ -368,6 +411,7 @@ def loadlang(lang):
                             ty.children = [ParseLine(-1, 'option', [], '', ty.children)]
                         conds = []
                         ops = []
+                        require = []
                         for op in ty['option']:
                             if 'xbar' in op:
                                 line = op.first('xbar')
@@ -389,7 +433,11 @@ def loadlang(lang):
                                     Translation(node, [res], 'syntax', [lang, int(tr.arg)], mode='syntax')
                             conds.append([toobj(x, lang, op.num) for x in op.args])
                             ops.append(node)
-                        ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs)
+                            req = []
+                            for r in op['require']:
+                                req.append(r.val)
+                            require.append(req)
+                        ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs, require)
         if th.label == 'transform':
             for ch in th['rule']:
                 tc = ch.fvo('context', lang, blank(lang), '@')

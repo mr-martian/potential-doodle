@@ -55,7 +55,7 @@ have (aux)
 be (aux)
   altpos: verb
   objects: 1
-  object1: AP
+  object1: NP/AP
   conj: prsprt
   output (tense=pstprt): been
   output (be<aux><nonpst>): are

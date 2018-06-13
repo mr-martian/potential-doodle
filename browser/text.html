@@ -1,0 +1,134 @@
+<html>
+  <head>
+    <title>Potential-doodle text entry</title>
+  </head>
+  <body>
+    <form id="submit" method="post" action="cgi-bin/check-text.py">
+      <span>Name:</span>
+      <input name="name" type="text"></input>
+      <span>Language:</span>
+      <input name="lang" type="number"></input>
+      <input id="json" name="json" type="text" style="display:none"></input>
+      <button onclick="save();">Save</button>
+    </form>
+    <div id="input"></div>
+    <script>
+      var INPUTDIV = document.getElementById('input');
+      var make_div = function() {
+        var ret = document.createElement('div');
+        var input = document.createElement('input');
+        input.onkeydown = keypress;
+        ret.appendChild(input);
+        return ret;
+      };
+      var make_syntax = function() {
+        var ret = document.createElement('ol');
+        ret.appendChild(document.createElement('li'));
+        ret.lastChild.appendChild(make_div());
+        ret.appendChild(document.createElement('li'));
+        ret.lastChild.appendChild(make_div());
+        ret.appendChild(document.createElement('li'));
+        ret.lastChild.appendChild(make_div());
+        ret.appendChild(document.createElement('li'));
+        ret.lastChild.appendChild(make_div());
+        return ret;
+      };
+      var find_next = function(node, isdown) {
+        var focus_input = function(n) {
+          if (n.tagName == 'INPUT') {
+            n.focus();
+            return true;
+          } else if (!n.firstChild) {
+            return false;
+          } else {
+            return focus_input(n.firstChild);
+          }
+        };
+        var sib = (isdown ? node.nextSibling : node.previousSibling);
+        if (sib && focus_input(sib)) {
+          return true;
+        } else if (node.parentNode == INPUTDIV) {
+          INPUTDIV.firstChild.firstChild.focus();
+        } else {
+          return find_next(node.parentNode, isdown);
+        }
+      };
+      var keypress = function(e) {
+        var cur = e.target;
+        switch (e.keyCode) {
+          case 9: //Tab
+            if (!cur.value) {
+              find_next(cur, true);
+            } else if (cur.value[cur.value.length-1] == 'P') {
+              if (cur.nextSibling && cur.nextSibling.tagName != 'OL') {
+                cur.parentNode.removeChild(cur.nextSibling);
+              }
+              if (!cur.nextSibling) {
+                cur.parentNode.appendChild(make_syntax());
+              }
+              cur.nextSibling.firstChild.firstChild.firstChild.focus();
+            } else {
+              if (cur.nextSibling && cur.nextSibling.tagName != 'INPUT') {
+                cur.parentNode.removeChild(cur.nextSibling);
+              }
+              if (!cur.nextSibling) {
+                cur.parentNode.appendChild(document.createElement('input'));
+              }
+              cur.nextSibling.focus();
+            }
+            e.preventDefault();
+            break;
+          case 37: //Left
+            if (cur.parentNode.parentNode.tagName == 'LI') {
+              cur.parentNode.parentNode.parentNode.previousSibling.focus();
+            } else {
+              find_next(cur, false);
+            }
+            e.preventDefault();
+            break;
+          case 39: //Right
+            find_next(cur, true);
+            e.preventDefault();
+            break;
+          case 38: //Up
+            find_next(cur, false);
+            e.preventDefault();
+            break;
+          case 40: //Down
+            if (cur.nextSibling) {
+              find_next(cur.parentNode, true);
+            } else {
+              find_next(cur, true);
+            }
+            e.preventDefault();
+            break;
+          case 187: //=
+            if (!cur.nextSibling && !cur.value.includes(' ')) {
+              cur.parentNode.appendChild(document.createElement('input'));
+              cur.nextSibling.focus();
+              e.preventDefault();
+            }
+            break;
+        }
+      };
+      var read_div = function(div) {
+        var ret = {ntype:div.firstChild.value};
+        if (div.children.length == 1) {
+        } else if (div.children[1].tagName == 'OL') {
+          var ls = ['spec', 'mod', 'head', 'comp'];
+          for (var i = 0; i < 4; i++) {
+            ret[ls[i]] = read_div(div.children[1].children[i].firstChild);
+          }
+        } else {
+          ret.root = div.children[1].value;
+        }
+        return ret;
+      };
+      INPUTDIV.appendChild(make_div());
+      var save = function() {
+        document.getElementById('json').value = JSON.stringify(read_div(INPUTDIV.firstChild));
+        document.getElementById('submit').submit();
+      };
+    </script>
+  </body>
+</html>
