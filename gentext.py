@@ -1,4 +1,5 @@
-import random, itertools, copy, os.path
+#!/usr/bin/env python3
+import random, itertools, copy, re, subprocess
 from compilelang import loadlang, loadlangset, toobj
 from datatypes import *
 NORMALIZE_NODES = True # True: .lang of non-lexical nodes is ignored
@@ -100,53 +101,98 @@ def makeall(words):
             p[k] = LimitList(few, many)
     for x in genall(p, p[lang.syntaxstart], {}):
         yield x
-def out(sen, traceopen='w'):
+def out(sen, traceopen, out, outmode):
     lang = Language.getormake(sen.lang)
     m = movement1(sen)
-    f = open(DATA_PATH + 'trace.txt', traceopen)
-    f.write(sen.writecompile() + '\n\n' + str(sen) + '\n\n')
-    f.write(m.writecompile() + '\n\n' + str(m) + '\n\n')
     r = dolinear(m)
-    f.write(' '.join(m.tagify_all()) + '\n\n' + str(m.linear()) + '\n\n' + r + '\n\n')
-    f.close()
-    return r
-def outls(sens, traceopen='a'):
-    if sens:
-        out(sens[0], traceopen)
+    if traceopen:
         f = open(DATA_PATH + 'trace.txt', traceopen)
-        f.write('\n\n'.join([str(s) for s in sens[1:]]) + '\n\n')
+        f.write(sen.writecompile() + '\n\n' + str(sen) + '\n\n')
+        f.write(m.writecompile() + '\n\n' + str(m) + '\n\n')
+        f.write(' '.join(m.tagify_all()) + '\n\n' + str(m.linear()) + '\n\n' + r + '\n\n')
         f.close()
-    return [dolinear(s) for s in sens]
-def trans(sen, tlang):
+    if out:
+        f = open(out, outmode)
+        f.write(r + '\n\n')
+        f.close()
+    else:
+        print(r)
+def trans(sen, tlang, checklang=True):
     tr = LangLink.getormake(sen.lang, tlang).translate(sen)
     ret = []
     for s in tr:
         if NORMALIZE_NODES:
             s.nodelang(tlang)
-        if True:#s.alllang(tlang):
-            ret.append(movement1(s))
+        if not checklang or s.alllang(tlang):
+            ret.append(s)
     return ret
-def full_process(sen, tlang):
-    print(out(sen))
-    l = outls(trans(sen, tlang))
-    for s in l:
-        print(s)
 if __name__ == '__main__':
-    import sys
-    fl = int(sys.argv[1])
-    tl = int(sys.argv[2])
-    sen = None
-    if len(sys.argv) > 3:
-        if sys.argv[3] == 'reuse':
-            f = open(DATA_PATH + 'trace.txt')
-            sen = toobj(f.readline(), fl, '1 of trace.txt')
+    import argparse
+    parser = argparse.ArgumentParser(description='Generate, translate, and parse sentences.')
+    parser.add_argument('langs', nargs=2, type=int, help='Languages to convert between, use 0 for plaintext')
+    files = parser.add_mutually_exclusive_group(required=True)
+    files.add_argument('-t', '--text', type=str, help='Get input from file in texts/')
+    files.add_argument('-f', '--file', type=str, help='Get input from file')
+    files.add_argument('-r', '--reuse', action='store_true', help='Reuse the sentence in trace.txt')
+    files.add_argument('-g', '--generate', action='store_true', help='Randomly generate a new sentence')
+    files.add_argument('-p', '--parse', type=str, metavar='FILE', help='Parse a plaintext sentence')
+    parser.add_argument('-n', '--notrace', action='store_true', help='Do not output to trace.txt')
+    parser.add_argument('-o', '--outfile', type=str, metavar='FILE', help='Output to FILE')
+    args = parser.parse_args()
+    
+    if 0 not in args.langs:
+        loadlangset(args.langs)
+        Source = Language.getormake(args.langs[0])
+        Target = Language.getormake(args.langs[1])
+    elif args.langs[0] == 0:
+        Source = None
+        Target = loadlang(args.langs[1])
+    elif args.langs[1] == 0:
+        Source = loadlang(args.langs[0])
+        Target = None
+    else:
+        parser.error('Source and target language must not both be 0.')
+    
+    if args.parse:
+        if not Target:
+            parser.error('Target language must not be 0 for parsing text.')
+        f = open(args.parse)
+        s = ''.join([c for c in f.read() if c.lower() in ' abcdefghijklmnopqrstuvwxyz']).split()
+        f.close()
+        proc = subprocess.Popen(['hfst-lookup', DATA_PATH + 'langs/%s/.generated/parse.hfst' % args.langs[1]], stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+        tags = proc.communicate('\n'.join(s))[0]
+        w = []
+        for m in Target.iterlex():
+            if re.search(m.tagify(True), tags):
+                w.append(m)
+        check = ' '.join(s).lower()
+        outstr = ''
+        for x in makeall(w):
+            if dolinear(movement1(x)).lower() == check:
+                outstr += str(x) + '\n\n'
+        if args.outfile:
+            f = open(args.outfile, 'w')
+            f.write(outstr)
             f.close()
-        elif os.path.isfile(sys.argv[3]):
-            f = open(sys.argv[3])
-            sen = toobj(f.readline(), fl, '1 of %s' % sys.argv[3])
+        else:
+            print(outstr)
+    else:
+        if not Source:
+            parser.error('Source language must not be 0 for translating text.')
+        if args.generate:
+            sen = make(Source)
+        else:
+            if args.text:
+                path = DATA_PATH + 'texts/' + args.text + '_tree.txt'
+            elif args.file:
+                path = args.file
+            else:
+                path = DATA_PATH + 'trace.txt'
+            f = open(path)
+            sen = toobj(f.readline(), Source.lang, '1 of %s' % path)
             f.close()
-    loadlangset([fl, tl])
-    if not sen:
-        sen = make(Language.getormake(fl))
-
-    full_process(sen, tl)
+        out(sen, None if args.notrace else 'w', args.outfile, 'w')
+        if Target:
+            ls = trans(sen, Target.lang, False)
+            for s in ls:
+                out(s, None if args.notrace else 'a', args.outfile, 'a')

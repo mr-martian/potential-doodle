@@ -468,6 +468,10 @@ class Language:
         return ret
     def allnames():
         return [(x, Language.__alllangs[x].name) for x in sorted(Language.__alllangs.keys())]
+    def iterlex(self):
+        for ntype in AllMorphemes[self.lang]:
+            for root in AllMorphemes[self.lang][ntype]:
+                yield AllMorphemes[self.lang][ntype][root]
 class LangLink:
     __alllinks = {}
     def __init__(self, fromlang, tolang):
