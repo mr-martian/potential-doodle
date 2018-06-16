@@ -13,7 +13,6 @@ conjunction=and: conjunction=y
 determiner=herPL: determiner=sus-f
 noun=child: noun=hijo
 tense=nonpast: tense=present
-aspect=habitual: aspect=habitual
 preposition=in: preposition=en
 noun=truth: noun=verdad
 verb=love: verb=amar

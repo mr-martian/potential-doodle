@@ -10,13 +10,6 @@ past (tense)
 nonpast (tense)
   audible: false
   tense: nonpst
-durative (aspect)
-  audible: false
-habitual (aspect)
-  audible: false
-perfect (aspect)
-continuous (aspect)
-perfect-continuous (aspect)
 could (mood)
   conj: inf
 couldn't (mood)
@@ -46,13 +39,13 @@ did (aux)
   conj: inf
 
 #tense-pl-num
-have (aux)
+have (aspect)
   conj: pstprt
   output (tense=pstprt): had
   output (tense=nonpst; person=3; number=SG): has
   output (have<aux><pst>): had
     lexicon: VerbInfl-Pers-and-Num
-be (aux)
+be (aspect)
   altpos: verb
   objects: 1
   object1: NP/AP
@@ -68,6 +61,12 @@ be (aux)
     lexicon: VerbInfl-Pers-and-Num
   output (tense=pst; person=3; number=SG): was
   output (tense=pst; person=1; number=SG): was
+have+been (aspect)
+  conj: pstprt
+  output (tense=pstprt): had+been
+  output (tense=nonpst; person=3; number=SG): has+been
+  output (have<aux><pst>): had+been
+    lexicon: VerbInfl-Pers-and-Num
 
 a (determiner)
   hasspec: false
@@ -269,7 +268,6 @@ truth (noun)
 understand (verb)
   objects: 1
   object1: NP
-you (noun)
 
 also (adverb)
 forever (adverb)

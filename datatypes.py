@@ -171,6 +171,7 @@ class Node:
             return []
     def __str__(self):
         if isinstance(self.children, list):
+            if isinstance(self.children[0], str): return '%s=%s' % (self.ntype, self.children[0])
             s = '[' + ' '.join([str(x) for x in self.children]) + ']'
         else:
             s = str(self.children)
@@ -239,7 +240,7 @@ class Node:
                     tags[tg] = defaults[tg]
         ret = format.format(**tags) or self.children[0]
         if regex:
-            ret = ret.replace('+', '\\+')
+            ret = '\t' + ret.replace('+', '\\+')
         return ret
     def tagify_all(self):
         if isinstance(self.children[0], str):

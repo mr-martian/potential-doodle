@@ -14,13 +14,13 @@ syntax
     IP
       xbar: ~; ~; I; VP
     NP
-      xbar: ~; AP?; noun; ~
+      xbar: ~; AP?; noun; CP?
       require: noun
     PP
       xbar: ~; ~; preposition; DP
       require: preposition
     I
-      structure: [I $t:tense $a:aspect $m:mood?]
+      structure: [I $t:tense $a:aspect? $m:mood?]
     DP
       variable: $head:determiner?
       option ($head(hasspec=true))
@@ -36,18 +36,25 @@ syntax
       variable: $head:verb
       option ($head(objects=1); $head(object1=NP))
         xbar: DP; adverb?; $head; DP
+        require: verb
       option ($head(objects=1); $head(object1=PP))
         xbar: DP; adverb?; $head; PP
+        require: verb
       option ($head(objects=1); $head(object1=AP))
         xbar: DP; adverb?; $head; AP
+        require: verb
       option ($head(objects=1); $head(object1=NP/AP))
-        xbar: DP; adverb?; $head; NP
+        xbar: DP; adverb?; $head; DP
+        require: verb
       option ($head(objects=1); $head(object1=NP/AP))
         xbar: DP; adverb?; $head; AP
+        require: verb
       option ($head(objects=0))
         xbar: DP; adverb?; $head; ~
+        require: verb
       option ($head(objects=1); $head(object1=CP))
         xbar: DP; adverb?; $head; CP
+        require: verb
 lexc: hfst
   split-root: _
   noun
@@ -92,6 +99,17 @@ lexc: hfst
         default: <SG>
     in: AuxRoot
     to: AuxInfl
+  aspect
+    format: {root[0]}<aux>{tense}{person}{number}
+    tags
+      tense: tense
+        default: <error>
+      person: person
+        default: <3>
+      number: number
+        default: <SG>
+    in: AuxRoot
+    to: AuxInfl
   adjective
     bland: <adj>
   determiner
@@ -112,15 +130,21 @@ lexc: hfst
     bland: <prn>
 transform
 #TAM + agreement
+  #rule
+  #  form: [Ibar [I $tense aspect=perfect-continuous $mood?] |[VP $subj $mod? $head $comp?]]
+  #  result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ ~ aux=be |[VP ~ $mod $head $comp]]]]
+  #rule
+  #  form: [Ibar [I $tense aspect=continuous $mood?] |[VP $subj $mod? $head $comp?]]
+  #  result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=be |[VP ~ $mod $head $comp]]]
+  #rule
+  #  form: [Ibar [I $tense aspect=perfect $mood?] |[VP $subj $mod? $head $comp?]]
+  #  result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ $mod $head $comp]]]
   rule
-    form: [Ibar [I $tense aspect=perfect-continuous $mood?] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ ~ aux=be |[VP ~ $mod $head $comp]]]]
+    form: [Ibar [I $tense? $aspect=have+been $mood?] [VP $subj? $rest?]]
+    result: [Ibar [I $tense ~ $mood] |[VP $subj aspect=have |[VP aspect=be [VP ~ $rest]]]]
   rule
-    form: [Ibar [I $tense aspect=continuous $mood?] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=be |[VP ~ $mod $head $comp]]]
-  rule
-    form: [Ibar [I $tense aspect=perfect $mood?] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ $mod $head $comp]]]
+    form: [Ibar [I $tense? $aspect $mood?] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense ~ $mood] |[VP $subj $aspect |[VP ~ $mod $head $comp]]]
   rule
     form: [Ibar [I $tense? $aspect? $mood] |[VP $subj $mod? $head $comp?]]
     result: [Ibar [I $tense $aspect ~] |[VP $subj $mood |[VP ~ $mod $head $comp]]]
@@ -131,8 +155,10 @@ transform
   #  setprop (tense): $mood.conj
   rule
     context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
-    form: [Ibar [I $tense? aspect=durative ~] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I $tense aspect=durative ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
+    #form: [Ibar [I $tense? aspect=durative ~] |[VP $subj $mod? $head $comp?]]
+    #result: [Ibar [I $tense aspect=durative ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
+    form: [Ibar [I $tense? ~ ~] |[VP $subj $mod? $head $comp?]]
+    result: [Ibar [I $tense ~ ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
   rule
     context: [Vbar $aux |[?VP @]]
     form: $verb

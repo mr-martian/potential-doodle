@@ -52,68 +52,83 @@ class LimitList:
             yield x, self
     def __len__(self):
         return len(self.few)+len(self.many)
-def genall(pats, tree, setvars):
-    #print('genall(pats, %s, %s)' % (tree, setvars))
-    if isinstance(tree, Node):
-        rc = [genall(pats, c, setvars) for c in tree.children]
-        for ch in itertools.product(*rc):
-            yield tree.swapchildren(ch)
-    elif isinstance(tree, list):
-        for x in tree:
-            yield x
-    elif isinstance(tree, Variable):
-        if tree.label in setvars:
-            yield setvars[tree.label]
-        elif isinstance(pats[tree.value], LimitList):
-            old = pats[tree.value]
-            for r, l in old.each():
-                pats[tree.value] = l
-                yield r
-            pats[tree.value] = old
-        else:
-            for x in genall(pats, pats[tree.value], setvars):
-                yield x
-        if tree.opt:
-            yield None
-    elif isinstance(tree, SyntaxPat):
-        idx = []
-        for i, req in enumerate(tree.require):
-            if all(len(pats[x]) > 0 for x in req):
-                idx.append(i)
-        if idx:
-            vals = [genall(pats, v, {}) for v in tree.vrs]
-            labs = [v.label for v in tree.vrs]
-            for vrs in itertools.product(*vals):
-                dct = dict(zip(labs, vrs))
-                for i in idx:
-                    if all(c.check(dct) for c in tree.conds[i]):
-                        for x in genall(pats, tree.opts[i], dct):
-                            yield x
-    else:
-        yield tree
+    def __str__(self):
+        return str(self.few + self.many)
 def makeall(words):
     if not words:
         return []
     lang = Language.getormake(words[0].lang)
-    p = lang.getpats()
-    for k in p:
-        if isinstance(p[k], list):
-            many = [x for x in p[k] if 'audible' in x.props and x.props['audible'] == 'false']
+    pats = lang.getpats()
+    for k in pats:
+        if isinstance(pats[k], list):
+            many = [x for x in pats[k] if 'audible' in x.props and x.props['audible'] == 'false']
             few = [x for x in words if x.ntype == k]
-            p[k] = LimitList(few, many)
-    for x in genall(p, p[lang.syntaxstart], {}):
-        yield x
+            pats[k] = LimitList(few, many)
+    def product(ls):
+        if len(ls) == 0:
+            yield ()
+        else:
+            for x in genall(*ls[0]):
+                for y in product(ls[1:]):
+                    yield (x,) + y
+    def genall(tree, setvars):
+        nonlocal pats
+        if isinstance(tree, Node):
+            for ch in product([[c, setvars] for c in tree.children]):
+                yield tree.swapchildren(ch)
+        elif isinstance(tree, list):
+            #for x in tree:
+            #    yield x
+            yield from tree
+        elif isinstance(tree, Variable):
+            if tree.label in setvars:
+                yield setvars[tree.label]
+            elif isinstance(pats[tree.value], LimitList):
+                old = pats[tree.value]
+                for r, l in old.each():
+                    pats[tree.value] = l
+                    yield r
+                pats[tree.value] = old
+            else:
+                #for x in genall(pats[tree.value], setvars):
+                #    yield x
+                yield from genall(pats[tree.value], setvars)
+            if tree.opt:
+                yield None
+        elif isinstance(tree, SyntaxPat):
+            idx = []
+            for i, req in enumerate(tree.require):
+                if all(len(pats[x]) > 0 for x in req):
+                    idx.append(i)
+            if idx:
+                labs = [v.label for v in tree.vrs]
+                for vrs in product([[v, {}] for v in tree.vrs]):
+                    dct = dict(zip(labs, vrs))
+                    for i in idx:
+                        if all(c.check(dct) for c in tree.conds[i]):
+                            for x in genall(tree.opts[i], dct):
+                                yield x
+        else:
+            yield tree
+    #for x in genall(pats[lang.syntaxstart], {}):
+    #    yield x
+    return genall(pats[lang.syntaxstart], {})
 def parse(lang, num, text):
     ret = Sentence(lang, str(num), {}, text)
     hfst = DATA_PATH + 'langs/%d/.generated/parse.hfst' % lang
-    tok = subprocess.Popen(['hfst-tokenize', hfst], stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-    par = subprocess.Popen(['hfst-lookup', hfst], stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
-    words = tok.communicate(text)[0]
-    tags = par.communicate(words)[0]
+    pip = subprocess.PIPE
+    tok = subprocess.Popen(['hfst-proc', '-x', '-w', hfst], stdin=pip, stdout=pip, universal_newlines=True)
+    tokplus = subprocess.Popen(['hfst-proc', '-x', '-w', hfst], stdin=pip, stdout=pip, universal_newlines=True)
+    tags = tok.communicate(text+'\n')[0].split('\n\n')
+    for x in tokplus.communicate(text.replace(' ', '+') + '\n')[0].split('\n\n'):
+        if '+' in x:
+            tags.append(x)
     w = []
     for m in Target.iterlex():
-        if re.search(m.tagify(True), tags):
-            w.append(m)
+        r = re.compile(m.tagify(True))
+        for t in tags:
+            if r.search(t):
+                w.append(m)
     n = 0
     for x in makeall(w):
         if dolinear(movement1(x)) == text:

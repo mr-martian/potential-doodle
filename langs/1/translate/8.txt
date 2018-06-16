@@ -15,7 +15,6 @@ determiner=herPL
     to: |[DP ~ ~ determiner=indef-pl |[NP $ns |[PP preposition=constr |[DP pronoun=3Sf]] $nh $nc]]
 noun=child: noun=طفل
 tense=nonpast: tense=present
-aspect=habitual: aspect=habitual
 preposition=in: preposition=في
 noun=truth: noun=حقيقة
 verb=love: verb=أحب
