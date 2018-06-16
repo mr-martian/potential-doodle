@@ -230,14 +230,15 @@ class ParseLine:
     def __init__(self, num, label, args, val, children):
         self.num = num
         self.label = label
-        self.arg = ','.join(args)
+        self.arg = '; '.join(args)
         self.args = args
         self.val = val
+        self.vals = [val] if val else []
         self.children = children
     def fromstring(fstr, num):
-        #label (arg1, arg2): value
+        #label (arg1; arg2): value
         #label: value
-        #label (arg1, arg2)
+        #label (arg1; arg2)
         #label
         i = 0
         r = ParseLine(num, '', [], '', [])
@@ -286,8 +287,22 @@ class ParseLine:
                 at.children.append(lobj)
                 depth += 1
         return r.children
+    def tofilestr(self, indent):
+        r = '  '*indent + '%s' % self.label
+        if self.args:
+            r += ' (' + '; '.join(self.args) + ')'
+        if self.vals:
+            r += ': ' + '; '.join(self.vals)
+        r += '\n'
+        for c in self.children:
+            r += c.tofilestr(indent+1)
+        return r
+    def tofile(self, fname):
+        f = open(fname, 'w')
+        f.write(self.tofilestr(0))
+        f.close()
     def __str__(self):
-        return '%d  %s (%s): %s\n' % (self.num, self.label, ', '.join(self.args), self.val) + ''.join([str(x) for x in self.children])
+        return '%d  %s (%s): %s\n' % (self.num, self.label, '; '.join(self.args), self.val) + ''.join([str(x) for x in self.children])
     def __getitem__(self, key):
         for ch in self.children:
             if ch.label == key:
@@ -547,3 +562,60 @@ def loadlangset(langs):
     for lf in langs:
         for lt in langs:
             loadtrans(lf, lt)
+class Sentence:
+    def __init__(self, lang, name, trees, gloss):
+        self.lang = lang
+        self.name = name
+        self.trees = trees
+        self.gloss = gloss
+    def fromparseline(pl, lang):
+        trees = {'':None}
+        if pl.val:
+            trees[''] = toobj(pl.val, lang, pl.num, None)
+        for l in pl.children:
+            if l.label != 'gloss':
+                trees[l.label] = toobj(l.val, lang, l.num, None)
+        g = pl.first('gloss')
+        return Sentence(lang, pl.label, trees, g.val if g else '')
+    def toparseline(self):
+        ret = ParseLine(0, self.name, [], None, [])
+        if self.gloss:
+            ret.children.append(ParseLine(0, 'gloss', [], self.gloss, []))
+        for k in sorted(self.trees.keys()):
+            if not k:
+                ret.val = self.trees[k].writecompile()
+            else:
+                ret.children.append(ParseLine(0, k, [], self.trees[k].writecompile(), []))
+        return ret
+    def translate(self, tlang, check=False, normalize=True, keepgloss=True):
+        ret = Sentence(self.lang, self.name, {}, self.gloss if keepgloss else '')
+        if not self.trees:
+            return ret
+        tr = LangLink.getormake(self.lang, tlang)
+        for k in self.trees:
+            for i, s in enumerate(tr.translate(self.trees[k])):
+                if normalize:
+                    s.nodelang(tlang)
+                if not check or s.alllang(tlang):
+                    ret.trees[k+'-'+str(i) if k else str(i)] = s
+        return ret
+class Text:
+    def __init__(self, sens):
+        self.sens = sens
+    def fromfile(fname, lang):
+        ret = Text([])
+        for s in ParseLine.fromfile(fname):
+            ret.sens.append(Sentence.fromparseline(s, lang))
+        return ret
+    def tofile(self, fname):
+        if isinstance(fname, str):
+            f = open(fname, 'w')
+        else:
+            f = fname
+        for s in self.sens:
+            f.write(s.toparseline().tofilestr(0))
+        f.close()
+    def translate(self, tlang, check=False, normalize=True, keepgloss=True):
+        return Text([x.translate(tlang, check, normalize, keepgloss) for x in self.sens])
+def translatefile(infile, outfile, slang, tlang, check=False, normalize=True, keepgloss=True):
+    Text.fromfile(infile, slang).translate(tlang, check, normalize, keepgloss).tofile(outfile)

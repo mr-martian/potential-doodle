@@ -1,58 +1,38 @@
 # TODO
 
-- [ ] [Morphology](interface/morphology.php)
-  - [ ] add more features and values (get feedback)
-  - [ ] contractions?
-  - [ ] simpler input for more agglutinative langs
-  - [ ] convert output and pass to [compilelang.py](compilelang.py)
-- [ ] [Syntax](interface/syntax.php)
-  - [ ] restandardize tree structure
-  - [ ] convert output and pass to [compilelang.py](compilelang.py)
-- [ ] [WALS](interface/walsfeatures.php)
-  - [ ] determine which features are helpful and which can be ignored
-  - [ ] create more questions to cover further relevant data
-  - [ ] import from WALS
-  - [ ] import from CALS
-  - [ ] export to CALS?
-  - [ ] convert output and pass to [compilelang.py](compilelang.py)
-- [ ] [Compilation](compilelang.py)
-  - [ ] document format
-  - [ ] more compact notation for common operations
-  - [x] line numbers for error messages
-  - [x] [make transducers](maketransducer.py)
-    - [x] incorporate twolc
-- [ ] [Translation](gentext.py)
-  - [x] separate from generation
-  - [ ] speed up
-    - port to compiled language?
-  - [ ] translation distance
-  - [ ] list untranslated words
-- [x] [Generation](gentext.py)
-- [ ] Language data
-  - [x] fix display/form
-  - [x] traces?
-  - [ ] theta roles?
-  - [ ] conjunctions
-  - [x] modifiers
-  - [x] post-movement lexical transforms
-  - [x] form based on preceding or following word
-  - [x] rules involving contents of morphemes
-  - [ ] [English](langs/1)
-    - [ ] auxiliary not
-    - [ ] lexicon
-    - [ ] AP paraphenalia
-    - [ ] NP paraphenalia
-    - [ ] VP paraphenalia
-    - [ ] double object constructions
-  - [ ] [Sajem Tan](langs/2)
-    - [ ] lexicon
-- [ ] practice
-  - [ ] make interface
-  - [ ] store data
-  - [ ] create users
-- metrics and comparisons
-  - includes things that are interesting even if of no real theoretical value
-  - [ ] "density"
-    - relative length of test data in various languages
-  - [ ] prevalence of phon(em)es and letters
-- [ ] switch to using Github issue tracker?
+- Immediate goals
+  - [ ] document file format
+  - [ ] check speed on larger corpora
+  - [ ] list words in text that could not be translated
+  - [ ] measure translation distance
+- Mid-term goals
+  - [ ] interface
+    - [ ] choose/finish one of the following:
+      - [ ] PHP server
+        - [ ] [Morphology](interface/morphology.php)
+          - [ ] add more features and values (get feedback)
+          - [ ] contractions?
+          - [ ] simpler input for more agglutinative langs
+          - [ ] convert output and pass to [compilelang.py](compilelang.py)
+        - [ ] [Syntax](interface/syntax.php)
+          - [ ] restandardize tree structure
+          - [ ] convert output and pass to [compilelang.py](compilelang.py)
+        - [ ] [WALS](interface/walsfeatures.php)
+          - [ ] determine which features are helpful and which can be ignored
+          - [ ] create more questions to cover further relevant data
+          - [ ] import from WALS
+          - [ ] import from CALS
+          - [ ] export to CALS?
+          - [ ] convert output and pass to [compilelang.py](compilelang.py)
+      - [ ] Python server
+      - [ ] Tkinter
+- For the distant future
+  - [ ] practice
+    - [ ] make interface
+    - [ ] store data
+    - [ ] create users
+  - metrics and comparisons
+    - includes things that are interesting even if of no real theoretical value
+    - [ ] "density"
+      - relative length of test data in various languages
+    - [ ] prevalence of phon(em)es and letters
