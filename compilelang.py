@@ -1,11 +1,13 @@
 from datatypes import *
 from os.path import isfile
 from re import compile
-import copy
+import copy, subprocess
 UNKNOWN_MORPH = "ERROR"
 #what to do when parser encounters a morpheme that isn't in the lexicon
 #options: "ERROR", "CREATE", "CREATE_AND_LOG"
 #"ERROR" is default because loading twice leads to copies that represent the same morpheme, but with different properties. -D.S. 2018-02-11
+FLAT = False
+#when flat is True, |[XP] is read as a [XP a b c d] rather than [XP a [Xmod b [Xbar c d]]]
 ###PARSING
 def tokenize(s):
     ret = []
@@ -125,13 +127,16 @@ def toobj(s, lang, loc, at=None):
                 ch.insert(0, sub[0]) #insert spec
             if len(ch) == 3: #spec, head, and comp
                 ch.insert(1, sub[1]) #insert mod
-            bar = Node(lang, name+'bar', ch[2:])
-            mod = Node(lang, name+'mod', [ch[1], bar])
             d = {}
             rest.pop(0)
             if rest and rest[0] == '{':
                 d = destring()
-            return Node(lang, name+'P', [ch[0], mod], d)
+            if FLAT:
+                return Node(lang, name+'P', ch, d)
+            else:
+                bar = Node(lang, name+'bar', ch[2:])
+                mod = Node(lang, name+'mod', [ch[1], bar])
+                return Node(lang, name+'P', [ch[0], mod], d)
         elif cur == '%': #Text entry
             nodes = []
             while True:
@@ -160,9 +165,12 @@ def toobj(s, lang, loc, at=None):
             ret = None
             while nodes:
                 n = nodes.pop()
-                ret = Node(lang, n['name']+'bar', [n['head'], ret])
-                ret = Node(lang, n['name']+'mod', [n['mod'], ret])
-                ret = Node(lang, n['name']+'P', [n['spec'], ret])
+                if FLAT:
+                    ret = Node(lang, n['name']+'P', [n['spec'], n['mod'], n['head'], ret])
+                else:
+                    ret = Node(lang, n['name']+'bar', [n['head'], ret])
+                    ret = Node(lang, n['name']+'mod', [n['mod'], ret])
+                    ret = Node(lang, n['name']+'P', [n['spec'], ret])
                 for k in n[' props']:
                     ret.props[k] = n[k]
             return ret
@@ -599,6 +607,13 @@ class Sentence:
                 if not check or s.alllang(tlang):
                     ret.trees[k+'-'+str(i) if k else str(i)] = s
         return ret
+    def graph(self):
+        for k in sorted(self.trees.keys()):
+            self.trees[k].flatten()
+            f = open(DATA_PATH + 'test/%s-%s.dot' % (self.name, k), 'w')
+            f.write(self.trees[k].graph('n', True))
+            f.close()
+            yield '<h3>%s</h3>' % (k or '(default)'), '%s-%s.dot' % (self.name, k)
 class Text:
     def __init__(self, sens):
         self.sens = sens
@@ -617,5 +632,21 @@ class Text:
         f.close()
     def translate(self, tlang, check=False, normalize=True, keepgloss=True):
         return Text([x.translate(tlang, check, normalize, keepgloss) for x in self.sens])
+    def graph(self, fname):
+        gls = []
+        f = open(fname, 'w')
+        f.write('<html><head></head><body>\n')
+        for s in self.sens:
+            f.write('<h1>%s</h1>\n' % s.name)
+            for h3, fn in s.graph():
+                f.write('%s<img src="%s.svg"></img>\n' % (h3, fn))
+                gls.append('test/' + fn)
+        f.write('</body></html>')
+        f.close()
+        pip = subprocess.PIPE
+        proc = subprocess.Popen(['dot', '-Tsvg', '-O'] + gls, stdin=pip, stdout=pip, universal_newlines=True)
 def translatefile(infile, outfile, slang, tlang, check=False, normalize=True, keepgloss=True):
     Text.fromfile(infile, slang).translate(tlang, check, normalize, keepgloss).tofile(outfile)
+if __name__ == '__main__':
+    loadlang(1)
+    Text.fromfile('texts/2john.pdtxt', 1).graph('test/2john.html')

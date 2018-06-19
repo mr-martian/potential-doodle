@@ -199,6 +199,44 @@ class Node:
             else:
                 l.append(str(c))
         return '[' + ' '.join(l) + ']'
+    def graph(self, name, ishead=False):
+        ret = ''
+        if ishead:
+            ret += 'digraph {'
+        ret += '%s [label="%s"];' % (name, self.ntype)
+        for i, c in enumerate(self.children):
+            ret += '%s -> %s%d;' % (name, name, i)
+            if isinstance(c, Node):
+                ret += c.graph(name+str(i))
+            else:
+                ret += '%s%d [label="%s"];' % (name, i, str(c))
+        if ishead:
+            ret += '}'
+        return ret
+    def flatten(self): #DESTRUCTIVE
+        for c in self.children:
+            if isinstance(c, Node):
+                c.flatten()
+        if self.ntype[-1] == 'P':
+            n = self.ntype[:-1]
+            if len(self.children) != 2: return None
+            if not isinstance(self.children[1], Node): return None
+            m = self.children[1]
+            if m.ntype != n+'mod': return None
+            if len(m.children) != 2: return None
+            if not isinstance(m.children[1], Node): return None
+            b = m.children[1]
+            if b.ntype != n+'bar': return None
+            if len(b.children) != 2: return None
+            self.children = [self.children[0], m.children[0], b.children[0], b.children[1]]
+    def unflatten(self): #DESTRUCTIVE
+        for c in self.children:
+            if isinstance(c, Node):
+                c.unflatten()
+        if self.ntype[-1] == 'P' and len(self.children) == 4:
+            ch = self.children
+            n = self.ntype[:-1]
+            self.children = [ch[0], Node(self.lang, n+'mod', [ch[1], Node(self.lang, n+'bar', [ch[2], ch[3]])])]
     def matchcondlist(self, cndls):
         for c in cndls:
             if c[0] not in self.props:

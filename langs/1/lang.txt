@@ -130,52 +130,25 @@ lexc: hfst
     bland: <prn>
 transform
 #TAM + agreement
-  #rule
-  #  form: [Ibar [I $tense aspect=perfect-continuous $mood?] |[VP $subj $mod? $head $comp?]]
-  #  result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ ~ aux=be |[VP ~ $mod $head $comp]]]]
-  #rule
-  #  form: [Ibar [I $tense aspect=continuous $mood?] |[VP $subj $mod? $head $comp?]]
-  #  result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=be |[VP ~ $mod $head $comp]]]
-  #rule
-  #  form: [Ibar [I $tense aspect=perfect $mood?] |[VP $subj $mod? $head $comp?]]
-  #  result: [Ibar [I $tense ~ $mood] |[VP $subj ~ aux=have |[VP ~ $mod $head $comp]]]
   rule
-    form: [Ibar [I $tense? $aspect=have+been $mood?] [VP $subj? $rest?]]
-    result: [Ibar [I $tense ~ $mood] |[VP $subj aspect=have |[VP aspect=be [VP ~ $rest]]]]
+    form: |[?IP [I $t? $aspect=have+been $mood?] |[VP $subj $m? $h? $c?]]
+    result: |[?IP [I $t ~ $mood] |[?VP $subj aspect=have |[VP aspect=be |[VP ~ $m $h $c]]]]
   rule
-    form: [Ibar [I $tense? $aspect $mood?] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I $tense ~ $mood] |[VP $subj $aspect |[VP ~ $mod $head $comp]]]
+    form: |[?IP [I $tense? $aspect $mood?] |[VP $subj $mod? $head $comp?]]
+    result: |[?IP [I $tense ~ $mood] |[VP $subj $aspect |[VP ~ $mod $head $comp]]]
   rule
-    form: [Ibar [I $tense? $aspect? $mood] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I $tense $aspect ~] |[VP $subj $mood |[VP ~ $mod $head $comp]]]
-    #setprop ($head.tense): $mood.conj
-  #rule
-  #  context: [Ibar [I $tense? $aspect? $mood] |[?VP @]]
-  #  form: $verb
-  #  setprop (tense): $mood.conj
+    form: |[?IP [I $tense? $aspect? $mood] |[VP $subj $mod? $head $comp?]]
+    result: |[?IP [I $tense $aspect ~] |[VP $subj $mood |[VP ~ $mod $head $comp]]]
   rule
-    context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
-    #form: [Ibar [I $tense? aspect=durative ~] |[VP $subj $mod? $head $comp?]]
-    #result: [Ibar [I $tense aspect=durative ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
-    form: [Ibar [I $tense? ~ ~] |[VP $subj $mod? $head $comp?]]
-    result: [Ibar [I $tense ~ ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
+    context: |[?CP complementizer=+Q @]
+    form: |[?IP [I $tense? ~ ~] |[VP $subj $mod? $head $comp?]]
+    result: |[?IP [I $tense ~ ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
   rule
-    context: [Vbar $aux |[?VP @]]
+    context: |[?VP $aux |[?VP @]]
     form: $verb
     setprop (tense): $aux.conj
   rule
-    context: [Vbar $aux:mood |[?VP @]]
-    form: $verb
-    setprop (tense): $aux.conj
-  #rule
-  #  context: |[CP * * complementizer=+Q [IP ~ [Imod * @]]]
-  #  form: [Ibar [I $tense ~ $mood] |[VP $subj $mod $head $comp]]
-  #  result: [Ibar [I $tense ~ ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
-  #rule
-  #  form: [Ibar [I $t? $a? $mood] |[VP $subj $mod? $head $comp?]]
-  #  result: [Ibar [I $t $a ~] |[VP $subj ~ $mood |[VP ~ $mod $head $comp]]]
-  rule
-    context: [Ibar [I $tense $aspect? ~] |[?VP @]]
+    context: |[?IP [I $tense * *] |[?VP @]]
     form: $head
     setprop (tense): $tense.tense
   rule
@@ -194,22 +167,22 @@ transform
     result: |[IP $head $mod $I |[VP $subj $vmod ~ $comp]]
 #relative clauses
   rule
-    form: |[IP ~ $imod? $i? [VP |[DP $subj:rel-pronoun] $rest?]]
-    result: |[IP |[DP $subj] $imod $i [VP ~ $rest]]
+    form: |[IP ~ $imod? $i? |[?VP |[DP $subj:rel-pronoun] $head? $comp?]]
+    result: |[IP |[DP $subj] $imod $i |[?VP ~ $head $comp]]
   rule
     form: |[IP ~ $imod? $i? |[VP $subj? $vmod? $v? |[DP $obj:rel-pronoun]]]
     result: |[IP |[DP $obj] $imod? $i? |[VP $subj? $vmod? $v? ~]]
   rule
-    context: [Nbar $noun:noun @]
-    form: |[CP ~ $cmod? complementizer=-Q [IP |[DP $rel:rel-pronoun] $rest]]
-    result: |[CP |[DP $rel] $cmod complementizer=-Q [IP ~ $rest]]
+    context: |[?NP $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q |[IP |[DP $rel:rel-pronoun] $mod? $head? $comp?]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q |[IP ~ $mod $head $comp]]
   rule
-    context: [Nbar $noun:noun @]
-    form: |[CP ~ $cmod? complementizer=-Q |[conjP [IP |[DP $rel:rel-pronoun] $rest] $jmod? $j? $jbar?]]
-    result: |[CP |[DP $rel] $cmod complementizer=-Q |[conjP [IP ~ $rest] $jmod $j $jbar]]
+    context: |[?NP $noun:noun @]
+    form: |[CP ~ $cmod? complementizer=-Q |[conjP |[IP |[DP $rel:rel-pronoun] $mod? $head? $comp?] $jmod? $j? $jbar?]]
+    result: |[CP |[DP $rel] $cmod complementizer=-Q |[conjP |[IP ~ $mod $head $comp] $jmod $j $jbar]]
 #plurality
   rule
-    context: [Dbar $head |[?NP @]]
+    context: |[?DP $head |[?NP @]]
     form: $noun
     setprop (number): $head.number
 #possession
@@ -217,10 +190,8 @@ transform
     form: |[DP $spec:DP $mod? $head $comp?]
     result: |[DP [GEN $spec $head] $mod ~ $comp]
   rule
-    #form: [GEN |[?DP $d? |[?NP $noun ~]] $gen]
-    #result: |[$DP $d |[$NP $noun ~]]
-    form: [GEN |[DP $ds? $dm? $dh? |[NP $ns? $nm? $noun ~]] $gen]
-    result: |[DP $ds $dm $dh |[NP $ns $nm $noun ~ ]]
+    form: [GEN |[?DP $dh? |[?NP $noun ~]] $gen]
+    result: |[?DP $dh |[?NP $noun ~]]
     setprop ($noun.case): gen
 #subject position
   rule

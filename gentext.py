@@ -157,7 +157,15 @@ if __name__ == '__main__':
     files.add_argument('-d', '--doc', type=str, metavar='FILE', help='Translate .pdtxt document')
     parser.add_argument('-n', '--notrace', action='store_true', help='Do not output to trace.txt')
     parser.add_argument('-o', '--outfile', type=argparse.FileType('w'), default=sys.stdout, metavar='FILE', help='Output to FILE')
+    parser.add_argument('-F', '--flatten', action='store_true', help='Flatten phrases to single nodes')
+    parser.add_argument('-N', '--normalize', action='store_true', help='When translating, ignore untranslated syntax nodes')
+    parser.add_argument('-U', '--useunknown', action='store_true', help='Log unknown morphemes in missing_morphemes.txt rather than erroring')
     args = parser.parse_args()
+    
+    import compilelang
+    compilelang.FLAT = args.flatten
+    NORMALIZE_NODES = args.normalize
+    compilelang.UNKNOWN_MORPH = "CREATE_AND_LOG" if args.useunknown else "ERROR"
     
     if 0 not in args.langs:
         loadlangset(args.langs)

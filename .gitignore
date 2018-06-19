@@ -12,3 +12,4 @@ langs/*/.generated
 langs/*/.temporary
 missing_morphemes.txt
 langs/7/*
+test/*
