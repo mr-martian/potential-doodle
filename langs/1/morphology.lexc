@@ -7,12 +7,8 @@ Multichar_Symbols
 
 ! Other symbols
 %>      ! Morpheme boundary
-%{Vi%}
-%{Vol%}
-%{Tf%}
-%{Tm%}
-%{Tn%}
-%{Tp%}
+%{e%}
+%{i%}
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -40,12 +36,12 @@ LEXICON VerbInfl
 
 LEXICON VerbInflTense
 
-%<pstprt%>:ed VerbInfl-Pers-and-Num ;
-%<prsprt%>:ing VerbInfl-Pers-and-Num ;
+%<pstprt%>:%{e%}d VerbInfl-Pers-and-Num ;
+%<prsprt%>:%{i%}ng VerbInfl-Pers-and-Num ;
 %<inf%>: VerbInfl-Pers-and-Num ;
 %<nonpst%>: VerbInfl-Pers-and-Num "weight: 1" ;
 %<nonpst%>%<3%>%<SG%>:s # ;
-%<pst%>:ed  VerbInfl-Pers-and-Num ;
+%<pst%>:%{e%}d  VerbInfl-Pers-and-Num ;
 
 LEXICON VerbInfl-Pers-and-Num
 

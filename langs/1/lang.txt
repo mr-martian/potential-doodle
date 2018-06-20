@@ -129,6 +129,13 @@ lexc: hfst
   rel-pronoun
     bland: <prn>
 transform
+#ditransitive verbs
+  rule
+    form: |[?vP ~ |[?VP $v]]
+    result: |[?vP $v |[?VP ~]]
+  #rule
+  #  form: |[?VP ~ |[?vP $v]]
+  #  result: |[?VP $v |[?vP ~]]
 #TAM + agreement
   rule
     form: |[?IP [I $t? $aspect=have+been $mood?] |[VP $subj $m? $h? $c?]]
@@ -137,14 +144,14 @@ transform
     form: |[?IP [I $tense? $aspect $mood?] |[VP $subj $mod? $head $comp?]]
     result: |[?IP [I $tense ~ $mood] |[VP $subj $aspect |[VP ~ $mod $head $comp]]]
   rule
-    form: |[?IP [I $tense? $aspect? $mood] |[VP $subj $mod? $head $comp?]]
-    result: |[?IP [I $tense $aspect ~] |[VP $subj $mood |[VP ~ $mod $head $comp]]]
+    form: |[?IP [I $tense? $aspect? $mood] |[?VP $subj $head $comp?]]
+    result: |[?IP [I $tense $aspect ~] |[VP $subj $mood |[?VP ~ $head $comp]]]
   rule
     context: |[?CP complementizer=+Q @]
     form: |[?IP [I $tense? ~ ~] |[VP $subj $mod? $head $comp?]]
     result: |[?IP [I $tense ~ ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
   rule
-    context: |[?VP $aux |[?VP @]]
+    context: |[VP $s1? $m1? $aux |[VP $s2? $m2? @ $c?]]
     form: $verb
     setprop (tense): $aux.conj
   rule
@@ -152,7 +159,7 @@ transform
     form: $head
     setprop (tense): $tense.tense
   rule
-    context: |[VP |[DP $ds? $dm? $dh(is-rel=false) $dc?] $vm? @ $vc?]
+    context: |[?VP |[?DP $dh(is-rel=false)] @ $vc?]
     form: $verb
     setprop (number): $dh.number
     setprop (person): $dh.person

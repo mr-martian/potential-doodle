@@ -10,6 +10,9 @@ past (tense)
 nonpast (tense)
   audible: false
   tense: nonpst
+object (tense)
+  audible: false
+  tense: prsprt
 could (mood)
   conj: inf
 couldn't (mood)
@@ -182,6 +185,7 @@ you (pronoun)
 #cases?
 not (quantifier)
 many (quantifier)
+  number: PL
 all (quantifier)
 who (rel-pronoun)
 that (rel-pronoun)
@@ -791,6 +795,7 @@ some (quantifier)
 ask (verb)
 bring (verb)
 come (verb)
+come+visit (verb)
 command (verb)
 confess (verb)
 do-so (verb)
