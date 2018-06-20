@@ -462,28 +462,37 @@ def loadlang(lang):
                             require.append(req)
                         ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs, require)
         if th.label == 'transform':
-            for ch in th['rule']:
-                tc = ch.fvo('context', lang, blank(lang), '@')
-                tf = ch.fvo('form', lang, None)
-                res = []
-                if 'result' in ch:
-                    res.append(ch.fvo('result', lang, None))
-                for l in ch['set']:
-                    res.append(['set', dict(condlist(l))])
-                for l in ch['setprop']:
-                    a = ['setprop', ' ', l.arg, False, l.val]
-                    if '.' in l.val:
-                        v,p = l.val[1:].split('.')
-                        a[3] = v
-                        a[4] = p
-                    if '.' in l.arg:
-                        v,p = l.arg[1:].split('.')
-                        a[1] = v
-                        a[2] = p
-                    res.append(a)
-                ret.transform.append(Translation(tf, res, 'transform', [lang, lang], context=tc, mode='syntax'))
-            for ch in th['rotate']:
-                ret.rotate.append(ch.val)
+            for ch in th.children:
+                if ch.label == 'rule':
+                    tc = ch.fvo('context', lang, blank(lang), '@')
+                    tf = ch.fvo('form', lang, None)
+                    res = []
+                    if 'result' in ch:
+                        res.append(ch.fvo('result', lang, None))
+                    for l in ch['set']:
+                        res.append(['set', dict(condlist(l))])
+                    for l in ch['setprop']:
+                        a = ['setprop', ' ', l.arg, False, l.val]
+                        if '.' in l.val:
+                            v,p = l.val[1:].split('.')
+                            a[3] = v
+                            a[4] = p
+                        if '.' in l.arg:
+                            v,p = l.arg[1:].split('.')
+                            a[1] = v
+                            a[2] = p
+                        res.append(a)
+                    ret.transform.append(Translation(tf, res, 'transform', [lang, lang], context=tc, mode='syntax'))
+                elif ch.label == 'rotate':
+                    ret.rotate.append(ch.val)
+                elif ch.label == 'multirule':
+                    layers = []
+                    for ly in ch['layer']:
+                        l = []
+                        for p in ly['form']:
+                            l.append([toobj(p.val, lang, p.num, blank(lang)), p.fvo('result', lang, blank(lang), '@')])
+                        layers.append(l)
+                    ret.transform.append(MultiRule(layers, 'transform', [lang, lang], mode='syntax'))
         if th.label == 'metadata':
             if 'creator' in th:
                 ret.creator = th.firstval('creator')

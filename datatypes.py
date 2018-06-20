@@ -43,7 +43,7 @@ class Variable:
     def putvarscopy(self, vrs):
         return vrs[self.label]
     def __str__(self):
-        return '$%s:%s(%s)' % (self.label, self.value, self.cond)
+        return '$%s:%s%s(%s)' % (self.label, self.value, '?' if self.opt else '', self.cond)
     def __repr__(self):
         return self.__str__()
 class Unknown(Variable):
@@ -142,6 +142,42 @@ class Node:
                     else:
                         vrs[act[1]].props[act[2]] = act[4]
         return copy.deepcopy(tr.context).putvars(vrs)
+    def transmulti(self, tr):
+        vrs = {' failed': False, ' ': self}
+        path = []
+        for l in tr.layers:
+            ok = False
+            for i, f in enumerate(l):
+                vrs2 = vrs[' '].getvars(f[0], copy.deepcopy(vrs))
+                if not vrs2[' failed']:
+                    ok = True
+                    vrs = vrs2
+                    path.append(f[1:])
+                    break
+            if not ok:
+                return []
+        vrs = copy.deepcopy(vrs)
+        for result in reversed(path):
+            for act in result:
+                if isinstance(act, Node):
+                    vrs[' '] = copy.deepcopy(act).putvars(vrs)
+                elif isinstance(act, list):
+                    if act[0] == 'setlang':
+                        vrs[' '].lang = act[1]
+                    elif act[0] == 'setdisplay':
+                        vrs[' '].props['display'] = act[1]
+                    elif act[0] == 'set':
+                        vrs[' '].props.update(act[1])
+                    elif act[0] == 'setprop':
+                        if act[3]:
+                            try:
+                                vrs[act[1]].props[act[2]] = vrs[act[3]].props[act[4]]
+                            except KeyError as e:
+                                print('%s does not have key %s' % (vrs[act[3]], act[4]))
+                                raise e
+                        else:
+                            vrs[act[1]].props[act[2]] = act[4]
+        return vrs[' ']
     def transform(self, pats, returnself=True):
         if len(pats) > 0:
             chs = []
@@ -156,7 +192,10 @@ class Node:
             for n in nodes:
                 added = False
                 for i, p in enumerate(pats):
-                    x = n.trans(p)
+                    if isinstance(p, Translation):
+                        x = n.trans(p)
+                    else:
+                        x = n.transmulti(p)
                     s = str(x)
                     if s not in retstr:
                         ret.append(x)
@@ -433,6 +472,37 @@ class Translation:
         return '{%s => %s}%s' % (self.form, self.result, self.roots)
     def __repr__(self):
         return self.__str__()
+class MultiRule:
+    def __init__(self, layers, category, langs, mode='syntax', stage=0):
+        self.layers = layers
+        self.stage = stage
+        self.langs = langs
+        self.category = category
+        self.roots = [] #roots of all morphemes in form
+        self.rootset = set(self.roots)
+        self.resultroots = []
+        self.resultrootset = set(self.resultroots)
+        self.addedroots = self.resultrootset - self.rootset
+        if self.langs[0] == self.langs[1]:
+            l = Language.getormake(self.langs[0])
+            if mode == 'syntax':
+                l.movesyntax.append(self)
+            elif mode == 'conj':
+                l.moveconj[category].append(self)
+            elif mode == 'linear':
+                l.linear[category].append(self)
+            elif mode == 'linear-text':
+                l.lineartext[category].append(self)
+            else:
+                x = len(l.movelex[category])
+                l.movelex[category].append(self)
+                assert(len(l.movelex[category]) > x)
+        else:
+            l = LangLink.getormake(self.langs[0], self.langs[1])
+            if mode == 'syntax':
+                l.syntax.append(self)
+            else:
+                l.pats[category].append(self)
 ###GENERATION
 class SyntaxPat:
     def __init__(self, name, conds, opts, vrs, require):
