@@ -2,16 +2,16 @@
 Every language has a numeric id which serves to internally distinguish it from other languages. It doesn't matter what this number is, as long as it is a positive integer.
 
 At present, all language files must be located in ```potential-doodle/langs/#/``` which ```#``` is the language's id. The directory structure is as follows:
-  - ```potential-doodle/langs/#/ ```
-    - ```.generated/```
-    - ```.temporary/```
-    - [```translate/ ```](#translation-files)
-      - ```#.txt```
-      - ```##.txt```
-    - [```lang.txt```](#lang.txt)
-    - [```lexicon.txt```](#lexicon.txt)
-    - [```morphology.lexc```](#.lexc-and-.twol)
-    - [```morphology.twol```](#.lexc-and-.twol)
+- ```potential-doodle/langs/#/ ```
+  - ```.generated/```
+  - ```.temporary/```
+  - [```translate/ ```](#translation-files)
+    - ```#.txt```
+    - ```##.txt```
+  - [```lang.txt```](#lang.txt)
+  - [```lexicon.txt```](#lexicon.txt)
+  - [```morphology.lexc```](#.lexc-and-.twol)
+  - [```morphology.twol```](#.lexc-and-.twol)
 
 If you are using Lttoolbox rather than HFST, replace ```morphology.lexc``` and ```morphology.twol``` with ```lang.dix```.
 
@@ -80,6 +80,11 @@ Names which the parser is unable to interpret as part of anything else will be t
 - ```$x:NP([NP $x noun=sock])``` - a variable called "x" which can only match nodes of type ```NP``` which have 2 children, the first being equal to ```$x```, if ```$x``` has a value, or simply not nothing if it doesn't, and the second being the noun "sock"
 
 # lang.txt
+```lang.txt``` is the main file of the language directory and currently contains 4 sections: metadata, syntax, lexc, and transform.
+## metadata
+## syntax
+## lexc
+## transform
 # lexicon.txt
 # Translation files
 # .pdtxt files
@@ -95,4 +100,4 @@ The next argument should be a mode which is one of
   - ```-r``` which takes the first line of ```potential-doodle/trace.txt``` which will be whatever was used most recently unless ```--notrace``` was used
   - ```-g``` which randomly generates a new sentence using the patterns described in the syntax section of lang.txt
   - ```-p FILE``` which takes a file containing one sentence per line and finds all trees which could generate them
-  - ```-d FILE``` which takes a .pdtxt file and translates it (converting .pdtxt to plaintext has not been implemented yet)
+  - ```-d FILE``` which takes a .pdtxt file and translates it

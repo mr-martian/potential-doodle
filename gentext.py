@@ -192,7 +192,11 @@ if __name__ == '__main__':
         f.close()
         text.tofile(args.outfile)
     elif args.doc:
-        translatefile(args.doc, args.outfile, Source.lang, Target.lang)
+        if Target:
+            translatefile(args.doc, args.outfile, Source.lang, Target.lang)
+        else:
+            args.outfile.write(Text.fromfile(args.doc, Source.lang).totext() + '\n')
+        args.outfile.close()
     else:
         if not Source:
             parser.error('Source language must not be 0 for translating text.')
@@ -208,7 +212,7 @@ if __name__ == '__main__':
             f = open(path)
             sen = toobj(f.readline(), Source.lang, '1 of %s' % path)
             f.close()
-        def out(sen, traceopen, out):
+        def out(sen, traceopen, outfile):
             lang = Language.getormake(sen.lang)
             m = movement1(sen)
             r = dolinear(m)
@@ -218,7 +222,7 @@ if __name__ == '__main__':
                 f.write(m.writecompile() + '\n\n' + str(m) + '\n\n')
                 f.write(' '.join(m.tagify_all()) + '\n\n' + str(m.linear()) + '\n\n' + r + '\n\n')
                 f.close()
-            out.write(r + '\n\n')
+            outfile.write(r + '\n\n')
         out(sen, None if args.notrace else 'w', args.outfile)
         if Target:
             ls = trans(sen, Target.lang, False)

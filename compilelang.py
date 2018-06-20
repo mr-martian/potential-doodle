@@ -607,6 +607,11 @@ class Sentence:
                 if not check or s.alllang(tlang):
                     ret.trees[k+'-'+str(i) if k else str(i)] = s
         return ret
+    def totext(self):
+        if '' in self.trees:
+            return dolinear(movement1(self.trees['']))
+        else:
+            return dolinear(movement1(self.trees[list(sorted(self.trees.keys()))[0]]))
     def graph(self):
         for k in sorted(self.trees.keys()):
             self.trees[k].flatten()
@@ -632,6 +637,8 @@ class Text:
         f.close()
     def translate(self, tlang, check=False, normalize=True, keepgloss=True):
         return Text([x.translate(tlang, check, normalize, keepgloss) for x in self.sens])
+    def totext(self):
+        return '\n'.join([x.totext() for x in self.sens])
     def graph(self, fname):
         gls = []
         f = open(fname, 'w')

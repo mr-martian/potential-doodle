@@ -708,14 +708,23 @@ so-that (conjunction)
 then-null (conjunction)
 thus (conjunction)
 PL (determiner)
+  number: PL
 our (determiner)
+  number: SG
 this (determiner)
+  number: SG
 vocative (determiner)
+  number: SG
 your (determiner)
+  number: SG
 yourPL (determiner)
+  number: PL
 may (mood)
+  conj: inf
 should (mood)
+  conj: inf
 subjunctive (mood)
+  conj: prsprt
 Christ (noun)
 God (noun)
 Jesus (noun)
@@ -767,10 +776,18 @@ of (preposition)
 on (preposition)
 out (preposition)
 anyone (pronoun)
+  number: SG
+  person: 3
 him (pronoun)
+  number: SG
+  person: 3
 this (pronoun)
+  number: SG
+  person: 3
 any (quantifier)
+  number: SG
 some (quantifier)
+  number: PL
 ask (verb)
 bring (verb)
 come (verb)
