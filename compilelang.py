@@ -337,6 +337,17 @@ class ParseLine:
             return toobj(default, lang, self.num, at)
         else:
             raise ParseError('Line %s does not have required child %s.' % (self.num, key))
+    def avo(self, key, lang, at, default=None): #all val objects
+        c = 0
+        for ch in self.children:
+            if ch.label == key:
+                c += 1
+                yield toobj(ch.val, lang, ch.num, at)
+        if c == 0:
+            if default:
+                yield toobj(default, lang, self.num, at)
+            else:
+                raise ParseError('Line %s does not have required child(ren) %s.' % (self.num, key))
 def blank(l): #for blank contexts
     return Variable(' ', None, Unknown(), l)
 def loadlexicon(lang):
@@ -464,7 +475,6 @@ def loadlang(lang):
         if th.label == 'transform':
             for ch in th.children:
                 if ch.label == 'rule':
-                    tc = ch.fvo('context', lang, blank(lang), '@')
                     tf = ch.fvo('form', lang, None)
                     res = []
                     if 'result' in ch:
@@ -482,15 +492,43 @@ def loadlang(lang):
                             a[1] = v
                             a[2] = p
                         res.append(a)
-                    ret.transform.append(Translation(tf, res, 'transform', [lang, lang], context=tc, mode='syntax'))
+                    if 'rotate' in ch:
+                        res.append('rotate')
+                    for tc in ch.avo('context', lang, blank(lang), '@'):
+                        ret.transform.append(Translation(tf, res, 'transform', [lang, lang], context=tc, mode='syntax'))
                 elif ch.label == 'rotate':
                     ret.rotate.append(ch.val)
                 elif ch.label == 'multirule':
                     layers = []
-                    for ly in ch['layer']:
+                    for ly in ch.children:
+                        if ly.val and 'form' not in ly:
+                            ly.children = [ParseLine(ly.num, 'form', [], ly.val, ly.children)]
+                        if ly.label == 'layer?':
+                            ly.children.append(ParseLine(-1, 'form', [], '@', []))
+                            ly.label = 'layer'
+                        if ly.label != 'layer':
+                            continue
                         l = []
                         for p in ly['form']:
-                            l.append([toobj(p.val, lang, p.num, blank(lang)), p.fvo('result', lang, blank(lang), '@')])
+                            op = [toobj(p.val, lang, p.num, blank(lang))]
+                            if 'result' in p:
+                                op.append(p.fvo('result', lang, blank(lang), '@'))
+                            for st in p['set']:
+                                op.append(['set', dict(condlist(st))])
+                            for st in p['setprop']:
+                                a = ['setprop', ' ', st.arg, False, st.val]
+                                if '.' in st.val:
+                                    v,p = st.val[1:].split('.')
+                                    a[3] = v
+                                    a[4] = p
+                                if '.' in st.arg:
+                                    v,p = st.arg[1:].split('.')
+                                    a[1] = v
+                                    a[2] = p
+                                op.append(a)
+                            if 'rotate' in p:
+                                op.append('rotate')
+                            l.append(op)
                         layers.append(l)
                     ret.transform.append(MultiRule(layers, 'transform', [lang, lang], mode='syntax'))
         if th.label == 'metadata':

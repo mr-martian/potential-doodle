@@ -9,6 +9,7 @@ Multichar_Symbols
 %>      ! Morpheme boundary
 %{e%}
 %{i%}
+%{bdh%}
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -19,8 +20,9 @@ LEXICON Root
 
 NounRoot ;
 Punctuation ;
-VerbRoot ;
-AuxRoot ;
+VerbRoot "weight: 2" ;
+AuxRoot "weight: 2" ;
+BeDoHave ;
 Bland ;
 
 LEXICON NounInfl
@@ -55,6 +57,35 @@ LEXICON VerbInfl-Pers-and-Num
 LEXICON AuxInfl
 
 %<aux%>: VerbInflTense ;
+
+LEXICON BeDoHave
+be%<aux%>: BeForms ;
+be%<v%>: BeForms ;
+do%<aux%>: DoForms ;
+do%<v%>: DoForms ;
+have%<aux%>: HaveForms ;
+have%<v%>: HaveForms ;
+
+LEXICON BeForms
+%<pst%>:were VerbInfl-Pers-and-Num "weight: 1" ;
+%<pst%>%<1%>%<SG%>:was # ;
+%<pst%>%<3%>%<SG%>:was # ;
+%<pstprt%>:been VerbInfl-Pers-and-Num ;
+%<nonpst%>:are VerbInfl-Pers-and-Num "weight: 1" ;
+%<nonpst%>%<1%>%<SG%>:am # ;
+%<nonpst%>%<3%>%<SG%>:is # ;
+
+LEXICON DoForms
+%<pst%>:did VerbInfl-Pers-and-Num ;
+%<pstprt%>:done VerbInfl-Pers-and-Num ;
+%<nonpst%>:do VerbInfl-Pers-and-Num "weight: 1" ;
+%<nonpst%>%<3%>%<SG%>:does # ;
+
+LEXICON HaveForms
+%<pst%>:had VerbInfl-Pers-and-Num ;
+%<pstprt%>:had VerbInfl-Pers-and-Num ;
+%<nonpst%>:have VerbInfl-Pers-and-Num "weight: 1" ;
+%<nonpst%>%<3%>%<SG%>:has # ;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!                          L E X I C O N                                  !!!

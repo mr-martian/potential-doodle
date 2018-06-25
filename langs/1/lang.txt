@@ -152,28 +152,32 @@ transform
     context: |[?CP complementizer=+Q @]
     form: |[?IP [I $tense? ~ ~] |[VP $subj $mod? $head $comp?]]
     result: |[?IP [I $tense ~ ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
-  rule
-    context: |[VP $s1? $m1? $aux |[VP $s2? $m2? @ $c?]]
-    form: $verb
-    setprop (tense): $aux.conj
-  rule
-    context: |[VP $s1? $m1? $aux |[vP $s2? $m2? @ $c?]]
-    form: $verb
-    setprop (tense): $aux.conj
+  multirule
+    layer
+      form: |[VP $s1? $m1? $aux @]
+        result: |[VP $s1 $m1 $aux @]
+      form: |[vP $s1? $m1? $aux @]
+        result: |[vP $s1 $m1 $aux @]
+    layer
+      form: |[?VP $verb]
+        result: |[?VP $verb]
+        setprop ($verb.tense): $aux.conj
+      form: |[?vP $verb]
+        result: |[?vP $verb]
+        setprop ($verb.tense): $aux.conj
   rule
     context: |[?IP [I $tense * *] |[?VP @]]
+    context: |[?IP [I $tense * *] |[?vP @]]
     form: $head
     setprop (tense): $tense.tense
   rule
-    context: |[VP |[DP $ds? $dm? $dh(is-rel=false) $dc?] $vm? @ $vc?]
-    form: $verb
-    setprop (number): $dh.number
-    setprop (person): $dh.person
-  rule
+    context: |[?VP |[?DP $dh(is-rel=false)] @ $vc?]
+    context: |[?vP |[?DP $dh(is-rel=false)] @ $vc?]
     context: |[?DP $dh |[?NP $nh? |[?CP $ch? |[?IP $ih? |[?VP |[?DP $s:rel-pronoun] @ $vc?]]]]]
+    context: |[?DP $dh |[?NP $nh? |[?CP $ch? |[?IP $ih? |[?vP |[?DP $s:rel-pronoun] @ $vc?]]]]]
     form: $verb
-    setprop (person): $dh.person
     setprop (number): $dh.number
+    setprop (person): $dh.person
   rule
     context: |[CP * * complementizer=+Q @]
     form: |[IP ~ $mod $I |[VP $subj $vmod $head:aux $comp]]
@@ -193,6 +197,17 @@ transform
     context: |[?NP $noun:noun @]
     form: |[CP ~ $cmod? complementizer=-Q |[conjP |[IP |[DP $rel:rel-pronoun] $mod? $head? $comp?] $jmod? $j? $jbar?]]
     result: |[CP |[DP $rel] $cmod complementizer=-Q |[conjP |[IP ~ $mod $head $comp] $jmod $j $jbar]]
+  !multirule
+    layer
+      form: |[?NP $noun:noun |[?CP ~ complementizer=-Q @]]
+        result: |[?NP $noun:noun |[?CP |[DP $rel] complementizer=-Q @]]
+    #layer?
+    #  #form: |[?conjP @ $conjbar $conjcomp]
+    #  form: [conjP @ $conjmod?]
+    layer?: |[?conjP @ $conjbar? $conjcomp?]
+    layer
+      form: |[IP |[DP $rel:rel-pronoun] $mod? $head? $comp?]
+        result: |[IP ~ $mod $head $comp]
 #plurality
   rule
     context: |[?DP $head |[?NP @]]
@@ -212,3 +227,6 @@ transform
     result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]
 #rotations
   rotate: Vmod
+  rule
+    form: [Dmod $m:PP $b]
+    rotate

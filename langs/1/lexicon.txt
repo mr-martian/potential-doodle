@@ -43,38 +43,19 @@ did (aux)
 
 #tense-pl-num
 have (aspect)
+  altpos: verb
   conj: pstprt
-  output (tense=pstprt): had
-  output (tense=nonpst; person=3; number=SG): has
-  output (have<aux><pst>): had
-    lexicon: VerbInfl-Pers-and-Num
 be (aspect)
   altpos: verb
   objects: 1
   object1: NP/AP
   conj: prsprt
-  output (tense=pstprt): been
-  output (be<aux><nonpst>): are
-    lexicon: VerbInfl-Pers-and-Num
-  output (be<aux><inf>): be
-    lexicon: VerbInfl-Pers-and-Num
-  output (tense=nonpst; person=3; number=SG): is
-  output (tense=nonpst; person=1; number=SG): am
-  output (be<aux><pst>): were
-    lexicon: VerbInfl-Pers-and-Num
-  output (tense=pst; person=3; number=SG): was
-  output (tense=pst; person=1; number=SG): was
 have+been (aspect)
   conj: pstprt
-  output (tense=pstprt): had+been
-  output (tense=nonpst; person=3; number=SG): has+been
-  output (have<aux><pst>): had+been
-    lexicon: VerbInfl-Pers-and-Num
 
 a (determiner)
   hasspec: false
   person: 3
-  plural: false
   number: SG
   is-rel: false
   linear-text: an
@@ -82,74 +63,89 @@ a (determiner)
 the (determiner)
   hasspec: false
   person: 3
-  plural: false
   number: SG
   is-rel: false
-as (determiner)
+a#PL (determiner)
   hasspec: false
   person: 3
-  plural: true
-  display: a
-  output: a
   number: PL
   is-rel: false
   linear-text: an
     1: /^[aeiou]/
-thes (determiner)
+the#PL (determiner)
   hasspec: false
   person: 3
-  plural: true
-  display: the
-  output: the
   number: PL
   is-rel: false
 's (determiner)
-  plural: false
   hasspec: true
   person: 3
   number: SG
   is-rel: false
-'ss (determiner)
-  plural: true
+'s#PL (determiner)
   hasspec: true
   person: 3
-  display: 's
   number: PL
   is-rel: false
 her (determiner)
-  plural: false
   hasspec: false
   number: SG
   person: 3
   is-rel: false
-herPL (determiner)
-  display: her
-  output: her
-  plural: true
+her#PL (determiner)
   hasspec: false
   number: PL
   person: 3
   is-rel: false
 his (determiner)
-  plural: false
   hasspec: false
   number: SG
   person: 3
   is-rel: false
-hisPL (determiner)
-  display: his
-  output: his
-  plural: true
+his#PL (determiner)
   hasspec: false
   number: PL
+  person: 3
+  is-rel: false
+that (determiner)
+  hasspec: false
+  number: SG
   person: 3
   is-rel: false
 those (determiner)
-  plural: true
   hasspec: false
   number: PL
   person: 3
   is-rel: false
+your (determiner)
+  hasspec: false
+  number: SG
+  person: 3
+  is-rel: false
+your#PL (determiner)
+  hasspec: false
+  number: PL
+  person: 3
+  is-rel: false
+anyone (pronoun)
+  number: SG
+  person: 3
+him (pronoun)
+  number: SG
+  person: 3
+this (pronoun)
+  number: SG
+  person: 3
+any (quantifier)
+  number: SG
+some (quantifier)
+  number: PL
+some#PL (determiner)
+  number: PL
+  hasspec: false
+  person: 3
+  is-rel: false
+
 I (pronoun)
   number: SG
   person: 1
@@ -582,89 +578,60 @@ writing (noun)
 year (noun)
 producer (noun)
 tree (noun)
-Google-Glass (noun)
-  display: Google Glass
-Sherlock-Holmes (noun)
-  display: Sherlock Holmes
+Google+Glass (noun)
+Sherlock+Holmes (noun)
 binding (noun)
-book-cover (noun)
-  display: book cover
+book+cover (noun)
 boundary (noun)
-bulletin-board (noun)
-  display: bulletin board
+bulletin+board (noun)
 cane (noun)
-card-game (noun)
-  display: card game
+card+game (noun)
 cold (noun)
 community (noun)
-contact-lens (noun)
-  display: contact lens
-couch-potato (noun)
-  display: couch potato
+contact+lens (noun)
+couch+potato (noun)
 donut (noun)
 doughnut (noun)
 end (noun)
-energy-beam (noun)
-  display: energy beam
+energy+beam (noun)
 eyewear (noun)
-french-horn (noun)
-  display: french horn
+french+horn (noun)
 gelato (noun)
 glasses (noun)
-hula-hoop (noun)
-  display: hula hoop
-ice-cream (noun)
-  display: ice cream
+hula+hoop (noun)
+ice+cream (noun)
 laser (noun)
 limit (noun)
-marinara-sauce (noun)
-  display: marinara sauce
+marinara+sauce (noun)
 mind (noun)
 monocle (noun)
-movie-theater (noun)
-  display: movie theater
-music-box (noun)
-  display: music box
+movie+theater (noun)
+music+box (noun)
 nature (noun)
 notebook (noun)
-olive-oil (noun)
-  display: olive oil
-outer-space (noun)
-  display: outer space
+olive+oil (noun)
+outer+space (noun)
 page (noun)
-pedal-boat (noun)
-  display: pedal boat
+pedal+boat (noun)
 phaser (noun)
-playing-card (noun)
-  display: playing card
-ray-gun (noun)
-  display: ray gun
-rubber-duckie (noun)
-  display: rubber duckie
-sign-language (noun)
-  display: sign language
-space-helicopter (noun)
-  display: space helicopter
+playing+card (noun)
+ray+gun (noun)
+rubber+duckie (noun)
+sign+language (noun)
+space+helicopter (noun)
 spectacles (noun)
 staff (noun)
-sugar-glider (noun)
-  display: sugar glider
-termination-point (noun)
-  display: termination point
+sugar+glider (noun)
+termination+point (noun)
 thought (noun)
-thumbs-down (noun)
-  display: thumbs down
-thumbs-up (noun)
-  display: thumbs up
+thumbs+down (noun)
+thumbs+up (noun)
 underachiever (noun)
-vegetable-oil (noun)
-  display: vegetable oil
+vegetable+oil (noun)
 vision (noun)
-walking-stick (noun)
-  display: walking stick
+walking+stick (noun)
 wiki (noun)
-writing-system (noun)
-  display: writing system
+writing+system (noun)
 
 
 #PROPER NOUNS
@@ -707,9 +674,22 @@ now (adverb)
 that (comlementizer)
 imp (complementizer)
 because (conjunction)
+comma (punct)
+  display: ,
+lpar (punct)
+  display: (-
+rpar (punct)
+  display: -)
 paren (conjunction)
-so-that (conjunction)
-then-null (conjunction)
+  inaudible
+  conjugation
+    structure: |[conjP $s? $m? @ $c]
+    result: |[conjP $s $m @ [par punct=lpar $c punct=rpar]]
+vocative (preposition)
+  inaudible
+  audible: false
+so+that (conjunction)
+then+null (conjunction)
 thus (conjunction)
 PL (determiner)
   number: PL
@@ -719,20 +699,17 @@ this (determiner)
   number: SG
 vocative (determiner)
   number: SG
-your (determiner)
-  number: SG
-yourPL (determiner)
-  number: PL
 may (mood)
   conj: inf
 should (mood)
   conj: inf
 subjunctive (mood)
   conj: prsprt
+  display: were
 Christ (noun)
 God (noun)
 Jesus (noun)
-Jesus-Christ (noun)
+Jesus+Christ (noun)
 Judah (noun)
 Moab (noun)
 antichrist (noun)
@@ -754,7 +731,7 @@ land (noun)
 man (noun)
 mercy (noun)
 one (noun)
-one-another (noun)
+one+another (noun)
 paper (noun)
 peace (noun)
 person (noun)
@@ -771,40 +748,30 @@ world (noun)
 both (pre-conj)
 if (pre-conj)
 though (pre-conj)
-according-to (preposition)
+according+to (preposition)
 ahead (preposition)
 as (preposition)
-as-if (preposition)
+as+if (preposition)
 into (preposition)
 of (preposition)
 on (preposition)
 out (preposition)
-anyone (pronoun)
-  number: SG
-  person: 3
-him (pronoun)
-  number: SG
-  person: 3
-this (pronoun)
-  number: SG
-  person: 3
-any (quantifier)
-  number: SG
-some (quantifier)
-  number: PL
 ask (verb)
 bring (verb)
 come (verb)
 come+visit (verb)
 command (verb)
 confess (verb)
-do-so (verb)
+do+so (verb)
 dwell (verb)
 find (verb)
+  output (find<v><pst>): found
+    lexicon: VerbInfl-Pers-and-Num
+  output (find<v><pstprt>): found
+    lexicon: VerbInfl-Pers-and-Num
 give (verb)
 go (verb)
 greet (verb)
-have (verb)
 hear (verb)
 hope (verb)
 judge (verb)

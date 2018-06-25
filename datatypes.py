@@ -64,6 +64,7 @@ class Node:
         self.ntype = ntype
         self.children = children
         self.props = props or {}
+        self.rotate = False
     def swapchildren(self, ls):
         return Node(self.lang, self.ntype, ls, self.props.copy())
     def getvars(self, form, vrs={' failed': False}):
@@ -113,6 +114,27 @@ class Node:
             if isinstance(ch, Variable):
                 self.children[i] = vrs[ch.label]
         return self
+    def applyrule(self, rule, vrs):
+        if isinstance(rule, Node):
+            vrs[' '] = copy.deepcopy(rule).putvars(vrs)
+        elif isinstance(rule, list):
+            if rule[0] == 'setlang':
+                vrs[' '].lang = rule[1]
+            elif rule[0] == 'setdisplay':
+                vrs[' '].props['display'] = rule[1]
+            elif rule[0] == 'set':
+                vrs[' '].props.update(rule[1])
+            elif rule[0] == 'setprop':
+                if rule[3]:
+                    try:
+                        vrs[rule[1]].props[rule[2]] = vrs[rule[3]].props[rule[4]]
+                    except KeyError:
+                        print('%s does not have key %s' % (vrs[rule[3]], rule[4]))
+                        raise
+                else:
+                    vrs[rule[1]].props[rule[2]] = rule[4]
+            elif rule[0] == 'rotate':
+                vrs[' '].rotate = True
     def trans(self, tr):
         vrs = self.getvars(tr.context, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], Node):
@@ -123,26 +145,11 @@ class Node:
         if not isinstance(tr.result[0], Node):
             vrs[' '] = copy.deepcopy(vrs[' '])
         for act in tr.result:
-            if isinstance(act, Node):
-                vrs[' '] = copy.deepcopy(act).putvars(vrs)
-            elif isinstance(act, list):
-                if act[0] == 'setlang':
-                    vrs[' '].lang = act[1]
-                elif act[0] == 'setdisplay':
-                    vrs[' '].props['display'] = act[1]
-                elif act[0] == 'set':
-                    vrs[' '].props.update(act[1])
-                elif act[0] == 'setprop':
-                    if act[3]:
-                        try:
-                            vrs[act[1]].props[act[2]] = vrs[act[3]].props[act[4]]
-                        except KeyError as e:
-                            print('%s does not have key %s' % (vrs[act[3]], act[4]))
-                            raise e
-                    else:
-                        vrs[act[1]].props[act[2]] = act[4]
+            self.applyrule(act, vrs)
         return copy.deepcopy(tr.context).putvars(vrs)
     def transmulti(self, tr):
+        if tr.ntypelist and self.ntype not in tr.ntypelist:
+            return []
         vrs = {' failed': False, ' ': self}
         path = []
         for l in tr.layers:
@@ -159,24 +166,7 @@ class Node:
         vrs = copy.deepcopy(vrs)
         for result in reversed(path):
             for act in result:
-                if isinstance(act, Node):
-                    vrs[' '] = copy.deepcopy(act).putvars(vrs)
-                elif isinstance(act, list):
-                    if act[0] == 'setlang':
-                        vrs[' '].lang = act[1]
-                    elif act[0] == 'setdisplay':
-                        vrs[' '].props['display'] = act[1]
-                    elif act[0] == 'set':
-                        vrs[' '].props.update(act[1])
-                    elif act[0] == 'setprop':
-                        if act[3]:
-                            try:
-                                vrs[act[1]].props[act[2]] = vrs[act[3]].props[act[4]]
-                            except KeyError as e:
-                                print('%s does not have key %s' % (vrs[act[3]], act[4]))
-                                raise e
-                        else:
-                            vrs[act[1]].props[act[2]] = act[4]
+                self.applyrule(act, vrs)
         return vrs[' ']
     def transform(self, pats, returnself=True):
         if len(pats) > 0:
@@ -297,7 +287,7 @@ class Node:
             tagset = typ['tags']
             defaults = typ['defaults']
             break
-        tags = {'root': self.children[0].split(lang.tags_rootsplit)}
+        tags = {'root': self.children[0].split('#')[0].split(lang.tags_rootsplit)}
         if 'root' in self.props:
             tags['root'] = self.props['root'].split(lang.tags_rootsplit)
         for tg in tagset:
@@ -319,11 +309,13 @@ class Node:
         if regex:
             ret = '\t' + ret.replace('+', '\\+')
         return ret
+    def rotated(self):
+        return self.ntype in Language.get(self.lang).rotate != self.rotate
     def tagify_all(self):
         if isinstance(self.children[0], str):
             return [self.tagify()]
         else:
-            rev = self.ntype in Language.get(self.lang).rotate
+            rev = self.rotated()
             ret = []
             for c in self.children:
                 if isinstance(c, Node):
@@ -345,7 +337,7 @@ class Node:
                     l.append(c.linear())
                 elif c:
                     l.append([c])
-            if self.ntype in Language.get(self.lang).rotate:
+            if self.rotated():
                 l.reverse()
             r = []
             for c in l:
@@ -483,6 +475,9 @@ class MultiRule:
         self.resultroots = []
         self.resultrootset = set(self.resultroots)
         self.addedroots = self.resultrootset - self.rootset
+        self.ntypelist = []
+        if all(isinstance(x[0], Node) for x in layers[0]):
+            self.ntypelist = [x[0].ntype for x in layers[0]]
         if self.langs[0] == self.langs[1]:
             l = Language.getormake(self.langs[0])
             if mode == 'syntax':
