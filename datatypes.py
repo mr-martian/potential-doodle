@@ -68,12 +68,12 @@ class Node:
     def swapchildren(self, ls):
         return Node(self.lang, self.ntype, ls, self.props.copy())
     def getvars(self, form, vrs={' failed': False}):
-        if isinstance(form, Variable):
+        if isinstance(form, Unknown):
+            vrs[form.label] = self
+        elif isinstance(form, Variable):
             vrs[form.label] = self
             if not form.check(vrs):
                 vrs[' failed'] = 'variable condition'
-        elif isinstance(form, Unknown):
-            pass
         elif type(self) != type(form):
             vrs[' failed'] = 'type'
         elif not match(self.lang, form.lang) or not match(self.ntype, form.ntype):
@@ -135,6 +135,8 @@ class Node:
                     vrs[rule[1]].props[rule[2]] = rule[4]
             elif rule[0] == 'rotate':
                 vrs[' '].rotate = True
+            elif rule[0] == 'makevar':
+                vrs[rule[1]] = copy.deepcopy(rule[2])
     def trans(self, tr):
         vrs = self.getvars(tr.context, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], Node):

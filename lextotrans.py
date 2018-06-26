@@ -4,7 +4,7 @@ from os.path import isfile
 lex = ParseLine.fromfile('langs/%s/lexicon.txt' % sys.argv[1])
 transfile = 'langs/%s/translate/%s.txt' % (sys.argv[1], sys.argv[2])
 if isfile(transfile):
-    trans = ParseLine.fromfile()
+    trans = ParseLine.fromfile(transfile)
 else:
     trans = []
 already = [x.label.split('=') for x in trans]

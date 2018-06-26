@@ -145,13 +145,30 @@ transform
         result: |[VP ~ $m $h $c]
       form: |[vP $subj? $m? $h? $c?]
         result: |[vP ~ $m $h $c]
+  !rule
+    form: |[?IP [I $tense? $aspect? $mood] |[?VP $subj? $head? $comp?]]
+    result: |[?IP [I $tense $aspect ~] |[VP $subj? $mood |[?VP ~ $head $comp]]]
+  multirule
+    layer
+      form: |[?IP [I $tense? $aspect? $mood] @]
+        result: |[?IP [I $tense $aspect ~] @]
+    layer
+      form: |[?VP $s? $h? $c?]
+        result: |[VP $s $mood |[?VP ~ $h $c]]
+      form: |[?vP $s? $h? $c?]
+        result: |[VP $s $mood |[?vP ~ $h $c]]
+      form: |[?conjP |[vP $s1? $m1? $h1? $c1?] $conj? |[vP $s2? $m2? $h2? $c2?]]
+        result: |[?conjP |[VP $s1 $mood |[vP ~ $m1 $h1 $c1]] $conj |[VP $s2 $mood |[vP ~ $m2 $h2 $c2]]]
+      form: |[?conjP |[vP $s1? $m1? $h1? $c1?] $conj? |[VP $s2? $m2? $h2? $c2?]]
+        result: |[?conjP |[VP $s1 $mood |[vP ~ $m1 $h1 $c1]] $conj |[VP $s2 $mood |[VP ~ $m2 $h2 $c2]]]
+      form: |[?conjP |[VP $s1? $m1? $h1? $c1?] $conj? |[vP $s2? $m2? $h2? $c2?]]
+        result: |[?conjP |[VP $s1 $mood |[VP ~ $m1 $h1 $c1]] $conj |[VP $s2 $mood |[vP ~ $m2 $h2 $c2]]]
+      form: |[?conjP |[VP $s1? $m1? $h1? $c1?] $conj? |[VP $s2? $m2? $h2? $c2?]]
+        result: |[?conjP |[VP $s1 $mood |[VP ~ $m1 $h1 $c1]] $conj |[VP $s2 $mood |[VP ~ $m2 $h2 $c2]]]
   rule
-    form: |[?IP [I $tense? $aspect? $mood] |[?VP $subj $head $comp?]]
-    result: |[?IP [I $tense $aspect ~] |[VP $subj $mood |[?VP ~ $head $comp]]]
-  rule
-    context: |[?CP complementizer=+Q @]
-    form: |[?IP [I $tense? ~ ~] |[VP $subj $mod? $head $comp?]]
-    result: |[?IP [I $tense ~ ~] |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]]
+    context: |[?CP complementizer=+Q |[IP [I $tense? ~ ~] @]]
+    form: |[VP $subj $mod? $head:verb $comp?]
+    result: |[VP $subj ~ aux=do |[VP ~ $mod $head $comp]]
   multirule
     layer
       form: |[VP $s1? $m1? $aux @]
@@ -168,8 +185,14 @@ transform
   rule
     context: |[?IP [I $tense * *] |[?VP @]]
     context: |[?IP [I $tense * *] |[?vP @]]
-    form: $head
     setprop (tense): $tense.tense
+  rule
+    #context: |[?IP [I $tense * *] |[?conjP |[?vP $v1] $c? |[*vP @]]]
+    #context: |[?IP [I $tense * *] |[?conjP |[?vP $v1] $c? |[*VP @]]]
+    #context: |[?IP [I $tense * *] |[?conjP |[?VP $v1] $c? |[*vP @]]]
+    context: |[IP * * [I $tense * *] |[conjP |[*VP $v1] * @ |[*VP $v2]]]
+    setprop ($v1.tense): $tense.tense
+    setprop ($v2.tense): $tense.tense
   rule
     context: |[?VP |[?DP $dh(is-rel=false)] @ $vc?]
     context: |[?vP |[?DP $dh(is-rel=false)] @ $vc?]
@@ -227,6 +250,7 @@ transform
     result: |[IP $subj $imod $ihead |[VP ~ $mod $head $comp]]
 #rotations
   rotate: Vmod
+  rotate: Nmod
   rule
     form: [Dmod $m:PP $b]
     rotate

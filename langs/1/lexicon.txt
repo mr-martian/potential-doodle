@@ -13,6 +13,12 @@ nonpast (tense)
 object (tense)
   audible: false
   tense: prsprt
+gerund (tense)
+  audible: false
+  tense: prsprt
+inf (tense)
+  audible: false
+  tense: inf
 could (mood)
   conj: inf
 couldn't (mood)
@@ -27,8 +33,45 @@ can't (mood)
   form
     structure: [I tense=past $aspect @]
     result: [I tense=past $aspect mood=couldn't]
+may (mood)
+  conj: inf
+  output (tense=nonpst; person=3; number=SG): may
+don't (aux)
+  conj: inf
+have (aspect)
+  altpos: verb
+  conj: pstprt
+be (aspect)
+  altpos: verb
+  objects: 1
+  object1: NP/AP
+  conj: prsprt
+have+been (aspect)
+  conj: pstprt
+haven't (aspect)
+  altpos: verb
+  conj: pstprt
+aren't (aspect)
+  altpos: verb
+  objects: 1
+  object1: NP/AP
+  conj: prsprt
+haven't+been (aspect)
+  conj: pstprt
 not (mood)
   conj: inf
+  form
+    structure: [I $tense? ~ @]
+    result: [I $tense ~ aux=don't]
+  form
+    structure: [I $tense? aspect=have @]
+    result: [I $tense aspect=haven't ~]
+  form
+    structure: [I $tense? aspect=be @]
+    result: [I $tense aspect=aren't ~]
+  form
+    structure: [I $tense? aspect=have+been @]
+    result: [I $tense aspect=haven't+been ~]
 must (mood)
   conj: inf
 will (mood)
@@ -40,18 +83,15 @@ does (aux)
   conj: inf
 did (aux)
   conj: inf
-
-#tense-pl-num
-have (aspect)
-  altpos: verb
-  conj: pstprt
-be (aspect)
-  altpos: verb
-  objects: 1
-  object1: NP/AP
-  conj: prsprt
-have+been (aspect)
-  conj: pstprt
+imperative (mood)
+  conj: inf
+  audible: false
+imperative-not (mood)
+  conj: inf
+  display: do not
+to (mood)
+  conj: inf
+  display: to
 
 a (determiner)
   hasspec: false
@@ -145,6 +185,39 @@ some#PL (determiner)
   hasspec: false
   person: 3
   is-rel: false
+many (determiner)
+  number: PL
+  hasspec: false
+  person: 3
+  is-rel: false
+SG (determiner)
+  number: SG
+  audible: false
+  person: 3
+  is-rel: false
+  hasspec: false
+PL (determiner)
+  number: PL
+  audible: false
+  person: 3
+  is-rel: false
+  hasspec: false
+our (determiner)
+  number: SG
+  person: 3
+  is-rel: false
+  hasspec: false
+this (determiner)
+  number: SG
+  person: 3
+  is-rel: false
+  hasspec: false
+vocative (determiner)
+  number: SG
+  person: 3
+  is-rel: false
+  hasspec: false
+  inaudible
 
 I (pronoun)
   number: SG
@@ -185,6 +258,16 @@ many (quantifier)
 all (quantifier)
 who (rel-pronoun)
 that (rel-pronoun)
+2S (null-pro)
+  person: 2
+  number: SG
+  audible: false
+  is-rel: true
+2S (dup-pro)
+  person: 2
+  number: SG
+  audible: false
+  is-rel: false
 3S (null-pro)
   person: 3
   plural: false
@@ -201,6 +284,25 @@ that (rel-pronoun)
 and (conjunction)
 but (conjunction)
 for (conjunction)
+then (conjunction)
+both (pre-conj)
+  display: both
+both-and (conjunction)
+  conjugation
+    structure: |[?conjP @]
+    result: [preconj pre-conj=both |[?conjP conjunction=and]]
+if (pre-conj)
+  display: if
+if-then (conjunction)
+  conjugation
+    structure: |[?conjP @]
+    result: [preconj pre-conj=if |[?conjP conjunction=then]]
+though (pre-conj)
+  display: though
+though-null (conjunction)
+  conjugation
+    structure: |[?conjP @]
+    result: [preconj pre-conj=though |[?conjP ~]]
 
 at (preposition)
 because+of (preposition)
@@ -671,7 +773,6 @@ other (adjective)
 greatly (adverb)
 not (adverb)
 now (adverb)
-that (comlementizer)
 imp (complementizer)
 because (conjunction)
 comma (punct)
@@ -682,6 +783,7 @@ rpar (punct)
   display: -)
 paren (conjunction)
   inaudible
+  audible: false
   conjugation
     structure: |[conjP $s? $m? @ $c]
     result: |[conjP $s $m @ [par punct=lpar $c punct=rpar]]
@@ -691,16 +793,6 @@ vocative (preposition)
 so+that (conjunction)
 then+null (conjunction)
 thus (conjunction)
-PL (determiner)
-  number: PL
-our (determiner)
-  number: SG
-this (determiner)
-  number: SG
-vocative (determiner)
-  number: SG
-may (mood)
-  conj: inf
 should (mood)
   conj: inf
 subjunctive (mood)
@@ -744,8 +836,6 @@ two (noun)
 wife (noun)
 woman (noun)
 world (noun)
-2S (null-pro)
-both (pre-conj)
 if (pre-conj)
 though (pre-conj)
 according+to (preposition)

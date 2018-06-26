@@ -22,7 +22,7 @@ NounRoot ;
 Punctuation ;
 VerbRoot "weight: 2" ;
 AuxRoot "weight: 2" ;
-BeDoHave ;
+BeDoGoHave ;
 Bland ;
 
 LEXICON NounInfl
@@ -58,13 +58,17 @@ LEXICON AuxInfl
 
 %<aux%>: VerbInflTense ;
 
-LEXICON BeDoHave
+LEXICON BeDoGoHave
 be%<aux%>: BeForms ;
 be%<v%>: BeForms ;
 do%<aux%>: DoForms ;
 do%<v%>: DoForms ;
+go%<v%>: GoForms ;
 have%<aux%>: HaveForms ;
 have%<v%>: HaveForms ;
+aren't%<aux%>: ArentForms ;
+don't%<aux%>: DontForms ;
+haven't%<aux%>: HaventForms ;
 
 LEXICON BeForms
 %<pst%>:were VerbInfl-Pers-and-Num "weight: 1" ;
@@ -74,18 +78,46 @@ LEXICON BeForms
 %<nonpst%>:are VerbInfl-Pers-and-Num "weight: 1" ;
 %<nonpst%>%<1%>%<SG%>:am # ;
 %<nonpst%>%<3%>%<SG%>:is # ;
+%<prsprt%>:being VerbInfl-Pers-and-Num ;
 
 LEXICON DoForms
 %<pst%>:did VerbInfl-Pers-and-Num ;
 %<pstprt%>:done VerbInfl-Pers-and-Num ;
 %<nonpst%>:do VerbInfl-Pers-and-Num "weight: 1" ;
 %<nonpst%>%<3%>%<SG%>:does # ;
+%<prsprt%>:doing VerbInfl-Pers-and-Num ;
+
+LEXICON GoForms
+%<pst%>:went VerbInfl-Pers-and-Num ;
+%<pstprt%>:gone VerbInfl-Pers-and-Num ;
+%<nonpst%>:go VerbInfl-Pers-and-Num "weight: 1" ;
+%<nonpst%>%<3%>%<SG%>:goes # ;
+%<prsprt%>:going VerbInfl-Pers-and-Num ;
 
 LEXICON HaveForms
 %<pst%>:had VerbInfl-Pers-and-Num ;
 %<pstprt%>:had VerbInfl-Pers-and-Num ;
 %<nonpst%>:have VerbInfl-Pers-and-Num "weight: 1" ;
 %<nonpst%>%<3%>%<SG%>:has # ;
+%<prsprt%>:having VerbInfl-Pers-and-Num ;
+
+LEXICON ArentForms
+%<pst%>:weren't VerbInfl-Pers-and-Num "weight: 1" ;
+%<pst%>%<1%>%<SG%>:wasn't # ;
+%<pst%>%<3%>%<SG%>:wasn't # ;
+%<nonpst%>:aren't VerbInfl-Pers-and-Num "weight: 1" ;
+%<nonpst%>%<1%>%<SG%>:am+not # ;
+%<nonpst%>%<3%>%<SG%>:isn't # ;
+
+LEXICON DontForms
+%<pst%>:didn't VerbInfl-Pers-and-Num ;
+%<nonpst%>:don't VerbInfl-Pers-and-Num "weight: 1" ;
+%<nonpst%>%<3%>%<SG%>:doesn't # ;
+
+LEXICON HaventForms
+%<pst%>:hadn't VerbInfl-Pers-and-Num ;
+%<nonpst%>:haven't VerbInfl-Pers-and-Num "weight: 1" ;
+%<nonpst%>%<3%>%<SG%>:hasn't # ;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!                          L E X I C O N                                  !!!

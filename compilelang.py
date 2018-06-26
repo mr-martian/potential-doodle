@@ -350,6 +350,52 @@ class ParseLine:
                 raise ParseError('Line %s does not have required child(ren) %s.' % (self.num, key))
 def blank(l): #for blank contexts
     return Variable(' ', None, Unknown(), l)
+def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c', 'd']]
+    ret = []
+    for s in ch.args:
+        k,v = s.split('=')
+        ret.append([k.strip(), v.strip()])
+    return ret
+def readresult(node, lang, at=None):
+    ret = []
+    for ch in node.children:
+        if ch.label == 'result':
+            ret.append(toobj(ch.val, lang, ch.num, at))
+        if ch.label == 'setprop':
+            a = ['setprop', ' ', ch.arg, False, ch.val]
+            if '.' in ch.val:
+                v,p = ch.val.split('.')
+                if v[0] == '$':
+                    a[3] = v[1:]
+                elif v == '@':
+                    a[3] = ' '
+                else:
+                    raise ParseError('Cannot interpret variable %s on line %s.' % (v, ch.num))
+                a[4] = p
+            if '.' in ch.arg:
+                v,p = ch.arg.split('.')
+                if v[0] == '$':
+                    a[1] = v[1:]
+                elif v == '@':
+                    a[1] = ' '
+                else:
+                    raise ParseError('Cannot interpret variable %s on line %s.' % (v, ch.num))
+                a[2] = p
+            ret.append(a)
+        if ch.label == 'setdisplay':
+            ret.append(['setdisplay', ch.val])
+        if ch.label == 'setprops':
+            d = {}
+            for prop in ch.children:
+                d[prop.label] = prop.val
+            ret.append(['set', d])
+        if ch.label == 'blank':
+            ret.append(['setdisplay', ''])
+        if ch.label == 'set':
+            ret.append(['set', dict(condlist(ch))])
+        if ch.label == 'rotate':
+            ret.append(['rotate'])
+    return ret
 def loadlexicon(lang):
     rootslist = ParseLine.fromfile(DATA_PATH + 'langs/%s/lexicon.txt' % lang)
     for root in rootslist:
@@ -366,18 +412,9 @@ def loadlexicon(lang):
                 for f in p['form']:
                     fm = Node(lang, root.arg, [f.val])
                     Translation(form, [fm], root.label, [lang, lang], context=c, mode=mode)
-                for f in p['result']:
-                    fm = toobj(f.val, lang, f.num, None)
-                    Translation(form, [fm], root.label, [lang, lang], context=c, mode=mode)
-                for f in p['setdisplay']:
-                    Translation(form, [['setdisplay', f.val]], root.label, [lang, lang], context=c, mode=mode)
-                for f in p['setprops']:
-                    d = {}
-                    for prop in f.children:
-                        d[prop.label] = prop.val
-                    Translation(form, [['set', d]], root.label, [lang, lang], context=c, mode=mode)
-                if 'blank' in p:
-                    Translation(form, [['setdisplay', '']], root.label, [lang, lang], context=c, mode=mode)
+                res = readresult(p, lang, m)
+                if res:
+                    Translation(form, res, root.label, [lang, lang], context=c, mode=mode)
             elif p.label == 'output':
                 o = [p.arg, p.val, '#']
                 if '=' in p.arg:
@@ -417,12 +454,6 @@ def loadlexicon(lang):
             for l in pos.children:
                 m2.props[l.label] = l.val
             register(m2)
-def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c', 'd']]
-    ret = []
-    for s in ch.args:
-        k,v = s.split('=')
-        ret.append([k.strip(), v.strip()])
-    return ret
 def loadlang(lang):
     loadlexicon(lang)
     things = ParseLine.fromfile(DATA_PATH + 'langs/%s/lang.txt' % lang)
@@ -475,25 +506,8 @@ def loadlang(lang):
         if th.label == 'transform':
             for ch in th.children:
                 if ch.label == 'rule':
-                    tf = ch.fvo('form', lang, None)
-                    res = []
-                    if 'result' in ch:
-                        res.append(ch.fvo('result', lang, None))
-                    for l in ch['set']:
-                        res.append(['set', dict(condlist(l))])
-                    for l in ch['setprop']:
-                        a = ['setprop', ' ', l.arg, False, l.val]
-                        if '.' in l.val:
-                            v,p = l.val[1:].split('.')
-                            a[3] = v
-                            a[4] = p
-                        if '.' in l.arg:
-                            v,p = l.arg[1:].split('.')
-                            a[1] = v
-                            a[2] = p
-                        res.append(a)
-                    if 'rotate' in ch:
-                        res.append('rotate')
+                    tf = ch.fvo('form', lang, blank(lang), '@')
+                    res = readresult(ch, lang, None)
                     for tc in ch.avo('context', lang, blank(lang), '@'):
                         ret.transform.append(Translation(tf, res, 'transform', [lang, lang], context=tc, mode='syntax'))
                 elif ch.label == 'rotate':
@@ -511,23 +525,7 @@ def loadlang(lang):
                         l = []
                         for p in ly['form']:
                             op = [toobj(p.val, lang, p.num, blank(lang))]
-                            if 'result' in p:
-                                op.append(p.fvo('result', lang, blank(lang), '@'))
-                            for st in p['set']:
-                                op.append(['set', dict(condlist(st))])
-                            for st in p['setprop']:
-                                a = ['setprop', ' ', st.arg, False, st.val]
-                                if '.' in st.val:
-                                    v,p = st.val[1:].split('.')
-                                    a[3] = v
-                                    a[4] = p
-                                if '.' in st.arg:
-                                    v,p = st.arg[1:].split('.')
-                                    a[1] = v
-                                    a[2] = p
-                                op.append(a)
-                            if 'rotate' in p:
-                                op.append('rotate')
+                            op += readresult(p, lang, blank(lang))
                             l.append(op)
                         layers.append(l)
                     ret.transform.append(MultiRule(layers, 'transform', [lang, lang], mode='syntax'))
