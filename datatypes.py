@@ -4,57 +4,75 @@ from subprocess import Popen, PIPE
 DATA_PATH = os.path.abspath(__file__)[:-12]
 ###VARIABLES
 class Variable:
-    def __init__(self, label, value, cond, lang):
+    pattern = re.compile('^\\$?([^:?!^+]+):?([^:?!^+]*)\\.?([^:?!^+]*)([?!^+]*)$')
+    def __init__(self, label, value=None, prop=None, opt=False, neg=False, multi=False, group=False, idx=None, cond=None):
         self.label = label
         self.value = value
-        self.opt = False
-        self.lang = lang
+        self.prop = prop
+        self.opt = opt
+        self.neg = neg
+        self.multi = multi
+        self.group = group
+        self.idx = idx
         self.cond = cond
-        if self.value and self.value[-1] == '?':
-            self.opt = True
-            self.value = self.value[:-1]
-        if self.label and self.label[-1] == '!':
-            self.cond = None
-            self.label = self.label[:-1]
-            self.blankcond = False
-        if self.label and self.label[-1] == '?':
-            self.opt = True
-            self.label = self.label[:-1]
-    def check(self, vrs):
-        v = vrs[self.label]
-        valmatch = (not self.value) or (isinstance(v, Node) and v.ntype == self.value)
-        if v == None:
-            return self.cond == None or self.opt
-        elif not isinstance(v, Node):
-            return False
-        elif isinstance(self.cond, Unknown):
-            return valmatch
-        elif isinstance(self.cond, list):
-            if self.cond[0] not in v.props:
-                return False
-            elif len(self.cond) > 1 and v.props[self.cond[0]] != self.cond[1]:
-                return False
-            else:
-                return valmatch
+    def fromstring(s):
+        m = Variable.pattern.match(s)
+        if m:
+            g = m.groups()
+            return Variable(g[0], g[1], g[2], '?' in g[3], '!' in g[3], '^' in g[3], '+' in g[3])
         else:
-            return valmatch and match(v, self.cond)
+            print('no match with %s' % s)
+    def checkset(self, vrs):
+        if self.label not in vrs:
+            return False
+        if self.group:
+            return all(self.check(x) for x in vrs[self.label])
+        elif self.multi:
+            return self.check(vrs[self.label][self.idx])
+        else:
+            return self.check(vrs[self.label])
+    def check(self, v):
+        if self.neg:
+            return v == None
+        if v == None:
+            return self.opt
+        if not isinstance(v, Node):
+            return False
+        if self.value and v.ntype != self.value:
+            return False
+        if self.cond:
+            if isinstance(self.cond, list):
+                if self.cond[0] not in v.props:
+                    return False
+                if len(self.cond) > 1 and v.props[self.cond[0]] != self.cond[1]:
+                    return False
+            else:
+                if not match(v, self.cond):
+                    return False
+        return True
     def putvars(self, vrs):
-        return vrs[self.label]
-    def putvarscopy(self, vrs):
-        return vrs[self.label]
+        if self.multi:
+            return vrs[self.label][self.idx]
+        else:
+            return vrs[self.label]
     def __str__(self):
-        return '$%s:%s%s(%s)' % (self.label, self.value, '?' if self.opt else '', self.cond)
-    def __repr__(self):
-        return self.__str__()
+        return '$'+self.label + \
+               (':'+self.value) if self.value else '' + \
+               ('.'+self.prop) if self.prop else '' + \
+               '?' if self.opt else '' + \
+               '!' if self.neg else '' + \
+               '^' if self.multi else '' + \
+               '+' if self.group else '' + \
+               ('(' + str(self.cond) + ')') if self.cond else ''
 class Unknown(Variable):
     count = 0
     def __init__(self):
-        Variable.__init__(self, ' '+str(Unknown.count)+'?', None, None, self)
+        Variable.__init__(self, ' '+str(Unknown.count), opt=True)
         Unknown.count += 1
     def __str__(self):
         return '*'
     def __repr__(self):
-        return self.__str__()
+        return '*'
 class Option(list):
     pass
 ###DATA STRUCTURES
@@ -71,9 +89,10 @@ class Node:
         if isinstance(form, Unknown):
             vrs[form.label] = self
         elif isinstance(form, Variable):
-            vrs[form.label] = self
-            if not form.check(vrs):
+            if not form.check(self):
                 vrs[' failed'] = 'variable condition'
+            else:
+                vrs[form.label] = self
         elif type(self) != type(form):
             vrs[' failed'] = 'type'
         elif not match(self.lang, form.lang) or not match(self.ntype, form.ntype):
@@ -88,14 +107,19 @@ class Node:
             for s, f in zip(self.children, form.children):
                 if isinstance(s, Node):
                     s.getvars(f, vrs)
+                    if vrs[' failed']:
+                        return vrs
                 elif isinstance(f, Variable):
-                    vrs[f.label] = s
-                    if not f.check(vrs):
+                    if not f.check(s):
                         vrs[' failed'] = 'variable condition on child'
+                        return vrs
+                    else:
+                        vrs[f.label] = s
                 elif match(s, f):
                     pass
                 else:
                     vrs[' failed'] = 'failed on child %s with form %s' % (s, f)
+                    return vrs
             for k in form.props.keys():
                 if isinstance(form.props[k], Variable):
                     vrs[form.props[k].label] = self.props[k]
@@ -103,6 +127,7 @@ class Node:
                     pass
                 else:
                     vrs[' failed'] = 'failed on property %s with value %s and form %s' % (k, self.props[k], form.props[k])
+                    return vrs
         return vrs
     def putvars(self, vrs): #DESTRUCTIVE
         for k in self.props:
@@ -438,10 +463,7 @@ class Translation:
             self.resultroots = result.roots()
         self.resultrootset = set(self.resultroots)
         self.addedroots = self.resultrootset - self.rootset
-        if not context:
-            self.context = Variable(' ', None, Unknown(), form.lang)
-        else:
-            self.context = context
+        self.context = context or Variable(' ')
         if self.langs[0] == self.langs[1]:
             l = Language.getormake(self.langs[0])
             if mode == 'syntax':
@@ -588,15 +610,7 @@ class LangLink:
         LangLink.__alllinks['%s-%s' % (fromlang, tolang)] = self
         sl = Language.getormake(fromlang).setlang
         for s in sl:
-            Translation(Variable('node', s, Unknown(), fromlang), [['setlang', tolang]], 'syntax', [fromlang, tolang], mode='syntax')
-    #def find(self, roots):
-    #    s = set(roots)
-    #    ret = []
-    #    for r in roots:
-    #        for p in self.pats[r]:
-    #            if p.rootset < s:
-    #                ret.append(p)
-    #    return ret
+            Translation(Variable('node', value=s), [['setlang', tolang]], 'syntax', [fromlang, tolang], mode='syntax')
     def find(self, _roots):
         roots = _roots + ['']
         s = set(roots)
@@ -612,12 +626,6 @@ class LangLink:
             return LangLink.__alllinks[s]
         else:
             return LangLink(fromlang, tolang)
-    #def translate(self, sen):
-    #    tr = sen.transform(self.find(sen.roots()))
-    #    ret = []
-    #    for s in tr:
-    #        ret += s.transform(self.syntax)
-    #    return ret
     def translate(self, sen):
         pats = self.find(sen.roots())
         #pats.append(self.syntax) #unnecessary due to sen.nodelang()
@@ -678,7 +686,6 @@ def hfst(tagstrs, lang):
         ret = ls.split('\n')
     else:
         raise Exception('Unknown morphology mode %s' % mode)
-    #print(list(zip(tagstrs, ret)))
     return ret
 def dolinear(sen):
     lin = sen.linear()

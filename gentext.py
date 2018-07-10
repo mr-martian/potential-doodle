@@ -30,7 +30,7 @@ def gen(pats, tree, depth, setvars):
         for i, cl in enumerate(tree.conds):
             ad = True
             for c in cl:
-                if not c.check(vrs):
+                if not c.checkset(vrs):
                     ad = False
                     break
             if ad:
@@ -105,7 +105,7 @@ def makeall(words):
                 for vrs in product([[v, {}] for v in tree.vrs]):
                     dct = dict(zip(labs, vrs))
                     for i in idx:
-                        if all(c.check(dct) for c in tree.conds[i]):
+                        if all(c.checkset(dct) for c in tree.conds[i]):
                             for x in genall(tree.opts[i], dct):
                                 yield x
         else:

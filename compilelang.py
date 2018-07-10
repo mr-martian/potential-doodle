@@ -14,7 +14,7 @@ def tokenize(s):
     add = False
     digraph = False
     for c in s:
-        if c in '[]<>$:(){}=@%':
+        if c in '[]<>$(){}=@%~*':
             if digraph:
                 ret[-1] += c
                 digraph = False
@@ -27,14 +27,9 @@ def tokenize(s):
             else:
                 ret.append(c)
             digraph = True
-        elif c == '~':
-            ret.append(None)
-            add = False
-        elif c == '*':
-            ret.append(Unknown())
-            add = False
         elif c.isspace():
             add = False
+            digraph = False
         elif add:
             ret[-1] += c
         else:
@@ -48,27 +43,16 @@ def toobj(s, lang, loc, at=None):
         nonlocal rest
         cur = rest.pop(0)
         def ok(th):
-            return isinstance(th, str) and th[0] not in '[]<>$:(){}=@|%'
-        if not isinstance(cur, str):
-            return cur
-        elif cur.isnumeric(): #number
-            return int(cur)
+            return isinstance(th, str) and th[0] not in '[]<>$(){}=@|%~*'
+        if cur == '~':
+            return None
+        elif cur == '*':
+            return Unknown()
         elif cur == '@':
             return at
         elif cur == '$': #Variable
-            l = None
-            if len(rest) >= 3 and rest[0] == '(' and rest[1].isnumeric() and rest[2] == ')':
-                l = int(rest[1])
-                rest = rest[3:]
-            label = ''
-            if ok(rest[0]):
-                label = rest.pop(0)
-            value = ''
-            if rest and rest[0] == ':':
-                rest.pop(0)
-                if rest and ok(rest[0]):
-                    value = rest.pop(0)
-            cond = Unknown()
+            ret = Variable.fromstring(rest.pop(0))
+            cond = None
             if rest and rest[0] == '(':
                 rest.pop(0)
                 if len(rest) >= 2 and rest[1] == ')':
@@ -82,7 +66,8 @@ def toobj(s, lang, loc, at=None):
                     if rest[0] != ')':
                         raise ParseError('Badly formed variable condition on line %s (remainder was %s).' % (loc, rest))
                     rest.pop(0)
-            return Variable(label, value, cond, l or lang)
+            ret.cond = cond
+            return ret
         elif cur == '[': #Syntax
             ntype = rest.pop(0)
             ch = []
@@ -94,28 +79,17 @@ def toobj(s, lang, loc, at=None):
                 d = destring()
             return Node(lang, ntype, ch, d)
         elif cur == '|[': #xbar Sytnax
-            if isinstance(rest[0], Unknown):
-                rest.pop(0)
-                sub = [Unknown(), Unknown(), Unknown(), Unknown()]
-                name = rest.pop(0)[:-1]
-            elif isinstance(rest[0], str) and len(rest[0]) > 1 and rest[0][0] == '?':
-                name = rest.pop(0)[1:-1]
-                sub = [Variable(name+'spec?', '', Unknown(), lang),
-                       Variable(name+'mod?',  '', Unknown(), lang),
-                       Variable(name+'head?', '', Unknown(), lang),
-                       Variable(name+'comp?', '', Unknown(), lang)]
-            elif rest[0] == '$':
-                rest.pop(0)
-                name = rest.pop(0)[:-1]
-                sub = [Variable(name+'spec', '', Unknown(), lang),
-                       Variable(name+'mod',  '', Unknown(), lang),
-                       Variable(name+'head', '', Unknown(), lang),
-                       Variable(name+'comp', '', Unknown(), lang)]
-            else:
-                sub = [None, None, None, None]
-                if rest[0] == None:
-                    rest.pop(0)
-                name = rest.pop(0)[:-1]
+            if rest[0][0] == '?':
+                rest = ['?', rest[0][1:]] + rest[1:]
+            if rest[0] not in '*?$~':
+                rest = ['~'] + rest
+            mode = rest.pop(0)
+            name = rest.pop(0)[:-1]
+            spots = ['spec', 'mod', 'head', 'comp']
+            sub = {'*': [Unknown(), Unknown(), Unknown(), Unknown()],
+                   '?': [Variable(name+s, opt=True) for s in spots],
+                   '$': [Variable(name+s) for s in spots],
+                   '~': [None, None, None, None]}[mode]
             ch = []
             while rest[0] != ']':
                 ch.append(destring())
@@ -348,8 +322,6 @@ class ParseLine:
                 yield toobj(default, lang, self.num, at)
             else:
                 raise ParseError('Line %s does not have required child(ren) %s.' % (self.num, key))
-def blank(l): #for blank contexts
-    return Variable(' ', None, Unknown(), l)
 def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c', 'd']]
     ret = []
     for s in ch.args:
@@ -407,7 +379,7 @@ def loadlexicon(lang):
                     mode = 'lex'
                 else:
                     mode = 'conj'
-                c = p.fvo('context', lang, blank(lang), '@')
+                c = p.fvo('context', lang, Variable(' '), '@')
                 form = p.fvo('structure', lang, m, '@')
                 for f in p['form']:
                     fm = Node(lang, root.arg, [f.val])
@@ -506,9 +478,9 @@ def loadlang(lang):
         if th.label == 'transform':
             for ch in th.children:
                 if ch.label == 'rule':
-                    tf = ch.fvo('form', lang, blank(lang), '@')
+                    tf = ch.fvo('form', lang, Variable(' '), '@')
                     res = readresult(ch, lang, None)
-                    for tc in ch.avo('context', lang, blank(lang), '@'):
+                    for tc in ch.avo('context', lang, Variable(' '), '@'):
                         ret.transform.append(Translation(tf, res, 'transform', [lang, lang], context=tc, mode='syntax'))
                 elif ch.label == 'rotate':
                     ret.rotate.append(ch.val)
@@ -524,8 +496,8 @@ def loadlang(lang):
                             continue
                         l = []
                         for p in ly['form']:
-                            op = [toobj(p.val, lang, p.num, blank(lang))]
-                            op += readresult(p, lang, blank(lang))
+                            op = [toobj(p.val, lang, p.num, Variable(' '))]
+                            op += readresult(p, lang, Variable(' '))
                             l.append(op)
                         layers.append(l)
                     ret.transform.append(MultiRule(layers, 'transform', [lang, lang], mode='syntax'))
@@ -588,7 +560,7 @@ def loadtrans(lfrom, lto):
         for i, stage in enumerate(trans):
             for lex in stage.children:
                 if lex.label == 'rule':
-                    c = lex.fvo('context', lfrom, blank(lfrom), '@')
+                    c = lex.fvo('context', lfrom, Variable(' '), '@')
                     f = lex.fvo('form', lfrom, None)
                     if 'anylang' in lex and isinstance(f, Node):
                         f.nodelang(Unknown())
@@ -606,7 +578,7 @@ def loadtrans(lfrom, lto):
                     for tr in lex.children:
                         if tr.label == 'translate':
                             f = tr.fvo('from', lfrom, m)
-                            c = tr.fvo('context', lfrom, blank(lfrom), '@')
+                            c = tr.fvo('context', lfrom, Variable(' '), '@')
                             for t in tr.child_vals('to'):
                                 Translation(f, [toobj(t, lto, tr.num, m)], m.children[0], [lfrom, lto], context=c, mode='lex', stage=i)
 def loadlangset(langs):
