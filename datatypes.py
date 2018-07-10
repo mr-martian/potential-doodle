@@ -182,7 +182,8 @@ class Node:
         for l in tr.layers:
             ok = False
             for i, f in enumerate(l):
-                vrs2 = vrs[' '].getvars(f[0], copy.deepcopy(vrs))
+                vrs2 = vrs[' '].getvars(f[0], copy.copy(vrs))
+                # don't need deepcopy because the values aren't ever modified
                 if not vrs2[' failed']:
                     ok = True
                     vrs = vrs2
