@@ -1,8 +1,6 @@
 from tkinter import *
 import sys
-from datatypes import *
-from compilelang import *
-from gentext import *
+from doodle import *
 
 class WindowMode(Frame):
     def __init__(self, master, returnTo):

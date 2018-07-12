@@ -145,9 +145,6 @@ transform
         result: |[VP ~ $m $h $c]
       form: |[vP $subj? $m? $h? $c?]
         result: |[vP ~ $m $h $c]
-  !rule
-    form: |[?IP [I $tense? $aspect? $mood] |[?VP $subj? $head? $comp?]]
-    result: |[?IP [I $tense $aspect ~] |[VP $subj? $mood |[?VP ~ $head $comp]]]
   multirule
     layer
       form: |[?IP [I $tense? $aspect? $mood] @]
@@ -220,17 +217,6 @@ transform
     context: |[?NP $noun:noun @]
     form: |[CP ~ $cmod? complementizer=-Q |[conjP |[IP |[DP $rel:rel-pronoun] $mod? $head? $comp?] $jmod? $j? $jbar?]]
     result: |[CP |[DP $rel] $cmod complementizer=-Q |[conjP |[IP ~ $mod $head $comp] $jmod $j $jbar]]
-  !multirule
-    layer
-      form: |[?NP $noun:noun |[?CP ~ complementizer=-Q @]]
-        result: |[?NP $noun:noun |[?CP |[DP $rel] complementizer=-Q @]]
-    #layer?
-    #  #form: |[?conjP @ $conjbar $conjcomp]
-    #  form: [conjP @ $conjmod?]
-    layer?: |[?conjP @ $conjbar? $conjcomp?]
-    layer
-      form: |[IP |[DP $rel:rel-pronoun] $mod? $head? $comp?]
-        result: |[IP ~ $mod $head $comp]
 #plurality
   rule
     context: |[?DP $head |[?NP @]]

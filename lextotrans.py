@@ -1,5 +1,5 @@
 import sys
-from compilelang import ParseLine
+from doodle import ParseLine
 from os.path import isfile
 lex = ParseLine.fromfile('langs/%s/lexicon.txt' % sys.argv[1])
 transfile = 'langs/%s/translate/%s.txt' % (sys.argv[1], sys.argv[2])

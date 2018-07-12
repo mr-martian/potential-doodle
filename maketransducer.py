@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from datatypes import *
-from compilelang import loadlang
+from doodle import *
 from collections import defaultdict
 from re import sub
 
