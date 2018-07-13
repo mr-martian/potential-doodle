@@ -4,6 +4,13 @@ from collections import defaultdict
 from subprocess import Popen, PIPE
 from os.path import isfile
 DATA_PATH = os.path.abspath(__file__)[:-9]
+UNKNOWN_MORPH = "ERROR"
+#what to do when parser encounters a morpheme that isn't in the lexicon
+#options: "ERROR", "CREATE", "CREATE_AND_LOG"
+#"ERROR" is default because loading twice leads to copies that represent the same morpheme, but with different properties. -D.S. 2018-02-11
+FLAT = False
+#when flat is True, |[XP] is read as a [XP a b c d] rather than [XP a [Xmod b [Xbar c d]]]
+NORMALIZE_NODES = True # True: .lang of non-lexical nodes is ignored
 ###VARIABLES
 class Variable:
     pattern = re.compile('^\\$?([^:?!^+]+):?([^:?!^+]*)\\.?([^:?!^+]*)([?!^+]*)$')
@@ -773,12 +780,6 @@ def dolinear(sen):
         else:
             final.append(lintxt[i])
     return ' '.join(final).replace('+', ' ').replace('- -', '').replace('- ', '').replace(' -', '')
-UNKNOWN_MORPH = "ERROR"
-#what to do when parser encounters a morpheme that isn't in the lexicon
-#options: "ERROR", "CREATE", "CREATE_AND_LOG"
-#"ERROR" is default because loading twice leads to copies that represent the same morpheme, but with different properties. -D.S. 2018-02-11
-FLAT = False
-#when flat is True, |[XP] is read as a [XP a b c d] rather than [XP a [Xmod b [Xbar c d]]]
 ###PARSING
 def tokenize(s):
     ret = []
@@ -1493,7 +1494,6 @@ def translatefile(infile, outfile, tlang, check=False, normalize=True, keepgloss
         f.write(Sentence.fromparseline(l, flang).translate(tlang, check, normalize, keepgloss).toparseline().tofilestr(0))
     if isinstance(outfile, str):
         f.close()
-NORMALIZE_NODES = True # True: .lang of non-lexical nodes is ignored
 def gen(pats, tree, depth, setvars):
     if isinstance(tree, Node):
         r = copy.copy(tree)
