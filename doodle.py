@@ -610,7 +610,7 @@ class Language:
         if lang in Language.__alllangs:
             return Language.__alllangs[lang]
         else:
-            return Language(lang)
+            return loadlang(lang)
     def getpats(self):
         r = {}
         for k in self.syntax:
@@ -663,7 +663,7 @@ class LangLink:
         if s in LangLink.__alllinks:
             return LangLink.__alllinks[s]
         else:
-            return LangLink(fromlang, tolang)
+            return loadtrans(fromlang, tolang)
     def translate(self, sen):
         pats = self.find(sen.roots())
         #pats.append(self.syntax) #unnecessary due to sen.nodelang()
@@ -823,6 +823,8 @@ def toobj(s, lang, loc, at=None):
             return at
         elif cur == '$': #Variable
             ret = Variable.fromstring(rest.pop(0))
+            if not ret:
+                raise ParseError('Badly formed variable at %s' % loc)
             cond = None
             if rest and rest[0] == '(':
                 rest.pop(0)
@@ -966,7 +968,7 @@ def toobj(s, lang, loc, at=None):
                     elif UNKNOWN_MORPH == "CREATE":
                         r = Node(lang, pos, [root])
                     else: #UNKNOWN_MORPH == "ERROR"
-                        raise ParseError('Unknown lang %d morpheme %s=%s on line %s' % (lang, pos, root, loc))
+                        raise ParseError('Unknown lang %d morpheme %s=%s at %s' % (lang, pos, root, loc))
                 return r
             else:
                 rest = ['$', ':'] + rest
@@ -980,14 +982,14 @@ def toobj(s, lang, loc, at=None):
 class ParseError(Exception):
     pass
 class ParseLine:
-    def __init__(self, num, label, args, val, children):
+    def __init__(self, num, label, args=None, val=None, children=None):
         self.num = num
         self.label = label
-        self.arg = '; '.join(args)
-        self.args = args
-        self.val = val
+        self.args = args or []
+        self.arg = '; '.join(self.args)
+        self.val = val or ''
         self.vals = [val] if val else []
-        self.children = children
+        self.children = children or []
     def fromstring(fstr, num):
         #label (arg1; arg2): value
         #label: value
@@ -1033,7 +1035,7 @@ class ParseLine:
                     continue
                 while not l.startswith('  '*depth):
                     depth -= 1
-                lobj = ParseLine.fromstring(l.rstrip()[depth*2:], i+1)
+                lobj = ParseLine.fromstring(l.rstrip()[depth*2:], 'line %s of %s' % (i+1, fname))
                 at = r
                 for d in range(depth):
                     at = at.children[-1]
@@ -1198,9 +1200,9 @@ def loadlexicon(lang):
                 m2.props[l.label] = l.val
             register(m2)
 def loadlang(lang):
-    loadlexicon(lang)
     things = ParseLine.fromfile(DATA_PATH + 'langs/%s/lang.txt' % lang)
-    ret = Language.getormake(lang)
+    ret = Language(lang)
+    loadlexicon(lang)
     for th in things:
         if th.label == 'syntax':
             for ch in th.children:
@@ -1324,6 +1326,7 @@ def loadlang(lang):
     return ret
 def loadtrans(lfrom, lto):
     fname = DATA_PATH + 'langs/%s/translate/%s.txt' % (lfrom, lto)
+    ret = LangLink(lfrom, lto)
     if isfile(fname):
         trans = ParseLine.fromfile(fname)
         if trans and trans[0].label != 'stage':
@@ -1352,12 +1355,57 @@ def loadtrans(lfrom, lto):
                             c = tr.fvo('context', lfrom, Variable(' '), '@')
                             for t in tr.child_vals('to'):
                                 Translation(f, [toobj(t, lto, tr.num, m)], m.children[0], [lfrom, lto], context=c, mode='lex', stage=i)
+    return ret
 def loadlangset(langs):
+    loaded = []
     for l in langs:
-        loadlang(l)
-    for lf in langs:
-        for lt in langs:
+        if l not in loaded and l != 0:
+            loadlang(l)
+            loaded.append(l)
+    for lf in loaded:
+        for lt in loaded:
             loadtrans(lf, lt)
+def addmissing():
+    f = open('missing_morphemes.txt')
+    lns = list(set(f.readlines()))
+    lns.sort()
+    lang = ''
+    for line in lns:
+        if not line: continue
+        s = line.split()
+        l = s[0][:-1]
+        p,r = s[1].split('=')
+        if l != lang:
+            f.close()
+            f = open(DATA_PATH + 'langs/%s/lexicon.txt' % l, 'a')
+            f.write('\n\n#Generated from missing_morphemes.txt\n')
+            lang = l
+            print('Writing to langs/%s/lexicon.txt' % l)
+        f.write('%s (%s)\n' % (r,p))
+    f.close()
+def filltrans(lfrom, lto):
+    Language.getormake(lfrom)
+    Language.getormake(lto)
+    LangLink.getormake(lfrom, lto)
+    fname = DATA_PATH + 'langs/%s/translate/%s.txt' % (lfrom, lto)
+    have = []
+    out = '#Automatically generated from langs/%s/lexicon.txt\n' % lfrom
+    if isfile(fname):
+        pl = ParseLine.fromfile(fname)
+        for l in pl:
+            if l.label == 'stage':
+                have += [x.label for x in l.children]
+            else:
+                have.append(l.label)
+        out = '\n\n'+out
+    for pos in sorted(AllMorphemes[lfrom].keys()):
+        for root in sorted(AllMorphemes[lfrom][pos].keys()):
+            s = pos + '=' + root
+            if s not in have:
+                out += s + ': ~\n'
+    f = open(fname, 'a')
+    f.write(out)
+    f.close()
 class Sentence:
     def __init__(self, lang, name, trees, gloss):
         self.lang = lang
@@ -1396,10 +1444,13 @@ class Sentence:
                     ret.trees[k+'-'+str(i) if k else str(i)] = s
         return ret
     def totext(self):
-        if '' in self.trees:
+        if '' in self.trees and self.trees['']:
             return dolinear(movement1(self.trees['']))
         else:
-            return dolinear(movement1(self.trees[list(sorted(self.trees.keys()))[0]]))
+            for k in sorted(self.trees.keys()):
+                if self.trees[k]:
+                    return dolinear(movement1(self.trees[k]))
+            return ''
     def graph(self):
         for k in sorted(self.trees.keys()):
             self.trees[k].flatten()
@@ -1407,40 +1458,41 @@ class Sentence:
             f.write(self.trees[k].graph('n', True))
             f.close()
             yield '<h3>%s</h3>' % (k or '(default)'), '%s-%s.dot' % (self.name, k)
-class Text:
-    def __init__(self, sens):
-        self.sens = sens
-    def fromfile(fname, lang):
-        ret = Text([])
-        for s in ParseLine.fromfile(fname):
-            ret.sens.append(Sentence.fromparseline(s, lang))
-        return ret
-    def tofile(self, fname):
-        if isinstance(fname, str):
-            f = open(fname, 'w')
-        else:
-            f = fname
-        for s in self.sens:
-            f.write(s.toparseline().tofilestr(0))
+def readfile(fname):
+    pl = ParseLine.fromfile(fname)
+    lang = int(pl[0].firstval('lang'))
+    return lang, [Sentence.fromparseline(l, lang) for l in pl[1:]]
+def graphtext(infile, outfile):
+    gls = []
+    f = open(outfile, 'w')
+    f.write('<html><head></head><body>\n')
+    for s in readfile(infile)[1]:
+        f.write('<h1>%s</h1>\n' % s.name)
+        for h3, fn in s.graph():
+            f.write('%s<img src="%s.svg"></img>\n' % (h3, fn))
+            gls.append('test/' + fn)
+    f.write('</body></html>')
+    f.close()
+    proc = Popen(['dot', '-Tsvg', '-O'] + gls, stdin=PIPE, stdout=PIPE, universal_newlines=True)
+def translatefile(infile, outfile, tlang, check=False, normalize=True, keepgloss=True, keepmeta=True):
+    pl = ParseLine.fromfile(infile)
+    flang = int(pl[0].firstval('lang'))
+    if isinstance(outfile, str):
+        f = open(outfile, 'w')
+    else:
+        f = outfile
+    if keepmeta:
+        meta = pl[0]
+        for x in meta.children:
+            if x.label == 'lang':
+                x.vals = [str(tlang)]
+    else:
+        meta = ParseLine(0, 'metadata', children=[ParseLine(7, 'lang', val=str(tlang))])
+    f.write(meta.tofilestr(0))
+    for l in pl[1:]:
+        f.write(Sentence.fromparseline(l, flang).translate(tlang, check, normalize, keepgloss).toparseline().tofilestr(0))
+    if isinstance(outfile, str):
         f.close()
-    def translate(self, tlang, check=False, normalize=True, keepgloss=True):
-        return Text([x.translate(tlang, check, normalize, keepgloss) for x in self.sens])
-    def totext(self):
-        return '\n'.join([x.totext() for x in self.sens])
-    def graph(self, fname):
-        gls = []
-        f = open(fname, 'w')
-        f.write('<html><head></head><body>\n')
-        for s in self.sens:
-            f.write('<h1>%s</h1>\n' % s.name)
-            for h3, fn in s.graph():
-                f.write('%s<img src="%s.svg"></img>\n' % (h3, fn))
-                gls.append('test/' + fn)
-        f.write('</body></html>')
-        f.close()
-        proc = Popen(['dot', '-Tsvg', '-O'] + gls, stdin=PIPE, stdout=PIPE, universal_newlines=True)
-def translatefile(infile, outfile, slang, tlang, check=False, normalize=True, keepgloss=True):
-    Text.fromfile(infile, slang).translate(tlang, check, normalize, keepgloss).tofile(outfile)
 NORMALIZE_NODES = True # True: .lang of non-lexical nodes is ignored
 def gen(pats, tree, depth, setvars):
     if isinstance(tree, Node):
@@ -1586,85 +1638,126 @@ def trans(sen, tlang, checklang=True):
 if __name__ == '__main__':
     import argparse, sys
     parser = argparse.ArgumentParser(description='Generate, translate, and parse sentences.')
-    parser.add_argument('langs', nargs=2, type=int, help='Languages to convert between, use 0 for plaintext')
-    files = parser.add_mutually_exclusive_group(required=True)
-    files.add_argument('-t', '--text', type=str, help='Get input from file in texts/')
-    files.add_argument('-f', '--file', type=str, help='Get input from file')
-    files.add_argument('-r', '--reuse', action='store_true', help='Reuse the sentence in trace.txt')
-    files.add_argument('-g', '--generate', action='store_true', help='Randomly generate a new sentence')
-    files.add_argument('-p', '--parse', type=str, metavar='FILE', help='Parse a plaintext sentence')
-    files.add_argument('-d', '--doc', type=str, metavar='FILE', help='Translate .pdtxt document')
-    parser.add_argument('-n', '--notrace', action='store_true', help='Do not output to trace.txt')
-    parser.add_argument('-o', '--outfile', type=argparse.FileType('w'), default=sys.stdout, metavar='FILE', help='Output to FILE')
-    parser.add_argument('-F', '--flatten', action='store_true', help='Flatten phrases to single nodes')
-    parser.add_argument('-N', '--normalize', action='store_true', help='When translating, ignore untranslated syntax nodes')
-    parser.add_argument('-U', '--useunknown', action='store_true', help='Log unknown morphemes in missing_morphemes.txt rather than erroring')
-    args = parser.parse_args()
-    
-    import compilelang
-    compilelang.FLAT = args.flatten
-    NORMALIZE_NODES = args.normalize
-    compilelang.UNKNOWN_MORPH = "CREATE_AND_LOG" if args.useunknown else "ERROR"
-    
-    if 0 not in args.langs:
-        loadlangset(args.langs)
-        Source = Language.getormake(args.langs[0])
-        Target = Language.getormake(args.langs[1])
-    elif args.langs[0] == 0:
-        Source = None
-        Target = loadlang(args.langs[1])
-    elif args.langs[1] == 0:
-        Source = loadlang(args.langs[0])
-        Target = None
-    else:
-        parser.error('Source and target language must not both be 0.')
-    
-    if args.parse:
-        if not Target:
-            parser.error('Target language must not be 0 for parsing text.')
-        f = open(args.parse)
-        text = Text([])
-        for i, l in enumerate(f.readlines()):
-            t = l.strip()
-            if t:
-                text.sens.append(parse(Target.lang, i+1, t))
-        f.close()
-        text.tofile(args.outfile)
-    elif args.doc:
-        if Target:
-            translatefile(args.doc, args.outfile, Source.lang, Target.lang)
-        else:
-            args.outfile.write(Text.fromfile(args.doc, Source.lang).totext() + '\n')
-        args.outfile.close()
-    else:
-        if not Source:
-            parser.error('Source language must not be 0 for translating text.')
-        if args.generate:
-            sen = make(Source)
-        else:
-            if args.text:
-                path = DATA_PATH + 'texts/' + args.text + '_tree.txt'
-            elif args.file:
-                path = args.file
+    STDINLINE = 1
+    class TranslateAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            if len(values) == 0:
+                print('Translate single tree: -t L1 [SRC] L2 [DEST]\n' + \
+                      '  read a tree from SRC (leave blank for stdin)\n' + \
+                      '  translate from L1 to L2\n' + \
+                      '  output to DEST (leave blank for stdout)\n' + \
+                      'Translate .pdtxt file: -t SRC LANG [DEST]\n' + \
+                      '  translate contents of file SRC to LANG\n' + \
+                      '  output to DEST (leave blank for stdout)')
+            elif values[0].isnumeric():
+                flang = int(values.pop(0))
+                if values[0].isnumeric():
+                    line = sys.stdin.readline()
+                    where = 'standard input line %s' % STDINLINE
+                    STDINLINE += 1
+                else:
+                    where = values.pop(0)
+                    f = open(where)
+                    where += ' line 1'
+                    line = f.readline()
+                    f.close()
+                tree = toobj(line, flang, where)
+                tr = trans(tree, int(values.pop(0)))
+                if values:
+                    f = open(values[0], 'w')
+                    f.write(tr.writecompile())
+                    f.close()
+                else:
+                    print(tr.writecompile())
             else:
-                path = DATA_PATH + 'trace.txt'
-            f = open(path)
-            sen = toobj(f.readline(), Source.lang, '1 of %s' % path)
-            f.close()
-        def out(sen, traceopen, outfile):
-            lang = Language.getormake(sen.lang)
-            m = movement1(sen)
-            r = dolinear(m)
-            if traceopen:
-                f = open(DATA_PATH + 'trace.txt', traceopen)
-                f.write(sen.writecompile() + '\n\n' + str(sen) + '\n\n')
-                f.write(m.writecompile() + '\n\n' + str(m) + '\n\n')
-                f.write(' '.join(m.tagify_all()) + '\n\n' + str(m.linear()) + '\n\n' + r + '\n\n')
+                if len(values) >= 3:
+                    translatefile(values[0], values[2], int(values[1]))
+                else:
+                    translatefile(values[0], sys.stdout, int(values[1]))
+    class GenerateAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            lang = Language.getormake(int(values.pop(0)))
+            sen = make(lang)
+            if values:
+                f = open(values[0], 'w')
+                f.write(sen.writecompile())
                 f.close()
-            outfile.write(r + '\n\n')
-        out(sen, None if args.notrace else 'w', args.outfile)
-        if Target:
-            ls = trans(sen, Target.lang, False)
-            for s in ls:
-                out(s, None if args.notrace else 'a', args.outfile)
-        args.outfile.close()
+            else:
+                print(sen.writecompile())
+    class ParseAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            if values[0].isnumeric():
+                lines = [sys.stdin.readline()]
+            else:
+                f = open(values.pop(0))
+                lines = f.readlines()
+                f.close()
+            lang = int(values.pop(0))
+            if values:
+                out = open(values[0], 'w')
+            else:
+                out = sys.stdout
+            for i, t in enumerate(lines):
+                l = t.strip()
+                if l:
+                    out.write(parse(lang, i+1, l).toparseline().tofilestr(0))
+            if values:
+                out.close()
+    class DisplayAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            if values[0].isnumeric() or (len(values) > 1 and values[1].isnumeric()):
+                if values[0].isnumeric():
+                    line = sys.stdin.readline()
+                    where = 'standard input line %s' % STDINLINE
+                    STDINLINE += 1
+                else:
+                    where = values.pop(0)
+                    f = open(where)
+                    where += ' line 1'
+                    line = f.readline()
+                    f.close()
+                lang = int(values.pop(0))
+                if values:
+                    f = open(values[0], 'w')
+                else:
+                    f = sys.stdout
+                f.write(dolinear(movement1(toobj(line, lang, where))))
+                if values:
+                    f.close()
+            else:
+                lines = readfile(values.pop(0))[1]
+                if values:
+                    f = open(values[0], 'w')
+                else:
+                    f = sys.stdout
+                for l in lines:
+                    f.write(l.totext() + '\n')
+                if values:
+                    f.close()
+    class BlankAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            if values:
+                filltrans(int(values[0]), int(values[1]))
+            else:
+                addmissing()
+    class SetGlobal(argparse.Action):
+        #Horrible? Yes. Effective? Also yes.
+        def __init__(self, *args, **kwargs):
+            self.command = 'global {0}; {0} = {1}'.format(*kwargs['todo'])
+            del kwargs['todo']
+            kwargs['nargs'] = 0
+            argparse.Action.__init__(self, *args, **kwargs)
+        def __call__(self, parser, namespace, values, option_string=None):
+            exec(self.command)
+    parser.add_argument('-t', '--translate', type=str, nargs='*', action=TranslateAction, metavar='ARG', help="Translate trees (run 'doodle.py -t' for detailed help)")
+    parser.add_argument('-g', '--generate', type=str, nargs='+', action=GenerateAction, metavar=('LANG', 'DEST'), help='Randomly generate a tree in LANG and output to DEST or stdout')
+    parser.add_argument('-p', '--parse', type=str, nargs='+', action=ParseAction, metavar=('[SRC] LANG', 'DEST'), help='Attempt to parse SRC or next line of std into trees in LANG, output to DEST or stdout')
+    parser.add_argument('-d', '--display', type=str, nargs='+', action=DisplayAction, metavar=('SRC [LANG]', 'DEST'), help='Get trees from SRC or stdin, convert to text and output to DEST or stdout')
+    parser.add_argument('-F', '--flatten', action=SetGlobal, todo=('FLAT', True), help='Start flattening phrases into single nodes')
+    parser.add_argument('-DF', '--dont-flatten', action=SetGlobal, todo=('FLAT', False), help='Stop flattening phrases')
+    parser.add_argument('-N', '--normalize', action=SetGlobal, todo=('NORMALIZE_NODES', True), help='Start ignoring the language of non-lexical nodes')
+    parser.add_argument('-DN', '--dont-normalize', action=SetGlobal, todo=('NORMALIZE_NODES', False), help='Stop ignoring node language')
+    parser.add_argument('-U', '--use-unknown', action=SetGlobal, todo=('UNKNOWN_MORPH', '"CREATE_AND_LOG"'), help='Begin logging unknown morphemes to missing_morphemes.txt, don\'t error')
+    parser.add_argument('-am', '--add-missing', nargs=0, action=BlankAction, help='Append everything in missing_morphemes.txt to the relevant lexicon files')
+    parser.add_argument('-ft', '--fill-trans', nargs=2, action=BlankAction, metavar=('LANG1', 'LANG2'), help='Add blank entries in translation file from LANG1 to LANG2 for any morpheme not already listed')
+    args = parser.parse_args()

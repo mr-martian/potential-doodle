@@ -10,7 +10,7 @@ determiner=a: determiner=un
 adjective=elect: adjective=electado
   #that's a participle -- fix later
 conjunction=and: conjunction=y
-determiner=herPL: determiner=sus-f
+determiner=her#PL: determiner=sus-f
 noun=child: noun=hijo
 tense=nonpast: tense=present
 preposition=in: preposition=en

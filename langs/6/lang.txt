@@ -17,8 +17,8 @@ syntax
       xbar: ~; AP?; noun; ~
     PP
       xbar: ~; ~; preposition; DP
-    I
-      structure: [I tense aspect mood]
+    #I
+    #  structure: [I tense aspect mood]
     DP
       variable: $head:determiner
       option ($head(hasspec=true))

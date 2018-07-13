@@ -1,31 +1,31 @@
 metadata
   name
     local: Sajem Tan
-    display
-      lang: 1
-      option: Sajem Tan
-      option: Common Honey
+    #display
+    #  lang: 1
+    #  option: Sajem Tan
+    #  option: Common Honey
   creator: Common Honey Tribe
 syntax
   start-with: CP
   auto-setlang: AP; CP; IP; NP; PP; DP; VP
   node-types
     AP
-      xbar (1): ~; ~; describer; ~
+      xbar: ~; ~; describer; ~
     CP
-      xbar (1): ~; ~; complementizer; IP
+      xbar: ~; ~; complementizer; IP
     IP
-      xbar (1): ~; ~; I; VP
+      xbar: ~; ~; I; VP
     NP
-      xbar (1): ~; AP; noun; ~
+      xbar: ~; AP; noun; ~
     PP
-      xbar (1): ~; ~; postposition; DP
+      xbar: ~; ~; postposition; DP
     I
       variable: $t:tense
       variable: $a:aspect
       variable: $m:mood
       structure: [I $t $a $m]
-      translation (1): [I $t $a $m]
+      #translation (1): [I $t $a $m]
     DP
       variable: $head:determiner
       option ($head(hasspec=true))
