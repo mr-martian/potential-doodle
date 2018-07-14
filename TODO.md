@@ -2,6 +2,12 @@
 
 - Immediate goals
   - [ ] document file format
+    - [ ] lang.txt
+      - [ ] lexc
+      - [ ] transform
+    - [ ] lexicon.txt
+    - [ ] translation files
+    - [ ] .lexc, .twol, and .dix
   - [ ] check speed on larger corpora
   - [ ] list words in text that could not be translated
   - [ ] measure translation distance

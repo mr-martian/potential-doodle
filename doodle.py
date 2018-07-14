@@ -13,7 +13,7 @@ FLAT = False
 NORMALIZE_NODES = True # True: .lang of non-lexical nodes is ignored
 ###VARIABLES
 class Variable:
-    pattern = re.compile('^\\$?([^:?!^+]+):?([^:?!^+]*)\\.?([^:?!^+]*)([?!^+]*)$')
+    pattern = re.compile('^\\$?([^:?!^+]*):?([^:?!^+]*)\\.?([^:?!^+]*)([?!^+]*)$')
     def __init__(self, label, value=None, prop=None, opt=False, neg=False, multi=False, group=False, idx=None, cond=None):
         self.label = label
         self.value = value
@@ -1227,7 +1227,7 @@ def loadlang(lang):
                             if 'xbar' in op:
                                 line = op.first('xbar')
                                 nodes = line.vals
-                                if len(nodes) != 3:
+                                if len(nodes) != 4:
                                     ParseError('Wrong number of nodes given to xbar on line %s, expected 4, got %s' % (line.num, len(nodes)))
                                 xargs = []
                                 for s, arg in zip(nodes, ['spec', 'mod', 'head', 'comp']):
@@ -1756,7 +1756,7 @@ if __name__ == '__main__':
     parser.add_argument('-F', '--flatten', action=SetGlobal, todo=('FLAT', True), help='Start flattening phrases into single nodes')
     parser.add_argument('-DF', '--dont-flatten', action=SetGlobal, todo=('FLAT', False), help='Stop flattening phrases')
     parser.add_argument('-N', '--normalize', action=SetGlobal, todo=('NORMALIZE_NODES', True), help='Start ignoring the language of non-lexical nodes')
-    parser.add_argument('-DN', '--dont-normalize', action=SetGlobal, todo=('NORMALIZE_NODES', False), help='Stop ignoring node language')
+    parser.add_argument('-DN', '--dont-normalize', action=SetGlobal, todo=('NORMALIZE_NODES', False), help='Stop ignoring node language (ignoring is the default)')
     parser.add_argument('-U', '--use-unknown', action=SetGlobal, todo=('UNKNOWN_MORPH', '"CREATE_AND_LOG"'), help='Begin logging unknown morphemes to missing_morphemes.txt, don\'t error')
     parser.add_argument('-am', '--add-missing', nargs=0, action=BlankAction, help='Append everything in missing_morphemes.txt to the relevant lexicon files')
     parser.add_argument('-ft', '--fill-trans', nargs=2, action=BlankAction, metavar=('LANG1', 'LANG2'), help='Add blank entries in translation file from LANG1 to LANG2 for any morpheme not already listed')

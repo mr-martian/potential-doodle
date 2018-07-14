@@ -82,22 +82,38 @@ Names which the parser is unable to interpret as part of anything else will be t
 # lang.txt
 ```lang.txt``` is the main file of the language directory and currently contains 4 sections: metadata, syntax, lexc, and transform.
 ## metadata
+This may contain any information about the language, but currently the only interpreted properties are ```creator``` and ```name```.
+
+Example:
+```
+metadata
+  creator: Common Honey Tribe
+  name
+    local: Sajem Tan
+    1: Common Honey
+```
 ## syntax
+The ```syntax``` section specifies how to generate a syntax tree, both randomly and when trying to parse a text. It has the following children:
+
+```start-with: XP``` specifies that ```XP``` should be the type of the highest node in the tree.
+
+```auto-setlang: AP; BP; CP; bloop``` specifies that when the translator encounters nodes whose types are in the set ```{AP Amod Abar BP Bmod Bbar CP Cmod Cbar bloop}``` it can just copy them over directly. This is generally unnecessary, since the language of syntactic nodes is ignored by default.
+
+The children of ```node-types``` each specify the rules for generating particular type of node. The label of each child is the way it is referred to by the other rules, though not necessarily the name of the node it generates. Each node has 0 or more ```variable``` children, specifying sub-elements to be generated first, and ```option``` children, each a possible final output. If there is only one ```option```, it may be omitted and its children placed directly under the node.
+
+For each ```variable```, an element will be selected which statisfies the condition and will be assigned to the variable. So ```variable: $x:noun``` will assign some noun as the value of ```$x```, and ```variable: $x:noun(gender=m)``` will assign a masculine noun as the value of ```$x```.
+
+Each ```option``` must have either as a child either ```xbar``` or ```structure```.
+
+```structure``` simply specifies the structure of the node. So, for instance ```structure: |[NP $x PP]``` would generate a noun phrase contain the previously declared variable ```$x``` and a prepositional phrase (or whatever else the PP rule might generate). ```structure``` may optionally be accompanied by ```translation (LANG): FORM``` where ```LANG``` is the destination language and ```FORM``` is the result. This automatically creates a translation rule, though this probably best done in the translation files.
+
+```xbar: A; B; C; D``` is equivalent to ```structure: |[XP A B C D]``` with ```XP``` being replaced with the rule name.
+
+Each option can also have one or more ```require``` lines. These tell the generator to ignore the option if a certain type of morpheme is unavailable. For example, ```require: pronoun``` will only allow the option to be selected if it is possible to generate a pronoun. This primarily exists to increase the efficiency of the parser.
 ## lexc
 ## transform
 # lexicon.txt
 # Translation files
 # .pdtxt files
+.pdtxt files are documents ready to be translated. The file has the same syntax as the language data files. The first line will be ```metadata``` with a child which says ```lang: ID``` with ```ID``` being the language of the document. The metadata section may contain other data about the document, but nothing is currently done with it. Each line after this will have the line number or some other identifier as the label and usually the primary tree for the sentence as the value. Any children will be interpreted as alternative trees (this would happen, for instance, if the translator had multiple outputs) except ```gloss``` which optionally holds the original plaintext.
 # .lexc and .twol
-# gentext.py command line
-Most options can be found by running ```gentext.py -h```.
-
-The first two arguments should be the numeric ids of the languages you want to translate between. If you want to parse plaintext, the first should be 0, and if you are converting trees to plaintext without translating the second should be 0.
-
-The next argument should be a mode which is one of
-  - ```-t NAME``` which gets input from the first line of ```potential-doodle/texts/NAME_tree.txt``` (with ```NAME.txt``` assumed to be the plaintext version)
-  - ```-f FILE``` which grabs the first line of FILE
-  - ```-r``` which takes the first line of ```potential-doodle/trace.txt``` which will be whatever was used most recently unless ```--notrace``` was used
-  - ```-g``` which randomly generates a new sentence using the patterns described in the syntax section of lang.txt
-  - ```-p FILE``` which takes a file containing one sentence per line and finds all trees which could generate them
-  - ```-d FILE``` which takes a .pdtxt file and translates it
