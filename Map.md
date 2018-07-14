@@ -1,12 +1,8 @@
 - Main Program
-  - [compilelang.py](compilelang.py)
-    - Reads data files
-  - [datatypes.py](compilelang.py)
-    - Classes and primary translation logic
-  - [gentext.py](gentext.py)
-    - Generates and translates random syntax trees
+  - [doodle.py](doodle.py)
+    - Data types, file parser, translation and generation logic, and command-line interface
 - Data
-  - langs
+  - languages
     - 1 (English)
       - [lang.txt](langs/1/lang.txt)
         - Language Metadata and general transformation rules
@@ -23,7 +19,9 @@
         - [1.txt](langs/2/translate/1.txt)
           - Per-morpheme Sajem Tan-English translation rules
     - 3 & 4 contain bits of conlangs which may be used as test data later
-- Docs
+- Documents
+  - [DOC.md](DOC.md)
+    - Details of the various file formats
   - [LICENSE](LICENSE)
     - MIT License, for simplicity
   - [Map.md](Map.md)
@@ -56,3 +54,10 @@
       - Generates walsform.html
     - [walsform.html](walsform.html)
       - Feature list, separated from walsfeatures.php to make editing easier
+- Internal Files
+  - [.gitignore](.gitignore)
+    - The .gitignore file
+  - [maketransducer.sh](maketransducer.sh)
+    - Helper script for [maketransducer.py](maketransducer.py)
+  - [maketransducer-lt.sh](maketransducer-lt.sh)
+    - Helper script for [maketransducer.py](maketransducer.py)
