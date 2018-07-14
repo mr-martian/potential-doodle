@@ -1494,6 +1494,8 @@ def translatefile(infile, outfile, tlang, check=False, normalize=True, keepgloss
         f.write(Sentence.fromparseline(l, flang).translate(tlang, check, normalize, keepgloss).toparseline().tofilestr(0))
     if isinstance(outfile, str):
         f.close()
+class GeneratorError(Exception):
+    pass
 def gen(pats, tree, depth, setvars):
     if isinstance(tree, Node):
         r = copy.copy(tree)
@@ -1526,6 +1528,8 @@ def gen(pats, tree, depth, setvars):
                     break
             if ad:
                 il.append(i)
+        if not il:
+            raise GeneratorError("None of the conditions for generation rule '%s' could be satisfied." % tree.name)
         return gen(pats, tree.opts[random.choice(il)], depth, vrs)
     else:
         return tree

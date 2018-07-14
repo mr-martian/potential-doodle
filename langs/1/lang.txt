@@ -55,6 +55,9 @@ syntax
       option ($head(objects=1); $head(object1=CP))
         xbar: DP; adverb?; $head; CP
         require: verb
+      option
+        structure: |[VP $head]
+        #default to intransitive if unspecified
 lexc: hfst
   split-root: _
   noun

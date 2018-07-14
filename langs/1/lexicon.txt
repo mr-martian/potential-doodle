@@ -39,8 +39,10 @@ may (mood)
 don't (aux)
   conj: inf
 have (aspect)
-  altpos: verb
   conj: pstprt
+have (verb)
+  objects: 1
+  object1: NP
 be (aspect)
   altpos: verb
   objects: 1
@@ -847,9 +849,17 @@ of (preposition)
 on (preposition)
 out (preposition)
 ask (verb)
+  objects: 1
+  object1: CP
 bring (verb)
-come (verb)
-come+visit (verb)
+  objects: 1
+  object1: NP
+come#PP (verb)
+  objects: 1
+  object1: PP
+come#IP (verb)
+  objects: 1
+  object1: IP
 command (verb)
 confess (verb)
 do+so (verb)
