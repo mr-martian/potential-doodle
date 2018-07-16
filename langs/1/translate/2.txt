@@ -1,0 +1,171 @@
+adjective=alone: adjective=zhokahm
+adjective=complete: adjective=goltso
+adjective=elect: adjective=delgemsun
+adjective=evil: adjective=tyceslit
+adjective=full: adjective=jelk
+adjective=new: adjective=jam
+adjective=other: suffix=uk
+adverb=also: adverb=nacen
+adverb=forever: adverb=jotmun
+adverb=greatly: adverb=xulm
+adverb=just: verb=dec
+adverb=not: adverb=molt
+adverb=now: adverb=fic
+aspect=be: verb=zan
+aspect=have+been: verb=zan
+aspect=have: verb=duthotum+zan
+complementizer=+Q: ~
+complementizer=-Q: ~
+complementizer=that: ~
+conjunction=and: conjunction=keh
+conjunction=because: suffix=vah
+conjunction=both-and: conjunction=keh
+conjunction=but: conjunction=smah
+conjunction=for: suffix=thot
+conjunction=if-then: conjunction=jo
+conjunction=paren: ~
+conjunction=so+that: suffix=jahk
+conjunction=though-null: ~
+conjunction=thus: ~
+determiner=PL: ~
+determiner=SG: ~
+determiner=a: ~
+determiner=her#PL: determiner=duvmeh
+determiner=his#PL: determiner=duvmeh
+determiner=many: determiner=xulm
+determiner=our: determiner=dehahvmeh
+determiner=some#PL: determiner=mehn
+determiner=the#PL: ~
+determiner=the: ~
+determiner=this: ~
+determiner=those: ~
+determiner=your#PL: determiner=doahvmeh
+determiner=your: determiner=dovmeh
+dup-pro=2S: pronoun=do
+mood=imperative-not
+  translate
+    from: [I $t? $a? mood=imperative-not]
+    to: [I $t $a mood=s_n mood=m_t]
+mood=imperative: mood=s_n
+mood=may: mood=shn_n
+mood=not: mood=m_t
+mood=should: mood=j_m
+mood=subjunctive: mood=fm_k
+mood=to
+  translate
+    from: |[?VP $subj? $verb? |[?IP [I $t? $a? mood=to] |[VP ~ $m? $v? $c?]]]
+    to: |[$VP $subj $verb |[CP complementizer=mu |[$IP [I $t $a ~] |[VP $subj $m $v $c]]]]
+  translate
+    from: |[?NP $noun |[?IP [I $t? $a? mood=to] |[?VP ~ $v? $c?]]]
+    to: |[$NP $noun |[CP complementizer=mu |[$IP [I $t $a ~] |[$VP |[DP pronoun=du] $v $c]]]]
+mood=will: suffix=jot
+noun=Christ: noun=con+Christ+om
+noun=God: noun=Fuhdet
+noun=Jesus+Christ: noun=con+Jesus+Christ+om
+noun=Jesus: noun=con+Jesus+om
+noun=antichrist: noun=con+Christ+omukmun
+noun=beginning: noun=sit
+noun=child: noun=dazlelfim
+noun=commandment: noun=fmolthyt
+noun=deceiver: noun=xecultnacolmgyn
+noun=deed: noun=gynthnu
+noun=elder: noun=dulm
+noun=everyone: noun=xyt
+noun=face: noun=kidek
+noun=father: noun=tatvakult
+noun=flesh: noun=fynit
+noun=grace: noun=zyshensolsolm
+noun=greeting: noun=xanoln
+noun=house: noun=xananzmet
+noun=ink: noun=thekzic
+noun=joy: noun=sleksolsolm
+noun=lady: noun=mam
+noun=love: noun=nashelt
+noun=mercy: noun=zyshensolsolm
+noun=one+another: noun=xytkahm
+noun=one: noun=dec
+noun=paper: noun=tulzhnolm
+noun=peace: noun=simem
+noun=person: noun=xananso
+noun=reward: noun=tulceslit
+noun=sister: noun=mamfyzuln
+noun=son: noun=tatdazlelfim
+noun=teaching: noun=snatzhutthnu
+noun=thing: noun=thing
+noun=truth: noun=cult
+noun=world: noun=cadelk
+null-pro=3PL: null-pro=duah
+null-pro=3S: null-pro=du
+preposition=according+to: suffix=vah+shan
+preposition=ahead: postposition=kac
+preposition=as+if: mood=fmolk
+preposition=as: ~
+preposition=because+of: suffix=vah
+preposition=for: suffix=thot
+preposition=from: suffix=thot
+preposition=in: postposition=kafmym
+preposition=into: postposition=javem
+preposition=of: suffix=vmeh
+preposition=on: postposition=navnyc
+preposition=out: postposition=kafmymukmun
+preposition=to: suffix=thot
+preposition=vocative: suffix=o
+preposition=with: suffix=kah
+pronoun=I: pronoun=deh
+pronoun=anyone: pronoun=mehn
+pronoun=him: pronoun=du
+pronoun=it: pronoun=du
+pronoun=this: suffix=deh
+pronoun=us: pronoun=dehah
+pronoun=we: pronoun=dehah
+pronoun=you: pronoun=do
+quantifier=all: quantifier=xyt
+quantifier=any: quantifier=mehn
+quantifier=many: quantifier=xulm
+quantifier=not: suffix=xeht
+rel-pronoun=that: rel-pron=mu
+rel-pronoun=who: rel-pron=mu
+tense=gerund: tense=thnu
+tense=inf
+  translate
+    from: [I tense=inf $a? $m?]
+    to: [I ~ $a $m]
+tense=nonpast
+  translate
+    from: [I tense=nonpast $a? $m?]
+    to: [I ~ $a $m]
+tense=object
+  translate
+    from: [I tense=object $a? $m?]
+    to: [I ~ $a $m]
+tense=past: tense=midpast
+verb=ask: verb=julgic
+verb=be: verb=zan
+verb=bring: verb=snam
+verb=come: verb=safic
+verb=command: suffix=zhut
+verb=confess: verb=snedelmxehttan
+verb=do+so: verb=fmyvuhk
+verb=find: verb=sezhulfen
+verb=give: verb=snam
+verb=go: verb=sazyc
+verb=greet: verb=xanoln
+verb=have: verb=duthotum+zan
+verb=hear: verb=voljam
+verb=hope: verb=zamen
+verb=know: verb=shyn
+verb=live: verb=xanan
+verb=lose: verb=xehtzyvuhk
+verb=love: verb=nashelt+kexek
+verb=receive: ~
+verb=rejoice: verb=slekmun
+verb=remain: verb=vinukmun
+verb=reside: verb=julfit
+verb=share: verb=vesnen
+verb=speak: verb=tan
+verb=visit: verb=tulnsazyc
+verb=walk: verb=slac
+verb=want: verb=tolthim
+verb=watch: verb=fman
+verb=work: verb=vuhxulm
+verb=write: verb=thek
