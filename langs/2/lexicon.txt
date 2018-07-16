@@ -1,14 +1,44 @@
 comp (complementizer)
   audible: false
+mu (rel)
+  display: [-
+om (rel)
+  display: -]
+mu (complementizer)
+  conjugation
+    structure: |[?CP @]
+    result: [MP rel=mu |[$CP ~] rel=om]
 g_m (mood)
   root: golm
   vowel: ol
+  searchkey: golm
 m_t (mood)
   root: molt
   vowel: ol
+  searchkey: molt
 d_c (mood)
   root: dic
   vowel: i
+  searchkey: dic
+d_t (mood)
+  vowel: i
+  searchkey: dit
+fm_k (mood)
+  vowel: ol
+  searchkey: fmolk
+j_m (mood)
+  vowel: ol
+  searchkey: jolm
+m_t (mood)
+  vowel: ol
+  searchkey: molt
+shn_n (mood)
+  vowel: ol
+  searchkey: shnoln
+s_n (mood)
+  vowel: i
+  searchkey: sin
+
 nonpast (tense)
   form
     structure: [I @ $aspect? mood=d_c]
@@ -30,10 +60,6 @@ null (determiner)
 vmeh (determiner)
   audible: false
   hasspec: true
-mu (rel)
-  display: [
-om (rel)
-  display: ]
 zho (pronoun)
 ah (noun/noun)
 feh (aspect)
@@ -57,6 +83,27 @@ tyk (conjunction)
   clause-only: true
 nuhtit (describer)
 zlulzim (describer)
+
+PL (determiner)
+  number: pl
+SG (determiner)
+  number: sg
+
+#pronouns
+deh (noun)
+do (noun)
+du (noun)
+
+dehahvmeh (determiner)
+doahvmeh (determiner)
+dovmeh (determiner)
+duvmeh (determiner)
+mehn (determiner)
+the (determiner)
+the#PL (determiner)
+this (determiner)
+those (determiner)
+xulm (determiner)
 
 cadelgyn (noun)
 cadelk (noun)
@@ -316,3 +363,114 @@ tulceslitvolt (noun)
 xaslan (noun)
 xen (noun)
 zlaslolk (noun)
+
+
+#Generated from missing_morphemes.txt
+delgemsun (adjective)
+goltso (adjective)
+jam (adjective)
+jelk (adjective)
+tyceslit (adjective)
+zhokahm (adjective)
+fic (adverb)
+jotmun (adverb)
+molt (adverb)
+nacen (adverb)
+xulm (adverb)
+-Q (complementizer)
+that (complementizer)
+jo (conjunction)
+paren (conjunction)
+smah (conjunction)
+though-null (conjunction)
+thus (conjunction)
+Fuhdet (noun)
+con+Christ+om (noun)
+con+Christ+omukmun (noun)
+con+Jesus+Christ+om (noun)
+con+Jesus+om (noun)
+cult (noun)
+dec (noun)
+dulm (noun)
+fmolthyt (noun)
+fynit (noun)
+gynthnu (noun)
+mamfyzuln (noun)
+simem (noun)
+sit (noun)
+sleksolsolm (noun)
+snatzhutthnu (noun)
+tatdazlelfim (noun)
+tatvakult (noun)
+thekzic (noun)
+thing (noun)
+tulceslit (noun)
+tulzhnolm (noun)
+xananso (noun)
+xanoln (noun)
+xecultnacolmgyn (noun)
+xyt (noun)
+xytkahm (noun)
+zyshensolsolm (noun)
+du (null-pro)
+duah (null-pro)
+pro (null)
+javem (postposition)
+kac (postposition)
+kafmym (postposition)
+kafmymukmun (postposition)
+navnyc (postposition)
+as (preposition)
+deh (pronoun)
+dehah (pronoun)
+do (pronoun)
+du (pronoun)
+mehn (pronoun)
+mehn (quantifier)
+xulm (quantifier)
+xyt (quantifier)
+deh (suffix)
+jahk (suffix)
+jot (suffix)
+kah (suffix)
+o (suffix)
+thot (suffix)
+uk (suffix)
+vah (suffix)
+vah+shan (suffix)
+vmeh (suffix)
+xeht (suffix)
+zhut (suffix)
+dac (tense)
+null (tense)
+thnu (tense)
+dec (verb)
+duthotum+zan (verb)
+fman (verb)
+fmyvuhk (verb)
+julfit (verb)
+julgic (verb)
+nashelt+kexek (verb)
+receive (verb)
+safic (verb)
+sazyc (verb)
+sezhulfen (verb)
+shyn (verb)
+slac (verb)
+slekmun (verb)
+snam (verb)
+snedelmxehttan (verb)
+tan (verb)
+thek (verb)
+tolthim (verb)
+tulnsazyc (verb)
+vesnen (verb)
+vinukmun (verb)
+voljam (verb)
+vuhxulm (verb)
+xanan (verb)
+xanoln (verb)
+xehtzyvuhk (verb)
+zamen (verb)
+zan (verb)
+

@@ -37,13 +37,9 @@ LEXICON NounInflCase
 %<nom%>: # ;
 %<gen%>:vmeh # ;
 
-LEXICON VerbInfl-Transitive
+LEXICON VerbInfl
 
-%<v%>%<tv%>: VerbInflAspect ;
-
-LEXICON VerbInfl-Intransitive
-
-%<v%>%<iv%>: VerbInflAspect ;
+%<v%>: VerbInflAspect ;
 
 LEXICON VerbInflAspect
 

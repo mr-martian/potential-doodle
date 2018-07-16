@@ -51,29 +51,24 @@ lexc: hfst
         default: <nom>
     in: NounRoot
     to: NounInflNum
-#doesn't deal with experiencer verbs
-  verb (transitive=true)
+  verb
     in: VerbRoot
-    to: VerbInfl-Transitive
-    format: {root[0]}<v><tv>{aspect}{valency}
-    tags
-      type
-        case (transitive=true): <tv>
-        case (transitive=false): <iv>
-        default: <tv>
-      aspect: aspect
-        default: <error>
-      valency: valency
-        default: <stat>
-  verb (transitive=false)
-    in: VerbRoot
-    to: VerbInfl-Intransitive
-    format: {root[0]}<v><iv>{aspect}{valency}
+    to: VerbInfl
+    format: {root[0]}<v>{aspect}{valency}
     tags
       aspect: aspect
         default: <error>
       valency: valency
         default: <stat>
+#  verb (transitive=false)
+#    in: VerbRoot
+#    to: VerbInfl-Intransitive
+#    format: {root[0]}<v><iv>{aspect}{valency}
+#    tags
+#      aspect: aspect
+#        default: <error>
+#      valency: valency
+#        default: <stat>
   mood (vowel=i)
     format: {root[0]}<aux>{tense}
     tags

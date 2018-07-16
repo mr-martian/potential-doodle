@@ -974,7 +974,11 @@ def toobj(s, lang, loc, at=None):
             else:
                 rest = ['$', ':'] + rest
                 return destring()
-    ret = destring()
+    try:
+        ret = destring()
+    except:
+        print('problem on line %s, add more checks, unparsed remainder was %s' % (loc, rest))
+        raise
     if rest != []:
         print('problem on line %s, unparsed remainder was %s' % (loc, rest))
     assert(rest == [])
@@ -1371,7 +1375,8 @@ def addmissing():
     lns = list(set(f.readlines()))
     lns.sort()
     lang = ''
-    for line in lns:
+    for _line in lns:
+        line = _line.strip()
         if not line: continue
         s = line.split()
         l = s[0][:-1]
@@ -1383,6 +1388,9 @@ def addmissing():
             lang = l
             print('Writing to langs/%s/lexicon.txt' % l)
         f.write('%s (%s)\n' % (r,p))
+    f.close()
+    f = open('missing_morphemes.txt', 'w')
+    f.write('\n')
     f.close()
 def filltrans(lfrom, lto):
     Language.getormake(lfrom)
