@@ -11,17 +11,13 @@ def genlexicon(langid):
     for ntype in AllMorphemes[langid]:
         for root in AllMorphemes[langid][ntype]:
             m = AllMorphemes[langid][ntype][root]
-            added = False
             for rule in lang.lexc_lexicons:
                 if rule['ntype'] != ntype:
                     continue
-                ok = True
                 for c in rule['conds']:
                     if m.props[c[0]] != c[1]:
-                        ok = False
                         break
-                if ok:
-                    added = True
+                else:
                     root = m.children[0].split('#')[0]
                     disp = root
                     if 'regex' in rule:
@@ -40,6 +36,9 @@ def genlexicon(langid):
                             s = form[0]
                         s = lexcescape(s)
                         lexs[rule['lexicon-in']].append('%s:%s %s "weight: %d" ;' % (s, form[1], form[2], 0 if form[2] == '#' else 1))
+                    break
+            else:
+                lexs['Bland'].append('%s:%s # "weight: 2" ;' % (lexcescape(m.tagify()), m.children[0]))
     for r in lang.lexc_lexicons:
         if r['bland']:
             lexs['Bland'].append(r['lexicon-in'] + ' ;')

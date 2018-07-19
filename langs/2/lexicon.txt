@@ -85,22 +85,24 @@ nuhtit (describer)
 zlulzim (describer)
 
 PL (determiner)
+  audible: false
   number: pl
 SG (determiner)
+  audible: false
   number: sg
+vmeh (determiner)
+  number: sg
+  display: -vmeh
+vmeh#PL (determiner)
+  number: pl
+  display: -vmeh
 
 #pronouns
 deh (noun)
 do (noun)
 du (noun)
 
-dehahvmeh (determiner)
-doahvmeh (determiner)
-dovmeh (determiner)
-duvmeh (determiner)
 mehn (determiner)
-the (determiner)
-the#PL (determiner)
 this (determiner)
 those (determiner)
 xulm (determiner)
@@ -438,7 +440,6 @@ thot (suffix)
 uk (suffix)
 vah (suffix)
 vah+shan (suffix)
-vmeh (suffix)
 xeht (suffix)
 zhut (suffix)
 dac (tense)

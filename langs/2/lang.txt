@@ -39,7 +39,7 @@ syntax
       option ($head(transitive=false))
         xbar (1): DP; ~; $head; ~
 lexc: hfst
-  split-root: _
+  split-root: __
   noun
     format: {root[0]}<n>{plural}{case}
     tags
@@ -73,7 +73,7 @@ lexc: hfst
     format: {root[0]}<aux>{tense}
     tags
       tense: tense
-        default: <error>
+        default: <nonpst>
     in: AuxRoot
     to: AuxInfl
     regex-match: _
@@ -82,7 +82,7 @@ lexc: hfst
     format: {root[0]}<aux>{tense}
     tags
       tense: tense
-        default: <error>
+        default: <nonpst>
     in: AuxRoot
     to: AuxInfl
     regex-match: _
@@ -98,6 +98,9 @@ transform
     form: $noun:noun
     set (case=gen)
 #aspect
+  rule
+    form: [I $tense? ~ $mood?]
+    result: [I $tense aspect=feh $mood]
   rule
     context: [Ibar [I $tense? $aspect:aspect $mood?] |[VP $spec? $mod? @ $comp?]]
     form: $verb:verb

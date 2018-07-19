@@ -26,6 +26,7 @@ Punctuation ;
 VerbRoot ;
 AuxRoot ;
 AdjRoot ;
+Bland ;
 
 LEXICON NounInflNum
 

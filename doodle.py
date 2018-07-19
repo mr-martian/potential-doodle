@@ -59,6 +59,26 @@ class Variable:
                 if not match(v, self.cond):
                     return False
         return True
+    def setvars(self, node, vrs):
+        """Equivalent to Node.getvars(), but applied to the pattern rather than the tree"""
+        if self.check(node):
+            if self.group or self.multi:
+                if self.label not in vrs:
+                    vrs[self.label] = [node]
+                elif not isinstance(vrs[self.label], list):
+                    vrs[' failed'] = 'variable reuse'
+                else:
+                    vrs[self.label].append(node)
+            elif self.label in vrs:
+                if match(node, vrs[self.label]):
+                    pass
+                else:
+                    vrs[' failed'] = 'variable reuse or value mismatch'
+            else:
+                vrs[self.label] = node
+        else:
+            vrs[' failed'] = 'variable condition'
+        return vrs
     def putvars(self, vrs):
         if self.multi:
             return vrs[self.label][self.idx]
@@ -81,6 +101,8 @@ class Unknown(Variable):
     def __init__(self):
         Variable.__init__(self, ' '+str(Unknown.count), opt=True)
         Unknown.count += 1
+    def check(self, v):
+        return True
     def __str__(self):
         return '*'
     def __repr__(self):
@@ -105,6 +127,33 @@ class Node:
                 vrs[' failed'] = 'variable condition'
             else:
                 vrs[form.label] = self
+        elif isinstance(form, UnorderedCollector):
+            if self.ntype != form.ntype:
+                vrs[' failed'] = 'ntype'
+            else:
+                for c in self.children:
+                    if not c:
+                        continue
+                    for v in form.children:
+                        if isinstance(v, Variable):
+                            v.setvars(c, vrs)
+                            if not vrs[' failed']:
+                                break
+                            else:
+                                vrs[' failed'] = False
+                        else:
+                            pass #ignore non-Variable items for now #@TODO?
+                    else:
+                        vrs[' failed'] = 'no matching variables found'
+                        break
+                else:
+                    for v in form.children:
+                        if v.label not in vrs:
+                            if v.opt:
+                                vrs[v.label] = None
+                            else:
+                                vrs[' failed'] = 'unmatched variable'
+                                break
         elif type(self) != type(form):
             vrs[' failed'] = 'type'
         elif not match(self.lang, form.lang) or not match(self.ntype, form.ntype):
@@ -192,16 +241,14 @@ class Node:
         vrs = {' failed': False, ' ': self}
         path = []
         for l in tr.layers:
-            ok = False
             for i, f in enumerate(l):
                 vrs2 = vrs[' '].getvars(f[0], vrs.copy())
                 # don't need deepcopy because the values aren't ever modified
                 if not vrs2[' failed']:
-                    ok = True
                     vrs = vrs2
                     path.append(f[1:])
                     break
-            if not ok:
+            else:
                 return []
         vrs = copy.deepcopy(vrs)
         for result in reversed(path):
@@ -327,6 +374,10 @@ class Node:
             tagset = typ['tags']
             defaults = typ['defaults']
             break
+        else:
+            format = '{root[0]}<%s>' % self.ntype
+            tagset = {}
+            defaults = {}
         tags = {'root': self.children[0].split('#')[0].split(lang.tags_rootsplit)}
         if 'root' in self.props:
             tags['root'] = self.props['root'].split(lang.tags_rootsplit)
@@ -386,10 +437,10 @@ class Node:
     def iternest(self):
         yield self
         for ch in self.children:
-            yield ch
             if isinstance(ch, Node):
-                for c in ch.iternest():
-                    yield c
+                yield from ch.iternest()
+            else:
+                yield ch
     def roots(self):
         ret = []
         for ch in self.children:
@@ -411,6 +462,10 @@ class Node:
             for c in self.children:
                 if isinstance(c, Node):
                     c.nodelang(lang)
+class UnorderedCollector:
+    def __init__(self, ntype, children):
+        self.ntype = ntype
+        self.children = children
 def match(a, b):
     #a is thing, b is pattern
     #only matters for nodes, where b's properties must be a subset of a's
@@ -922,22 +977,15 @@ def toobj(s, lang, loc, at=None):
                 for k in n[' props']:
                     ret.props[k] = n[k]
             return ret
-        elif cur == '<': #Morphology
-            l = None
-            if rest[0] == '(':
-                rest.pop(0)
-                l = int(rest.pop(0))
-                assert(rest.pop(0) == ')')
-            mode = rest.pop(0)
-            a = destring()
-            if rest[0] == '>':
-                rest.pop(0)
-                return Node(l or lang, mode, [a, None])
-            b = destring()
-            if rest[0] != '>':
-                raise ParseError('Morphology Node with too many elements on line %s. %s' % (loc, rest))
-            rest.pop(0)
-            return Node(l or lang, mode, [a, b])
+        elif cur == '<': #UnorderedCollector
+            ntype = rest.pop(0)
+            ch = []
+            while rest and rest[0] != '>':
+                ch.append(destring())
+            if not rest:
+                raise ParseError('Incomplete Unordered Collector, missing > at %s' % loc)
+            rest.pop()
+            return UnorderedCollector(ntype, ch)
         elif cur == '{': #props pattern
             d = {}
             while rest[0] != '}':
@@ -1529,12 +1577,10 @@ def gen(pats, tree, depth, setvars):
             vrs[v.label] = gen(pats, v, depth, {})
         il = []
         for i, cl in enumerate(tree.conds):
-            ad = True
             for c in cl:
                 if not c.checkset(vrs):
-                    ad = False
                     break
-            if ad:
+            else:
                 il.append(i)
         if not il:
             raise GeneratorError("None of the conditions for generation rule '%s' could be satisfied." % tree.name)
@@ -1677,10 +1723,10 @@ if __name__ == '__main__':
                 tr = trans(tree, int(values.pop(0)))
                 if values:
                     f = open(values[0], 'w')
-                    f.write(tr.writecompile())
+                    f.write('\n'.join(t.writecompile() for t in tr))
                     f.close()
                 else:
-                    print(tr.writecompile())
+                    print('\n'.join(t.writecompile() for t in tr))
             else:
                 if len(values) >= 3:
                     translatefile(values[0], values[2], int(values[1]))
