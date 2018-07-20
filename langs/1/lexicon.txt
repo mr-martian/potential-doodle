@@ -7,18 +7,29 @@ that (complementizer)
 past (tense)
   audible: false
   tense: pst
+  conj: pst
 nonpast (tense)
   audible: false
   tense: nonpst
+  conj: nonpst
 object (tense)
   audible: false
   tense: prsprt
+  conj: prsprt
+  person: 3
+  number: SG
 gerund (tense)
   audible: false
   tense: prsprt
+  conj: prsprt
+  person: 3
+  number: SG
 inf (tense)
   audible: false
   tense: inf
+  conj: inf
+  person: 3
+  number: SG
 could (mood)
   conj: inf
 couldn't (mood)
@@ -62,18 +73,18 @@ haven't+been (aspect)
   conj: pstprt
 not (mood)
   conj: inf
-  form
-    structure: [I $tense? ~ @]
-    result: [I $tense ~ aux=don't]
-  form
-    structure: [I $tense? aspect=have @]
-    result: [I $tense aspect=haven't ~]
-  form
-    structure: [I $tense? aspect=be @]
-    result: [I $tense aspect=aren't ~]
-  form
-    structure: [I $tense? aspect=have+been @]
-    result: [I $tense aspect=haven't+been ~]
+    form
+      structure: [I $tense? ~ @]
+      result: [I $tense ~ aux=don't]
+    form
+      structure: [I $tense? aspect=have @]
+      result: [I $tense aspect=haven't ~]
+    form
+      structure: [I $tense? aspect=be @]
+      result: [I $tense aspect=aren't ~]
+    form
+      structure: [I $tense? aspect=have+been @]
+      result: [I $tense aspect=haven't+been ~]
 must (mood)
   conj: inf
 will (mood)
@@ -259,7 +270,11 @@ many (quantifier)
   number: PL
 all (quantifier)
 who (rel-pronoun)
+  person: 3
+  number: SG
 that (rel-pronoun)
+  person: 3
+  number: SG
 2S (null-pro)
   person: 2
   number: SG

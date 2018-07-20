@@ -13,8 +13,8 @@ FLAT = False
 NORMALIZE_NODES = True # True: .lang of non-lexical nodes is ignored
 ###VARIABLES
 class Variable:
-    pattern = re.compile('^\\$?([^:?!^+]*):?([^:?!^+]*)\\.?([^:?!^+]*)([?!^+]*)$')
-    def __init__(self, label, value=None, prop=None, opt=False, neg=False, multi=False, group=False, idx=None, cond=None):
+    pattern = re.compile('^\\$?([^:?!^+\\.&]*):?([^:?!^+\\.&]*)\\.?([^:?!^+\\.&]*)([?!^+&]*)$')
+    def __init__(self, label, value=None, prop=None, opt=False, neg=False, multi=False, group=False, descend=False, idx=None, cond=None):
         self.label = label
         self.value = value
         self.prop = prop
@@ -22,18 +22,19 @@ class Variable:
         self.neg = neg
         self.multi = multi
         self.group = group
+        self.descend = descend
         self.idx = idx
         self.cond = cond
     def fromstring(s):
         m = Variable.pattern.match(s)
         if m:
             g = m.groups()
-            return Variable(g[0], g[1], g[2], '?' in g[3], '!' in g[3], '^' in g[3], '+' in g[3])
+            return Variable(g[0], g[1], g[2], '?' in g[3], '!' in g[3], '^' in g[3], '+' in g[3], '&' in g[3])
         else:
             print('no match with %s' % s)
     def checkset(self, vrs):
         if self.label not in vrs:
-            return False
+            return self.neg
         if self.group:
             return all(self.check(x) for x in vrs[self.label])
         elif self.multi:
@@ -59,6 +60,43 @@ class Variable:
                 if not match(v, self.cond):
                     return False
         return True
+    def retrieve(self, vrs):
+        if self.label in vrs:
+            node = vrs[self.label]
+            if not node:
+                if not self.prop or self.opt:
+                    return node
+                else:
+                    raise Exception('Variable %s cannot retrieve properties from None.' % self)
+            if self.descend:
+                while True:
+                    if node.ntype == 'conjP':
+                        node = node.children[0]
+                    elif node.ntype[-1] == 'P' and len(node.children) in [2,4]:
+                        if len(node.children) == 4:
+                            node = node.children[2]
+                        else:
+                            node = node.children[1].children[1].children[0]
+                    else:
+                        break
+            if self.prop:
+                if self.prop in node.props:
+                    return node.props[self.prop]
+                elif self.opt:
+                    return None
+                else:
+                    raise Exception('Error with variable %s and node %s, property does not exist.' % (self, node))
+            else:
+                return node
+        elif self.opt:
+            return None
+        else:
+            print(vrs)
+            print(self.label)
+            raise Exception('Variable %s does not exist.' % self)
+    def place(self, vrs, val):
+        if self.label in vrs and vrs[self.label]:
+            vrs[self.label].props[self.prop] = val
     def setvars(self, node, vrs):
         """Equivalent to Node.getvars(), but applied to the pattern rather than the tree"""
         if self.check(node):
@@ -80,19 +118,22 @@ class Variable:
             vrs[' failed'] = 'variable condition'
         return vrs
     def putvars(self, vrs):
-        if self.multi:
+        if self.multi and self.idx != None:
             return vrs[self.label][self.idx]
         else:
             return vrs[self.label]
     def __str__(self):
         return '$'+self.label + \
-               (':'+self.value) if self.value else '' + \
-               ('.'+self.prop) if self.prop else '' + \
-               '?' if self.opt else '' + \
-               '!' if self.neg else '' + \
-               '^' if self.multi else '' + \
-               '+' if self.group else '' + \
-               ('(' + str(self.cond) + ')') if self.cond else ''
+               ((':'+self.value) if self.value else '') + \
+               (('.'+self.prop) if self.prop else '') + \
+               ('?' if self.opt else '') + \
+               ('!' if self.neg else '') + \
+               ('^' if self.multi else '') + \
+               ('+' if self.group else '') + \
+               ('&' if self.descend else '') + \
+               (('(' + str(self.cond) + ')') if self.cond else '')
+    def __repr__(self):
+        return self.__str__()
     def __deepcopy__(self, memo):
         return self
         #Variables aren't modified, so we don't care about copying them
@@ -166,7 +207,7 @@ class Node:
             vrs[' failed'] = 'too many properties: %s not <= %s' % (form.props.keys(), self.props.keys())
         else:
             for s, f in zip(self.children, form.children):
-                if isinstance(s, Node):
+                if isinstance(s, Node) or isinstance(s, UnorderedCollector):
                     s.getvars(f, vrs)
                     if vrs[' failed']:
                         return vrs
@@ -190,7 +231,7 @@ class Node:
                     vrs[' failed'] = 'failed on property %s with value %s and form %s' % (k, self.props[k], form.props[k])
                     return vrs
         return vrs
-    def putvars(self, vrs): #DESTRUCTIVE
+    def _putvars(self, vrs): #DESTRUCTIVE
         for k in self.props:
             if isinstance(self.props[k], Variable):
                 self.props[k] = vrs[self.props[k].label]
@@ -200,9 +241,22 @@ class Node:
             if isinstance(ch, Variable):
                 self.children[i] = vrs[ch.label]
         return self
+    def putvars(self, vrs):
+        ch = []
+        for c in self.children:
+            try:
+                a = c.putvars(vrs)
+                if isinstance(a, list):
+                    ch += a
+                else:
+                    ch.append(a)
+            except AttributeError:
+                ch.append(c)
+        return Node(self.lang, self.ntype, ch, self.props.copy())
     def applyrule(self, rule, vrs):
         if isinstance(rule, Node):
-            vrs[' '] = copy.deepcopy(rule).putvars(vrs)
+            #vrs[' '] = copy.deepcopy(rule).putvars(vrs)
+            vrs[' '] = rule.putvars(vrs)
         elif isinstance(rule, list):
             if rule[0] == 'setlang':
                 vrs[' '].lang = rule[1]
@@ -211,18 +265,47 @@ class Node:
             elif rule[0] == 'set':
                 vrs[' '].props.update(rule[1])
             elif rule[0] == 'setprop':
-                if rule[3]:
-                    try:
-                        vrs[rule[1]].props[rule[2]] = vrs[rule[3]].props[rule[4]]
-                    except KeyError:
-                        print('%s does not have key %s' % (vrs[rule[3]], rule[4]))
-                        raise
-                else:
-                    vrs[rule[1]].props[rule[2]] = rule[4]
+                rule[1].place(vrs, rule[2].retrieve(vrs))
             elif rule[0] == 'rotate':
                 vrs[' '].rotate = True
             elif rule[0] == 'makevar':
                 vrs[rule[1]] = copy.deepcopy(rule[2])
+            elif rule[0] == 'order':
+                ch = []
+                for v in rule[2:]:
+                    if v.label in vrs and vrs[v.label]:
+                        ch.append(vrs[v.label])
+                vrs[' '] = Node(self.lang, rule[1], ch)
+            elif rule[0] == 'node':
+                vrs[' '] = toobj(*rule[1:], at=vrs[' ']).putvars(vrs)
+            elif rule[0] == 'cond':
+                for op in rule[1:]:
+                    if all(v.checkset(vrs) for v in op[0]):
+                        for r in op[1:]:
+                            self.applyrule(r, vrs)
+                        break
+            elif rule[0] == 'distribute':
+                src = rule[1]
+                dst = rule[2]
+                try:
+                    val = vrs[rule[3].label].props[src]
+                except:
+                    print(vrs[' '])
+                    print(rule)
+                    raise
+                for l in rule[4:]:
+                    nv = None
+                    for v in (l if isinstance(l, list) else [l]):
+                        if v.label in vrs and vrs[v.label]:
+                            vrs[v.label].props[dst] = val
+                            if src in vrs[v.label].props:
+                                nv = vrs[v.label].props[src]
+                    if nv:
+                        val = nv
+            elif rule[0] == 'log':
+                print(rule[1].retrieve(vrs))
+            elif rule[0] == 'print':
+                print(rule[1])
     def trans(self, tr):
         vrs = self.getvars(tr.context, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], Node):
@@ -255,7 +338,7 @@ class Node:
             for act in result:
                 self.applyrule(act, vrs)
         return vrs[' ']
-    def transform(self, pats, returnself=True):
+    def _transform(self, pats, returnself=True):
         if len(pats) > 0:
             chs = []
             for c in self.children:
@@ -280,6 +363,35 @@ class Node:
                     added |= bool(x)
                 if not added:
                     ret.append(n)
+            return ret
+        elif returnself:
+            return [self]
+        else:
+            return []
+    def transform(self, pats, returnself=True):
+        if len(pats) > 0:
+            nodes = []
+            retstr = ['[]']
+            for i, p in enumerate(pats):
+                if isinstance(p, Translation):
+                    x = self.trans(p)
+                else:
+                    x = self.transmulti(p)
+                s = str(x)
+                if s not in retstr:
+                    nodes.append(x)
+                    retstr.append(s)
+            if not nodes:
+                nodes = [self]
+            ret = []
+            for n in nodes:
+                chs = []
+                for c in n.children:
+                    if isinstance(c, Node):
+                        chs.append(c.transform(pats))
+                    else:
+                        chs.append([c])
+                ret += [n.swapchildren(list(cl)) for cl in itertools.product(*chs)]
             return ret
         elif returnself:
             return [self]
@@ -463,9 +575,19 @@ class Node:
                 if isinstance(c, Node):
                     c.nodelang(lang)
 class UnorderedCollector:
-    def __init__(self, ntype, children):
+    def __init__(self, lang, ntype, children):
+        self.lang = lang
         self.ntype = ntype
         self.children = children
+    def putvars(self, vrs):
+        ch = []
+        for v in self.children:
+            a = v.putvars(vrs)
+            if isinstance(a, list):
+                ch += a
+            else:
+                ch.append(a)
+        return Node(self.lang, self.ntype, ch)
 def match(a, b):
     #a is thing, b is pattern
     #only matters for nodes, where b's properties must be a subset of a's
@@ -556,38 +678,6 @@ class Translation:
         return '{%s => %s}%s' % (self.form, self.result, self.roots)
     def __repr__(self):
         return self.__str__()
-class Layer:
-    def __init__(self, form, result):
-        self.form = form
-        self.result = result
-    def applyrule(self, vrs):
-        for rule in self.result:
-            mode = rule[0]
-            args = rule[1:]
-            if mode == 'node':
-                pass
-        if isinstance(rule, Node):
-            vrs[' '] = copy.deepcopy(rule).putvars(vrs)
-        elif isinstance(rule, list):
-            if rule[0] == 'setlang':
-                vrs[' '].lang = rule[1]
-            elif rule[0] == 'setdisplay':
-                vrs[' '].props['display'] = rule[1]
-            elif rule[0] == 'set':
-                vrs[' '].props.update(rule[1])
-            elif rule[0] == 'setprop':
-                if rule[3]:
-                    try:
-                        vrs[rule[1]].props[rule[2]] = vrs[rule[3]].props[rule[4]]
-                    except KeyError:
-                        print('%s does not have key %s' % (vrs[rule[3]], rule[4]))
-                        raise
-                else:
-                    vrs[rule[1]].props[rule[2]] = rule[4]
-            elif rule[0] == 'rotate':
-                vrs[' '].rotate = True
-            elif rule[0] == 'makevar':
-                vrs[rule[1]] = copy.deepcopy(rule[2])
 class MultiRule:
     def __init__(self, layers, category, langs, mode='syntax', stage=0):
         self.layers = layers
@@ -920,8 +1010,12 @@ def toobj(s, lang, loc, at=None):
                    '$': [Variable(name+s) for s in spots],
                    '~': [None, None, None, None]}[mode]
             ch = []
-            while rest[0] != ']':
+            while rest and rest[0] != ']':
                 ch.append(destring())
+            if rest:
+                rest.pop(0)
+            else:
+                raise ParseError('Syntax mode is missing closing bracket at %s' % loc)
             if len(ch) == 0: #nothing
                 ch.insert(0, sub[2]) #insert head
             if len(ch) == 1: #just head
@@ -931,7 +1025,6 @@ def toobj(s, lang, loc, at=None):
             if len(ch) == 3: #spec, head, and comp
                 ch.insert(1, sub[1]) #insert mod
             d = {}
-            rest.pop(0)
             if rest and rest[0] == '{':
                 d = destring()
             if FLAT:
@@ -984,8 +1077,8 @@ def toobj(s, lang, loc, at=None):
                 ch.append(destring())
             if not rest:
                 raise ParseError('Incomplete Unordered Collector, missing > at %s' % loc)
-            rest.pop()
-            return UnorderedCollector(ntype, ch)
+            rest.pop(0)
+            return UnorderedCollector(lang, ntype, ch)
         elif cur == '{': #props pattern
             d = {}
             while rest[0] != '}':
@@ -1025,6 +1118,7 @@ def toobj(s, lang, loc, at=None):
     try:
         ret = destring()
     except:
+        print('original line: %s' % s)
         print('problem on line %s, add more checks, unparsed remainder was %s' % (loc, rest))
         raise
     if rest != []:
@@ -1159,40 +1253,57 @@ def readresult(node, lang, at=None):
     for ch in node.children:
         if ch.label == 'result':
             ret.append(toobj(ch.val, lang, ch.num, at))
-        if ch.label == 'setprop':
-            a = ['setprop', ' ', ch.arg, False, ch.val]
-            if '.' in ch.val:
-                v,p = ch.val.split('.')
-                if v[0] == '$':
-                    a[3] = v[1:]
-                elif v == '@':
-                    a[3] = ' '
-                else:
-                    raise ParseError('Cannot interpret variable %s on line %s.' % (v, ch.num))
-                a[4] = p
-            if '.' in ch.arg:
-                v,p = ch.arg.split('.')
-                if v[0] == '$':
-                    a[1] = v[1:]
-                elif v == '@':
-                    a[1] = ' '
-                else:
-                    raise ParseError('Cannot interpret variable %s on line %s.' % (v, ch.num))
-                a[2] = p
+        elif ch.label == 'setprop':
+            a = ['setprop']
+            if '$' in ch.arg or '@' in ch.arg:
+                a.append(Variable.fromstring(ch.arg.replace('@', ' ')))
+            else:
+                a.append(Variable.fromstring('$ .'+ch.arg))
+            if a[1] == None:
+                raise ParseError('Cannot interpret variable %s on line %s.' % (v, ch.arg))
+            if '$' in ch.val or '@' in ch.val:
+                a.append(Variable.fromstring(ch.val.replace('@', ' ')))
+            else:
+                a.append(Variable.fromstring('$ .'+ch.val))
+            if a[2] == None:
+                raise ParseError('Cannot interpret variable %s on line %s.' % (v, ch.val))
             ret.append(a)
-        if ch.label == 'setdisplay':
+        elif ch.label == 'setval':
+            a = ['setprop', None, ch.val]
+            if '$' in ch.arg or '@' in ch.arg:
+                a[1] = Variable.fromstring(ch.arg.replace('@', ' '))
+            else:
+                a[1] = Variable.fromstring('$ .'+ch.arg)
+            ret.append(a)
+        elif ch.label == 'setdisplay':
             ret.append(['setdisplay', ch.val])
-        if ch.label == 'setprops':
+        elif ch.label == 'setprops':
             d = {}
             for prop in ch.children:
                 d[prop.label] = prop.val
             ret.append(['set', d])
-        if ch.label == 'blank':
+        elif ch.label == 'blank':
             ret.append(['setdisplay', ''])
-        if ch.label == 'set':
+        elif ch.label == 'set':
             ret.append(['set', dict(condlist(ch))])
-        if ch.label == 'rotate':
+        elif ch.label == 'rotate':
             ret.append(['rotate'])
+        elif ch.label == 'cond':
+            com = ['cond']
+            for op in ch.children:
+                if op.label == 'option':
+                    com.append([[toobj(x, lang, op.num, at) for x in op.args]] + readresult(op, lang, at))
+            ret.append(com)
+        elif ch.label == 'if':
+            ret.append(['cond', [[toobj(x, lang, ch.num, at) for x in ch.args]] + readresult(ch, lang, at)])
+        elif ch.label == 'distribute':
+            ret.append(['distribute'] + ch.args + [toobj(x, lang, ch.num, at) for x in ch.vals])
+        elif ch.label == 'order':
+            ret.append(['order', ch.arg] + [toobj(x, lang, ch.num, at) for x in ch.vals])
+        elif ch.label == 'log':
+            ret.append(['log', toobj(ch.val, lang, ch.num, at)])
+        elif ch.label == 'print':
+            ret.append(['print', ch.val])
     return ret
 def loadlexicon(lang):
     rootslist = ParseLine.fromfile(DATA_PATH + 'langs/%s/lexicon.txt' % lang)
@@ -1316,7 +1427,7 @@ def loadlang(lang):
                         if ly.val and 'form' not in ly:
                             ly.children = [ParseLine(ly.num, 'form', [], ly.val, ly.children)]
                         if ly.label == 'layer?':
-                            ly.children.append(ParseLine(-1, 'form', [], '@', []))
+                            ly.children.append(ParseLine(-1, 'form', [], '@', [ParseLine(-1, 'result', [], '@', [])]))
                             ly.label = 'layer'
                         if ly.label != 'layer':
                             continue
@@ -1711,6 +1822,7 @@ if __name__ == '__main__':
                 flang = int(values.pop(0))
                 if values[0].isnumeric():
                     line = sys.stdin.readline()
+                    global STDINLINE
                     where = 'standard input line %s' % STDINLINE
                     STDINLINE += 1
                 else:
@@ -1766,6 +1878,7 @@ if __name__ == '__main__':
             if values[0].isnumeric() or (len(values) > 1 and values[1].isnumeric()):
                 if values[0].isnumeric():
                     line = sys.stdin.readline()
+                    global STDINLINE
                     where = 'standard input line %s' % STDINLINE
                     STDINLINE += 1
                 else:
@@ -1779,7 +1892,7 @@ if __name__ == '__main__':
                     f = open(values[0], 'w')
                 else:
                     f = sys.stdout
-                f.write(dolinear(movement1(toobj(line, lang, where))))
+                f.write(dolinear(movement1(toobj(line, lang, where))) + '\n')
                 if values:
                     f.close()
             else:
