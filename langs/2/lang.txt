@@ -106,16 +106,22 @@ transform
     form: $verb:verb
     setprop (aspect): $aspect.aspect
 #tense + mood
+  #rule
+  #  context: [I $tns:tense $aspect? @]
+  #  form: $mood:mood
+  #  setprop (tense): $tns.tense
   rule
-    context: [I $tns:tense $aspect? @]
-    form: $mood:mood
-    setprop (tense): $tns.tense
+    form: <I $tense:tense $mood:mood+ $other+?>
+    setprop ($mood.tense+): $tense.tense
 #subject position
   rule
     context: @
     form: |[IP ~ $imod? $ihead |[VP $subj $vmod? $vhead $vcomp?]]
     result: |[IP $subj $imod $ihead |[VP ~ $vmod $vhead $vcomp]]
 #rotations
+  rule
+    form: [Dbar $d(suffix=true) $c?]
+    rotate
   rotate: Pbar
   rotate: VP
   rotate: Vbar

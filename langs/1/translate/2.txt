@@ -1,14 +1,45 @@
 stage
+  verb=come#IP
+    rule
+      form: |[IP $spec? ~ $I? |[?VP verb=come#IP $comp:IP]]
+      result: |[IP $spec |[CP complementizer=jahk $comp] $I |[$VP verb=safic ~]]
+    rule
+      form: |[IP $I |[?VP verb=come#IP |[conjP $comp1 $conj? $comp2]]]
+      result: |[IP ~ |[conjP |[CP complementizer=jahk $comp1] $conj |[CP complementizer=jahk $comp2]] $I |[$VP verb=safic ~]]
+stage
   preposition=of
-    translate
-      from: |[DP $det?(number=SG) |[?NP $noun? |[PP preposition=of $comp]]]
-      to: |[DP $comp determiner=vmeh |[$NP $noun ~]]
-    translate
-      from: |[DP $det(number=PL) |[?NP $noun? |[PP preposition=of $comp]]]
-      to: |[DP $comp determiner=vmeh#PL |[$NP $noun ~]]
-    translate
-      from: |[DP determiner=the#PL |[NP $noun? |[PP preposition=of $comp]]]
-      to: |[DP $comp determiner=vmeh#PL |[NP $noun ~]]
+    rule
+      form: |[DP $det?(number=SG) |[?NP $noun? |[PP preposition=of $comp]]]
+      result: |[DP $comp determiner=vmeh |[$NP $noun ~]]
+    rule
+      form: |[DP $det(number=PL) |[?NP $noun? |[PP preposition=of $comp]]]
+      result: |[DP $comp determiner=vmeh#PL |[$NP $noun ~]]
+    rule
+      form: |[DP determiner=the#PL |[NP $noun? |[PP preposition=of $comp]]]
+      result: |[DP $comp determiner=vmeh#PL |[NP $noun ~]]
+  #rule
+  #  form: |[DP $pro:pronoun $mod:AP?]
+  #  cond
+  #    option ($pro(number=SG))
+  #      result: |[DP determiner=SG |[NP $mod $pro ~]]
+  #    option ($pro(number=PL))
+  #      result: |[DP determiner=PL |[NP $mod $pro ~]]
+  rule
+    samelang
+    form: |[DP $pro:pronoun(number=SG) $mod:AP?]
+    result: |[DP determiner=SG |[NP $mod $pro ~]]
+  rule
+    samelang
+    form: |[DP $pro:pronoun(number=PL) $mod:AP?]
+    result: |[DP determiner=PL |[NP $mod $pro ~]]
+  rule
+    samelang
+    form: |[DP $pro:null-pro(number=SG)]
+    result: |[DP determiner=SG |[NP $pro]]
+  rule
+    samelang
+    form: |[DP $pro:null-pro(number=PL)]
+    result: |[DP determiner=PL |[NP $pro]]
 stage
   adjective=alone: adjective=zhokahm
   adjective=complete: adjective=goltso
@@ -23,11 +54,13 @@ stage
   adverb=just: verb=dec
   adverb=not: adverb=molt
   adverb=now: adverb=fic
-  aspect=be: verb=zan
-  aspect=have+been: verb=zan
-  aspect=have: verb=duthotum+zan
-  complementizer=+Q: complementizer=comp
-  complementizer=-Q: complementizer=comp
+  aspect=be: aspect=feh
+  aspect=have+been: aspect=dah
+  aspect=have: aspect=dah
+  complementizer=+Q
+    rule
+      form: |[?CP complementizer=+Q]
+      result: |[$CP ~]
   complementizer=that: ~
   conjunction=and: conjunction=keh
   conjunction=because: suffix=vah
@@ -43,48 +76,54 @@ stage
   determiner=SG: determiner=SG
   determiner=a: determiner=SG
   determiner=her#PL
-    translate
-      from: |[DP determiner=her#PL $comp?]
-      to: |[DP |[DP determiner=SG |[NP noun=du]] determiner=vmeh#PL $comp]
+    rule
+      form: |[DP determiner=her#PL $comp?]
+      result: |[DP |[DP determiner=SG |[NP noun=du]] determiner=vmeh#PL $comp]
   determiner=his#PL
-    translate
-      from: |[DP determiner=his#PL $comp?]
-      to: |[DP |[DP determiner=SG |[NP noun=du]] determiner=vmeh#PL $comp]
+    rule
+      form: |[DP determiner=his#PL $comp?]
+      result: |[DP |[DP determiner=SG |[NP noun=du]] determiner=vmeh#PL $comp]
   determiner=many: determiner=xulm
   determiner=our
-    translate
-      from: |[DP determiner=our $comp?]
-      to: |[DP |[DP determiner=PL |[NP noun=deh]] determiner=vmeh $comp]
+    rule
+      form: |[DP determiner=our $comp?]
+      result: |[DP |[DP determiner=PL |[NP noun=deh]] determiner=vmeh $comp]
   determiner=some#PL: determiner=mehn
   determiner=the#PL: determiner=PL
   determiner=the: determiner=SG
-  determiner=this: ~
-  determiner=those: ~
+  determiner=this: determiner=-deh#SG
+  determiner=those: determiner=-du#PL
   determiner=your#PL
-    translate
-      from: |[DP determiner=your#PL $comp?]
-      to: |[DP |[DP determiner=SG |[NP noun=do]] determiner=vmeh#PL $comp]
+    rule
+      form: |[DP determiner=your#PL $comp?]
+      result: |[DP |[DP determiner=SG |[NP noun=do]] determiner=vmeh#PL $comp]
   determiner=your
-    translate
-      from: |[DP determiner=your $comp?]
-      to: |[DP |[DP determiner=SG |[NP noun=do]] determiner=vmeh $comp]
-  dup-pro=2S: |[DP determiner=SG |[NP noun=do]]
+    rule
+      form: |[DP determiner=your $comp?]
+      result: |[DP |[DP determiner=SG |[NP noun=do]] determiner=vmeh $comp]
+  dup-pro=2S
+    rule
+      form: |[DP dup-pro=2S]
+      result: |[DP determiner=SG |[NP noun=do]]
   mood=imperative-not
-    translate
-      from: [I $t? $a? mood=imperative-not]
-      to: [I $t $a mood=s_n mood=m_t]
+    rule
+      form: <I mood=imperative-not $other+?>
+      result: <I mood=s_n mood=m_t $other+>
   mood=imperative: mood=s_n
   mood=may: mood=shn_n
   mood=not: mood=m_t
   mood=should: mood=j_m
   mood=subjunctive: mood=fm_k
   mood=to
-    translate
-      from: |[?VP $subj? $verb? |[?IP [I $t? $a? mood=to] |[VP ~ $m? $v? $c?]]]
-      to: |[$VP $subj $verb |[CP complementizer=mu |[$IP [I $t $a ~] |[VP $subj $m $v $c]]]]
-    translate
-      from: |[?NP $noun |[?IP [I $t? $a? mood=to] |[?VP ~ $v? $c?]]]
-      to: |[$NP $noun |[CP complementizer=mu |[$IP [I $t $a ~] |[$VP |[DP pronoun=du] $v $c]]]]
+    rule
+      form: |[?VP $subj? $verb? |[?IP <I mood=to $other+?> |[VP ~ $m? $v? $c?]]]
+      result: |[$VP $subj $verb |[CP complementizer=mu |[$IP <I $other+> |[VP $subj $m $v $c]]]]
+    rule
+      form: |[?VP $subj? $verb? |[?conjP |[?IP <I mood=to $other+?> |[VP ~ $m? $v? $c?]] $conj? $conjbar?]]
+      result: |[$VP $subj $verb |[$conjP |[CP complementizer=mu |[$IP <I $other+> |[VP $subj $m $v $c]]] $conj $conjbar]]
+    rule
+      form: |[?NP $noun |[?IP <I mood=to $other+?> |[?VP ~ $v? $c?]]]
+      result: |[$NP $noun |[CP complementizer=mu |[$IP <I $other+> |[$VP |[DP pronoun=du] $v $c]]]]
   mood=will: suffix=jot
   noun=Christ: noun=con+Christ+om
   noun=God: noun=Fuhdet
@@ -121,8 +160,9 @@ stage
   noun=thing: noun=thing
   noun=truth: noun=cult
   noun=world: noun=cadelk
-  null-pro=3PL: null-pro=duah
-  null-pro=3S: null-pro=du
+  null-pro=2S: noun=do
+  null-pro=3PL: noun=du
+  null-pro=3S: noun=du
   preposition=according+to: suffix=vah+shan
   preposition=ahead: postposition=kac
   preposition=as+if: mood=fmolk
@@ -137,57 +177,33 @@ stage
   preposition=to: suffix=thot
   preposition=vocative: suffix=o
   preposition=with: suffix=kah
-  pronoun=I
-    translate
-      from: |[DP pronoun=I]
-      to: |[DP determiner=SG |[NP noun=deh]]
   pronoun=anyone: pronoun=mehn
-  pronoun=him
-    translate
-      from: |[DP pronoun=him]
-      to: |[DP determiner=SG |[NP noun=du]]
-  pronoun=it
-    translate
-      from: |[DP pronoun=it]
-      to: |[DP determiner=SG |[NP noun=du]]
   pronoun=this: suffix=deh
-  pronoun=us
-    translate
-      from: |[DP pronoun=us]
-      to: |[DP determiner=PL |[NP noun=deh]]
-  pronoun=we
-    translate
-      from: |[DP pronoun=we]
-      to: |[DP determiner=PL |[NP noun=deh]]
-  pronoun=you
-    translate
-      from: |[DP pronoun=you]
-      to: |[DP determiner=SG |[NP noun=do]]
+  pronoun=I: noun=deh
+  pronoun=him: noun=du
+  pronoun=it: noun=du
+  pronoun=us: noun=deh
+  pronoun=we: noun=deh
+  pronoun=you: noun=do
   quantifier=all: quantifier=xyt
   quantifier=any: quantifier=mehn
   quantifier=many: quantifier=xulm
   quantifier=not: suffix=xeht
   rel-pronoun=that
-    translate
-      from: |[DP rel-pronoun=that]
-      to: |[DP determiner=SG |[NP noun=du]]
+    rule
+      form: |[DP rel-pronoun=that]
+      result: |[DP determiner=SG |[NP noun=du]]
   rel-pronoun=who
-    translate
-      from: |[DP rel-pronoun=who]
-      to: |[DP determiner=SG |[NP noun=du]]
+    rule
+      form: |[DP rel-pronoun=who]
+      result: |[DP determiner=SG |[NP noun=du]]
   tense=gerund: tense=thnu
-  tense=inf
-    translate
-      from: [I tense=inf $a? $m?]
-      to: [I ~ $a $m]
-  tense=nonpast
-    translate
-      from: [I tense=nonpast $a? $m?]
-      to: [I ~ $a $m]
+  tense=inf: tense=nonpast
+  tense=nonpast: tense=nonpast
   tense=object
-    translate
-      from: [I tense=object $a? $m?]
-      to: [I ~ $a $m]
+    rule
+      form: [I tense=object $a? $m?]
+      result: [I ~ $a $m]
   tense=past: tense=midpast
   verb=ask: verb=julgic
   verb=be: verb=zan
@@ -219,3 +235,7 @@ stage
   verb=watch: verb=fman
   verb=work: verb=vuhxulm
   verb=write: verb=thek
+stage
+  rule
+    form: <I $tense:tense? $mood:mood+?>
+    result: <I $tense $mood+ aspect=feh>

@@ -1,13 +1,19 @@
 comp (complementizer)
+  valency: stat
   audible: false
 mu (rel)
   display: [-
 om (rel)
   display: -]
 mu (complementizer)
-  conjugation
-    structure: |[?CP @]
+  valency: stat
+  rule (1)
+    form: |[?CP @]
     result: [MP rel=mu |[$CP ~] rel=om]
+jahk (complementizer)
+  valency: goal
+sun (complementizer)
+  valency: pass
 g_m (mood)
   root: golm
   vowel: ol
@@ -40,8 +46,9 @@ s_n (mood)
   searchkey: sin
 
 nonpast (tense)
-  form
-    structure: [I @ $aspect? mood=d_c]
+  rule
+    stage: -1
+    form: [I @ $aspect? mood=d_c]
     result: [I ~ $aspect ~]
   audible: false
   tense: nonpst
@@ -65,6 +72,9 @@ ah (noun/noun)
 feh (aspect)
   audible: false
   aspect: dur
+dah (aspect)
+  audible: false
+  aspect: perf
 vmeh (case)
   audible: false
 danec (verb)
@@ -96,6 +106,18 @@ vmeh (determiner)
 vmeh#PL (determiner)
   number: pl
   display: -vmeh
+-deh#SG (determiner)
+  number: sg
+  suffix: true
+-deh#PL (determiner)
+  number: pl
+  suffix: true
+-du#SG (determiner)
+  number: sg
+  suffix: true
+-du#PL (determiner)
+  number: PL
+  suffix: true
 
 #pronouns
 deh (noun)
@@ -474,4 +496,3 @@ xanoln (verb)
 xehtzyvuhk (verb)
 zamen (verb)
 zan (verb)
-

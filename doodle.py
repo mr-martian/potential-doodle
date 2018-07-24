@@ -3,16 +3,79 @@ import shlex, re, itertools, random, copy, os
 from collections import defaultdict
 from subprocess import Popen, PIPE
 from os.path import isfile
-DATA_PATH = os.path.abspath(__file__)[:-9]
-UNKNOWN_MORPH = "ERROR"
-#what to do when parser encounters a morpheme that isn't in the lexicon
-#options: "ERROR", "CREATE", "CREATE_AND_LOG"
-#"ERROR" is default because loading twice leads to copies that represent the same morpheme, but with different properties. -D.S. 2018-02-11
-FLAT = False
-#when flat is True, |[XP] is read as a [XP a b c d] rather than [XP a [Xmod b [Xbar c d]]]
-NORMALIZE_NODES = True # True: .lang of non-lexical nodes is ignored
+from types import SimpleNamespace
+Globals = SimpleNamespace(path=os.path.abspath(__file__)[:-9], unknown_error=True, flat=False, normalize=True, partial=True, keepmeta=True)
+#path: The directory containing the program
+#unknown_error: Should an error be raised when trying parse a non-existent morpheme?
+#flat: Read |[XP] as [XP a b c d] rather than [XP a [Xmod b [Xbar c d]]]
+#normalize: The language of non-morpheme Nodes will be ignored
+#partial: Return incomplete translations
+#keepmeta: Copy glosses and metadata from input to output
+#These are to clean up isinstance() or isinstance() lines
+class PatternElement:
+    pass
+class DataElement(PatternElement):
+    def matchcondlist(self, cndls):
+        for c in cndls:
+            if c[0] not in self:
+                return False
+            if self[c[0]] != c[1]:
+                return False
+        return True
+    def trans(self, tr):
+        vrs = self.getvars(tr.context, {' failed': False})
+        if vrs[' failed'] or not isinstance(vrs[' '], DataElement):
+            return []
+        vrs = vrs[' '].getvars(tr.form, vrs)
+        if vrs[' failed']:
+            return []
+        #if not isinstance(tr.result[0], Node):
+        #    vrs[' '] = copy.deepcopy(vrs[' '])
+        for act in tr.result:
+            applyrule(self.lang, act, vrs)
+        return copy.deepcopy(tr.context).putvars(vrs)
+    def transmulti(self, tr):
+        if tr.ntypelist and self.ntype not in tr.ntypelist:
+            return []
+        vrs = {' failed': False, ' ': self}
+        path = []
+        for l in tr.layers:
+            for i, f in enumerate(l):
+                vrs2 = vrs[' '].getvars(f[0], vrs.copy())
+                # don't need deepcopy because the values aren't ever modified
+                if not vrs2[' failed']:
+                    vrs = vrs2
+                    path.append(f[1:])
+                    break
+            else:
+                return []
+        #vrs = copy.deepcopy(vrs)
+        for result in reversed(path):
+            for act in result:
+                applyrule(self.lang, act, vrs)
+        return vrs[' ']
+    def transform(self, pats, returnself=True):
+        if len(pats) > 0:
+            nodes = []
+            retstr = ['[]']
+            for i, p in enumerate(pats):
+                if isinstance(p, Translation):
+                    x = self.trans(p)
+                else:
+                    x = self.transmulti(p)
+                s = str(x)
+                if s not in retstr:
+                    nodes.append(x)
+                    retstr.append(s)
+            if not nodes and returnself:
+                nodes = [self]
+            return nodes
+        elif returnself:
+            return [self]
+        else:
+            return []
 ###VARIABLES
-class Variable:
+class Variable(PatternElement):
     pattern = re.compile('^\\$?([^:?!^+\\.&]*):?([^:?!^+\\.&]*)\\.?([^:?!^+\\.&]*)([?!^+&]*)$')
     def __init__(self, label, value=None, prop=None, opt=False, neg=False, multi=False, group=False, descend=False, idx=None, cond=None):
         self.label = label
@@ -46,15 +109,15 @@ class Variable:
             return v == None
         if v == None:
             return self.opt
-        if not isinstance(v, Node):
+        if not isinstance(v, DataElement):
             return False
         if self.value and v.ntype != self.value:
             return False
         if self.cond:
             if isinstance(self.cond, list):
-                if self.cond[0] not in v.props:
+                if self.cond[0] not in v:
                     return False
-                if len(self.cond) > 1 and v.props[self.cond[0]] != self.cond[1]:
+                if len(self.cond) > 1 and v[self.cond[0]] != self.cond[1]:
                     return False
             else:
                 if not match(v, self.cond):
@@ -80,8 +143,8 @@ class Variable:
                     else:
                         break
             if self.prop:
-                if self.prop in node.props:
-                    return node.props[self.prop]
+                if self.prop in node:
+                    return node[self.prop]
                 elif self.opt:
                     return None
                 else:
@@ -96,7 +159,11 @@ class Variable:
             raise Exception('Variable %s does not exist.' % self)
     def place(self, vrs, val):
         if self.label in vrs and vrs[self.label]:
-            vrs[self.label].props[self.prop] = val
+            if self.group:
+                for v in vrs[self.label]:
+                    v.props[self.prop] = val
+            else:
+                vrs[self.label].props[self.prop] = val
     def setvars(self, node, vrs):
         """Equivalent to Node.getvars(), but applied to the pattern rather than the tree"""
         if self.check(node):
@@ -151,7 +218,120 @@ class Unknown(Variable):
 class Option(list):
     pass
 ###DATA STRUCTURES
-class Node:
+class Morpheme(DataElement):
+    __AllMorphemes = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
+    def __init__(self, lang, ntype, root, props=None, isref=False, loc=None):
+        self.lang = lang
+        self.ntype = ntype
+        self.root = root
+        self.props = props or {}
+        self.isref = isref
+        if not isref:
+            roots = [root]
+            if 'searchkey' in self.props:
+                roots.append(self.props['searchkey'])
+            pos = [ntype]
+            if 'altpos' in self.props:
+                pos.append(self.props['altpos'])
+            for p in pos:
+                for r in roots:
+                    Morpheme.__AllMorphemes[lang][p][r] = self
+        else:
+            try:
+                Morpheme.get(lang, ntype, root, loc or '(see stacktrace)')
+            except:
+                if Globals.unknown_error:
+                    raise
+                else:
+                    f = open(Globals.path + 'missing_morphemes.txt', 'a')
+                    f.write(str(lang) + ': ' + ntype + '=' + root + '\n')
+                    f.close()
+    def tagify(self, regex=False):
+        lang = Language.get(self.lang)
+        format = ''
+        tagset = []
+        defaults = {}
+        for typ in lang.tags:
+            if typ['ntype'] != self.ntype:
+                continue
+            if not self.matchcondlist(typ['conds']):
+                continue
+            format = typ['format']
+            tagset = typ['tags']
+            defaults = typ['defaults']
+            break
+        else:
+            format = '{root[0]}<%s>' % self.ntype
+            tagset = {}
+            defaults = {}
+        tags = {'root': self.root.split('#')[0].split(lang.tags_rootsplit)}
+        if 'root' in self:
+            tags['root'] = self['root'].split(lang.tags_rootsplit)
+        for tg in tagset:
+            if isinstance(tagset[tg], str):
+                if tagset[tg] in self:
+                    t = self[tagset[tg]]
+                    tags[tg] = '<' + t + '>' if t else ''
+            else:
+                for cs in tagset[tg]:
+                    if self.matchcondlist(cs['conds']):
+                        tags[tg] = cs['tag']
+                        break
+            if tg not in tags:
+                if regex:
+                    tags[tg] = '<[^<>]*>'
+                else:
+                    tags[tg] = defaults[tg]
+        ret = format.format(**tags) or self.root
+        if regex:
+            ret = '\t' + ret.replace('+', '\\+')
+        return ret
+    def get(lang, ntype, root, loc):
+        if lang not in Morpheme.__AllMorphemes:
+            raise Exception('Error at %s: Language %s not loaded.' % (loc, lang))
+        else:
+            d = Morpheme.__AllMorphemes[lang]
+            if ntype not in d:
+                raise Exception('Error at %s: Non-existent part of speech %s' (loc, ntype))
+            else:
+                d = d[ntype]
+                if root not in d:
+                    raise Exception('Error at %s: Undefined morpheme %s=%s' % (loc, ntype, root))
+                else:
+                    return d[root]
+    def __getitem__(self, key):
+        if key in self.props:
+            return self.props[key]
+        elif self.isref:
+            #ref = AllMorphemes[self.lang][self.ntype][self.root].props
+            ref = Morpheme.get(self.lang, self.ntype, self.root, None)
+            if key in ref.props:
+                return ref.props[key]
+        else:
+            raise KeyError('Morpheme %s does not have property %s.' % (self, key))
+    def __contains__(self, key):
+        if key in self.props:
+            return True
+        if self.isref:
+            return key in Morpheme.get(self.lang, self.ntype, self.root, None).props
+        return False
+    def __repr__(self):
+        return '%s=%s' % (self.ntype, self.root)
+    def getvars(self, form, vrs={' failed': False}):
+        if isinstance(form, Morpheme):
+            if self.lang != form.lang or self.ntype != form.ntype or self.root != form.root:
+                vrs[' failed'] = True
+        elif isinstance(form, Variable):
+            if form.check(self):
+                vrs[form.label] = self
+            else:
+                vrs[' failed'] = True
+        else:
+            vrs[' failed'] = True
+        return vrs
+    def putvars(self, vrs):
+        return self
+class Node(DataElement):
     def __init__(self, lang, ntype, children, props=None):
         self.lang = lang
         self.ntype = ntype
@@ -160,6 +340,10 @@ class Node:
         self.rotate = False
     def swapchildren(self, ls):
         return Node(self.lang, self.ntype, ls, self.props.copy())
+    def __contains__(self, key):
+        return key in self.props
+    def __getitem__(self, key):
+        return self.props[key]
     def getvars(self, form, vrs={' failed': False}):
         if isinstance(form, Unknown):
             vrs[form.label] = self
@@ -183,13 +367,16 @@ class Node:
                             else:
                                 vrs[' failed'] = False
                         else:
-                            pass #ignore non-Variable items for now #@TODO?
+                            v2 = c.getvars(v, vrs.copy())
+                            if not v2[' failed']:
+                                vrs = v2
+                                break
                     else:
-                        vrs[' failed'] = 'no matching variables found'
+                        vrs[' failed'] = 'no matching variables found for %s' % c
                         break
                 else:
                     for v in form.children:
-                        if v.label not in vrs:
+                        if isinstance(v, Variable) and v.label not in vrs:
                             if v.opt:
                                 vrs[v.label] = None
                             else:
@@ -207,7 +394,7 @@ class Node:
             vrs[' failed'] = 'too many properties: %s not <= %s' % (form.props.keys(), self.props.keys())
         else:
             for s, f in zip(self.children, form.children):
-                if isinstance(s, Node) or isinstance(s, UnorderedCollector):
+                if isinstance(s, DataElement):
                     s.getvars(f, vrs)
                     if vrs[' failed']:
                         return vrs
@@ -220,7 +407,7 @@ class Node:
                 elif match(s, f):
                     pass
                 else:
-                    vrs[' failed'] = 'failed on child %s with form %s' % (s, f)
+                    vrs[' failed'] = 'failed on child %s (%s) with form %s %s' % (s, type(s), f, type(f))
                     return vrs
             for k in form.props.keys():
                 if isinstance(form.props[k], Variable):
@@ -231,16 +418,6 @@ class Node:
                     vrs[' failed'] = 'failed on property %s with value %s and form %s' % (k, self.props[k], form.props[k])
                     return vrs
         return vrs
-    def _putvars(self, vrs): #DESTRUCTIVE
-        for k in self.props:
-            if isinstance(self.props[k], Variable):
-                self.props[k] = vrs[self.props[k].label]
-        for i, ch in enumerate(self.children):
-            if isinstance(ch, Node):
-                self.children[i] = ch.putvars(vrs)
-            if isinstance(ch, Variable):
-                self.children[i] = vrs[ch.label]
-        return self
     def putvars(self, vrs):
         ch = []
         for c in self.children:
@@ -253,153 +430,22 @@ class Node:
             except AttributeError:
                 ch.append(c)
         return Node(self.lang, self.ntype, ch, self.props.copy())
-    def applyrule(self, rule, vrs):
-        if isinstance(rule, Node):
-            #vrs[' '] = copy.deepcopy(rule).putvars(vrs)
-            vrs[' '] = rule.putvars(vrs)
-        elif isinstance(rule, list):
-            if rule[0] == 'setlang':
-                vrs[' '].lang = rule[1]
-            elif rule[0] == 'setdisplay':
-                vrs[' '].props['display'] = rule[1]
-            elif rule[0] == 'set':
-                vrs[' '].props.update(rule[1])
-            elif rule[0] == 'setprop':
-                rule[1].place(vrs, rule[2].retrieve(vrs))
-            elif rule[0] == 'rotate':
-                vrs[' '].rotate = True
-            elif rule[0] == 'makevar':
-                vrs[rule[1]] = copy.deepcopy(rule[2])
-            elif rule[0] == 'order':
-                ch = []
-                for v in rule[2:]:
-                    if v.label in vrs and vrs[v.label]:
-                        ch.append(vrs[v.label])
-                vrs[' '] = Node(self.lang, rule[1], ch)
-            elif rule[0] == 'node':
-                vrs[' '] = toobj(*rule[1:], at=vrs[' ']).putvars(vrs)
-            elif rule[0] == 'cond':
-                for op in rule[1:]:
-                    if all(v.checkset(vrs) for v in op[0]):
-                        for r in op[1:]:
-                            self.applyrule(r, vrs)
-                        break
-            elif rule[0] == 'distribute':
-                src = rule[1]
-                dst = rule[2]
-                try:
-                    val = vrs[rule[3].label].props[src]
-                except:
-                    print(vrs[' '])
-                    print(rule)
-                    raise
-                for l in rule[4:]:
-                    nv = None
-                    for v in (l if isinstance(l, list) else [l]):
-                        if v.label in vrs and vrs[v.label]:
-                            vrs[v.label].props[dst] = val
-                            if src in vrs[v.label].props:
-                                nv = vrs[v.label].props[src]
-                    if nv:
-                        val = nv
-            elif rule[0] == 'log':
-                print(rule[1].retrieve(vrs))
-            elif rule[0] == 'print':
-                print(rule[1])
-    def trans(self, tr):
-        vrs = self.getvars(tr.context, {' failed': False})
-        if vrs[' failed'] or not isinstance(vrs[' '], Node):
-            return []
-        vrs = vrs[' '].getvars(tr.form, vrs)
-        if vrs[' failed']:
-            return []
-        if not isinstance(tr.result[0], Node):
-            vrs[' '] = copy.deepcopy(vrs[' '])
-        for act in tr.result:
-            self.applyrule(act, vrs)
-        return copy.deepcopy(tr.context).putvars(vrs)
-    def transmulti(self, tr):
-        if tr.ntypelist and self.ntype not in tr.ntypelist:
-            return []
-        vrs = {' failed': False, ' ': self}
-        path = []
-        for l in tr.layers:
-            for i, f in enumerate(l):
-                vrs2 = vrs[' '].getvars(f[0], vrs.copy())
-                # don't need deepcopy because the values aren't ever modified
-                if not vrs2[' failed']:
-                    vrs = vrs2
-                    path.append(f[1:])
-                    break
-            else:
-                return []
-        vrs = copy.deepcopy(vrs)
-        for result in reversed(path):
-            for act in result:
-                self.applyrule(act, vrs)
-        return vrs[' ']
-    def _transform(self, pats, returnself=True):
-        if len(pats) > 0:
+    def transform(self, pats, returnself=True):
+        ret = []
+        for n in DataElement.transform(self, pats, True):
             chs = []
-            for c in self.children:
-                if isinstance(c, Node):
+            for c in n.children:
+                if isinstance(c, DataElement):
                     chs.append(c.transform(pats))
                 else:
                     chs.append([c])
-            nodes = [self.swapchildren(list(cl)) for cl in itertools.product(*chs)]
-            ret = []
-            retstr = ['[]']
-            for n in nodes:
-                added = False
-                for i, p in enumerate(pats):
-                    if isinstance(p, Translation):
-                        x = n.trans(p)
-                    else:
-                        x = n.transmulti(p)
-                    s = str(x)
-                    if s not in retstr:
-                        ret.append(x)
-                        retstr.append(s)
-                    added |= bool(x)
-                if not added:
-                    ret.append(n)
-            return ret
-        elif returnself:
-            return [self]
-        else:
-            return []
-    def transform(self, pats, returnself=True):
-        if len(pats) > 0:
-            nodes = []
-            retstr = ['[]']
-            for i, p in enumerate(pats):
-                if isinstance(p, Translation):
-                    x = self.trans(p)
-                else:
-                    x = self.transmulti(p)
-                s = str(x)
-                if s not in retstr:
-                    nodes.append(x)
-                    retstr.append(s)
-            if not nodes:
-                nodes = [self]
-            ret = []
-            for n in nodes:
-                chs = []
-                for c in n.children:
-                    if isinstance(c, Node):
-                        chs.append(c.transform(pats))
-                    else:
-                        chs.append([c])
-                ret += [n.swapchildren(list(cl)) for cl in itertools.product(*chs)]
-            return ret
-        elif returnself:
-            return [self]
-        else:
+            ret += [n.swapchildren(list(cl)) for cl in itertools.product(*chs)]
+        if not ret and returnself:
+            ret = [self]
+        return ret
             return []
     def __str__(self):
         if isinstance(self.children, list):
-            if isinstance(self.children[0], str): return '%s=%s' % (self.ntype, self.children[0])
             s = '[' + ' '.join([str(x) for x in self.children]) + ']'
         else:
             s = str(self.children)
@@ -465,87 +511,36 @@ class Node:
             ch = self.children
             n = self.ntype[:-1]
             self.children = [ch[0], Node(self.lang, n+'mod', [ch[1], Node(self.lang, n+'bar', [ch[2], ch[3]])])]
-    def matchcondlist(self, cndls):
-        for c in cndls:
-            if c[0] not in self.props:
-                return False
-            if self.props[c[0]] != c[1]:
-                return False
-        return True
-    def tagify(self, regex=False):
-        lang = Language.get(self.lang)
-        format = ''
-        tagset = []
-        defaults = {}
-        for typ in lang.tags:
-            if typ['ntype'] != self.ntype:
-                continue
-            if not self.matchcondlist(typ['conds']):
-                continue
-            format = typ['format']
-            tagset = typ['tags']
-            defaults = typ['defaults']
-            break
-        else:
-            format = '{root[0]}<%s>' % self.ntype
-            tagset = {}
-            defaults = {}
-        tags = {'root': self.children[0].split('#')[0].split(lang.tags_rootsplit)}
-        if 'root' in self.props:
-            tags['root'] = self.props['root'].split(lang.tags_rootsplit)
-        for tg in tagset:
-            if isinstance(tagset[tg], str):
-                if tagset[tg] in self.props:
-                    t = self.props[tagset[tg]]
-                    tags[tg] = '<' + t + '>' if t else ''
-            else:
-                for cs in tagset[tg]:
-                    if self.matchcondlist(cs['conds']):
-                        tags[tg] = cs['tag']
-                        break
-            if tg not in tags:
-                if regex:
-                    tags[tg] = '<[^<>]*>'
-                else:
-                    tags[tg] = defaults[tg]
-        ret = format.format(**tags) or self.children[0]
-        if regex:
-            ret = '\t' + ret.replace('+', '\\+')
-        return ret
     def rotated(self):
         return self.ntype in Language.get(self.lang).rotate != self.rotate
     def tagify_all(self):
-        if isinstance(self.children[0], str):
-            return [self.tagify()]
-        else:
-            rev = self.rotated()
-            ret = []
-            for c in self.children:
-                if isinstance(c, Node):
-                    a = c.tagify_all()
-                else:
-                    a = [c] if c else []
-                if rev:
-                    ret = a + ret
-                else:
-                    ret += a
-            return ret
+        rev = self.rotated()
+        ret = []
+        for c in self.children:
+            if isinstance(c, Node):
+                a = c.tagify_all()
+            elif isinstance(c, Morpheme):
+                a = [c.tagify()]
+            else:
+                a = [c] if c else []
+            if rev:
+                ret = a + ret
+            else:
+                ret += a
+        return ret
     def linear(self):
-        if isinstance(self.children[0], str):
-            return [self]
-        else:
-            l = []
-            for c in self.children:
-                if isinstance(c, Node):
-                    l.append(c.linear())
-                elif c:
-                    l.append([c])
-            if self.rotated():
-                l.reverse()
-            r = []
-            for c in l:
-                r += c
-            return r
+        l = []
+        for c in self.children:
+            if isinstance(c, Node):
+                l.append(c.linear())
+            elif c:
+                l.append([c])
+        if self.rotated():
+            l.reverse()
+        r = []
+        for c in l:
+            r += c
+        return r
     def iternest(self):
         yield self
         for ch in self.children:
@@ -556,14 +551,14 @@ class Node:
     def roots(self):
         ret = []
         for ch in self.children:
-            if isinstance(ch, str):
-                ret.append(ch)
+            if isinstance(ch, Morpheme):
+                ret.append(ch.root)
             elif isinstance(ch, Node):
                 ret += ch.roots()
         return ret
     def alllang(self, lang):
         for n in self.iternest():
-            if isinstance(n, Node) and n.lang != lang:
+            if isinstance(n, DataElement) and n.lang != lang:
                 return False
         return True
     def nodelang(self, lang): #DESTRUCTIVE
@@ -574,7 +569,7 @@ class Node:
             for c in self.children:
                 if isinstance(c, Node):
                     c.nodelang(lang)
-class UnorderedCollector:
+class UnorderedCollector(PatternElement):
     def __init__(self, lang, ntype, children):
         self.lang = lang
         self.ntype = ntype
@@ -588,6 +583,10 @@ class UnorderedCollector:
             else:
                 ch.append(a)
         return Node(self.lang, self.ntype, ch)
+    def __str__(self):
+        return '<%s %s>' % (self.ntype, ' '.join(str(x) for x in self.children))
+    def __repr__(self):
+        return self.__str__()
 def match(a, b):
     #a is thing, b is pattern
     #only matters for nodes, where b's properties must be a subset of a's
@@ -621,29 +620,49 @@ def match(a, b):
             if k not in a.props or not match(a.props[k], b.props[k]):
                 return False
         return True
+    elif isinstance(a, Morpheme) and isinstance(b, Morpheme):
+        if a.lang != b.lang:
+            return False
+        if a.ntype != b.ntype:
+            return False
+        if a.root != b.root:
+            return False
+        for k in b.props:
+            if k not in a or not match(a[k], b[k]):
+                return False
+        return True
     elif isinstance(a, Translation) and isinstance(b, Translation):
         return match(a.form, b.form) and match(a.result, b.result)
     else:
         return a == b
-AllMorphemes = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
-def register(morph):
-    roots = [morph.children[0]]
-    if 'searchkey' in morph.props:
-        roots.append(morph.props['searchkey'])
-    pos = [morph.ntype]
-    if 'altpos' in morph.props:
-        pos.append(morph.props['altpos'])
-    for p in pos:
-        for r in roots:
-            AllMorphemes[morph.lang][p][r] = morph
 ###TRANSFORMATIONS
-class Translation:
-    def __init__(self, form, result, category, langs, context=None, mode='syntax', stage=0):
-        self.form = form
-        self.result = result
-        self.stage = stage
+class Rule:
+    def __init__(self, langs, category='', mode='syntax', stage=0, name=''):
         self.langs = langs
         self.category = category
+        self.mode = mode
+        self.stage = stage
+        self.name = name
+        if self.langs[0] == self.langs[1]:
+            l = Language.getormake(self.langs[0])
+            if mode == 'linear':
+                l.linear[category].append(self)
+            elif mode == 'linear-text':
+                l.lineartext[category].append(self)
+            else:
+                x = len(l.movement[category])
+                l.movement[category].append(self)
+                assert(len(l.movement[category]) > x)
+        else:
+            l = LangLink.getormake(self.langs[0], self.langs[1])
+            if mode == 'syntax':
+                l.syntax.append(self)
+            else:
+                l.pats[category].append(self)
+class Translation(Rule):
+    def __init__(self, form, result, category, langs, context=None, mode='syntax', stage=0, name=''):
+        self.form = form
+        self.result = result
         self.roots = [] #roots of all morphemes in form
         if isinstance(form, Node):
             self.roots = form.roots()
@@ -654,36 +673,14 @@ class Translation:
         self.resultrootset = set(self.resultroots)
         self.addedroots = self.resultrootset - self.rootset
         self.context = context or Variable(' ')
-        if self.langs[0] == self.langs[1]:
-            l = Language.getormake(self.langs[0])
-            if mode == 'syntax':
-                l.movesyntax.append(self)
-            elif mode == 'conj':
-                l.moveconj[category].append(self)
-            elif mode == 'linear':
-                l.linear[category].append(self)
-            elif mode == 'linear-text':
-                l.lineartext[category].append(self)
-            else:
-                x = len(l.movelex[category])
-                l.movelex[category].append(self)
-                assert(len(l.movelex[category]) > x)
-        else:
-            l = LangLink.getormake(self.langs[0], self.langs[1])
-            if mode == 'syntax':
-                l.syntax.append(self)
-            else:
-                l.pats[category].append(self)
+        Rule.__init__(self, langs, category, mode, stage, name)
     def __str__(self):
         return '{%s => %s}%s' % (self.form, self.result, self.roots)
     def __repr__(self):
         return self.__str__()
-class MultiRule:
-    def __init__(self, layers, category, langs, mode='syntax', stage=0):
+class MultiRule(Rule):
+    def __init__(self, layers, category, langs, mode='syntax', stage=0, name=''):
         self.layers = layers
-        self.stage = stage
-        self.langs = langs
-        self.category = category
         self.roots = [] #roots of all morphemes in form
         self.rootset = set(self.roots)
         self.resultroots = []
@@ -692,26 +689,60 @@ class MultiRule:
         self.ntypelist = []
         if all(isinstance(x[0], Node) for x in layers[0]):
             self.ntypelist = [x[0].ntype for x in layers[0]]
-        if self.langs[0] == self.langs[1]:
-            l = Language.getormake(self.langs[0])
-            if mode == 'syntax':
-                l.movesyntax.append(self)
-            elif mode == 'conj':
-                l.moveconj[category].append(self)
-            elif mode == 'linear':
-                l.linear[category].append(self)
-            elif mode == 'linear-text':
-                l.lineartext[category].append(self)
-            else:
-                x = len(l.movelex[category])
-                l.movelex[category].append(self)
-                assert(len(l.movelex[category]) > x)
-        else:
-            l = LangLink.getormake(self.langs[0], self.langs[1])
-            if mode == 'syntax':
-                l.syntax.append(self)
-            else:
-                l.pats[category].append(self)
+        Rule.__init__(self, langs, category, mode, stage, name)
+def applyrule(lang, rule, vrs):
+    if isinstance(rule, Node) or isinstance(rule, UnorderedCollector):
+        #vrs[' '] = copy.deepcopy(rule).putvars(vrs)
+        vrs[' '] = rule.putvars(vrs)
+    elif isinstance(rule, list):
+        if rule[0] == 'setlang':
+            vrs[' '].lang = rule[1]
+        elif rule[0] == 'setdisplay':
+            vrs[' '].props['display'] = rule[1]
+        elif rule[0] == 'set':
+            vrs[' '].props.update(rule[1])
+        elif rule[0] == 'setprop':
+            rule[1].place(vrs, rule[2].retrieve(vrs))
+        elif rule[0] == 'rotate':
+            vrs[' '].rotate = True
+        elif rule[0] == 'makevar':
+            vrs[rule[1]] = copy.deepcopy(rule[2])
+        elif rule[0] == 'order':
+            ch = []
+            for v in rule[2:]:
+                if v.label in vrs and vrs[v.label]:
+                    ch.append(vrs[v.label])
+            vrs[' '] = Node(lang, rule[1], ch)
+        elif rule[0] == 'node':
+            vrs[' '] = toobj(*rule[1:], at=vrs[' ']).putvars(vrs)
+        elif rule[0] == 'cond':
+            for op in rule[1:]:
+                if all(v.checkset(vrs) for v in op[0]):
+                    for r in op[1:]:
+                        applyrule(lang, r, vrs)
+                    break
+        elif rule[0] == 'distribute':
+            src = rule[1]
+            dst = rule[2]
+            try:
+                val = vrs[rule[3].label][src]
+            except:
+                print(vrs[' '])
+                print(rule)
+                raise
+            for l in rule[4:]:
+                nv = None
+                for v in (l if isinstance(l, list) else [l]):
+                    if v.label in vrs and vrs[v.label]:
+                        vrs[v.label].props[dst] = val
+                        if src in vrs[v.label]:
+                            nv = vrs[v.label][src]
+                if nv:
+                    val = nv
+        elif rule[0] == 'log':
+            print(rule[1].retrieve(vrs))
+        elif rule[0] == 'print':
+            print(rule[1])
 ###GENERATION
 class SyntaxPat:
     def __init__(self, name, conds, opts, vrs, require):
@@ -740,9 +771,7 @@ class Language:
         self.syntaxstart = None
         self.setlang = []
         #Movement
-        self.movelex = defaultdict(list)
-        self.movesyntax = []
-        self.moveconj = defaultdict(list)
+        self.movement = defaultdict(list)
         self.linear = defaultdict(list)
         self.lineartext = defaultdict(list)
         #Transducer
@@ -772,18 +801,25 @@ class Language:
         for k, v in AllMorphemes[self.lang].items():
             r[k] = list(v.values())
         return r
-    def movefind(self, roots, conj=False):
-        if conj:
-            dct = self.moveconj
-        else:
-            dct = self.movelex
-        s = set(roots)
-        ret = []
-        for r in roots:
-            for p in dct[r]:
+    def movefind(self, roots):
+        s = set(roots + [''])
+        ret = defaultdict(list)
+        for r in s:
+            for p in self.movement[r]:
                 if p.rootset < s:
-                    ret.append(p)
-        return ret
+                    ret[p.stage].append(p)
+        return [ret[k] for k in sorted(ret.keys())]
+    def domovement(self, sen):
+        pats = self.movefind(sen.roots())
+        tr = [sen]
+        for p in pats:
+            ntr = []
+            for s in tr:
+                ntr += s.transform(p, False)
+            tr = ntr or tr
+        return tr
+    def totext(self, sen):
+        return dolinear(self.domovement(sen)[0])
     def allnames():
         return [(x, Language.__alllangs[x].name) for x in sorted(Language.__alllangs.keys())]
     def iterlex(self):
@@ -798,9 +834,9 @@ class LangLink:
         self.syntax = []
         self.pats = defaultdict(list)
         LangLink.__alllinks['%s-%s' % (fromlang, tolang)] = self
-        sl = Language.getormake(fromlang).setlang
-        for s in sl:
-            Translation(Variable('node', value=s), [['setlang', tolang]], 'syntax', [fromlang, tolang], mode='syntax')
+        #sl = Language.getormake(fromlang).setlang
+        #for s in sl:
+        #    Translation(Variable('node', value=s), [['setlang', tolang]], 'syntax', [fromlang, tolang], mode='syntax')
     def find(self, _roots):
         roots = _roots + ['']
         s = set(roots)
@@ -827,51 +863,17 @@ class LangLink:
             if ntr:
                 tr = ntr
         return tr
-###MOVEMENT
-def movement1(sen):
-    roots = sen.roots()
-    lang = Language.getormake(sen.lang)
-    pats = lang.movefind(roots, False)
-    lexsen = sen.transform(pats)[0] or sen
-    for p in lang.movesyntax:
-        lexsen = lexsen.transform([p])[0] or lexsen
-    lexsen = lexsen.transform(lang.movefind(lexsen.roots(), True))[0] or lexsen
-    return lexsen
-def movementall(sen):
-    roots = sen.roots()
-    rootset = set(roots)
-    lang = Language.getormake(sen.lang)
-    pats1 = lang.movefind(roots, False)
-    sens1 = sen.transform(pats1) or [sen]
-    sens2 = []
-    for s in sens1:
-        l = len(sens1)
-        for p in lang.movesyntax:
-            sens2 += s.transform([p])
-        if len(sens1) == l:
-            sens2.append(s)
-    sens3 = []
-    rootset = set(roots)
-    for p in pats1:
-        rootset.update(p.addedroots)
-    for p in lang.movesyntax:
-        rootset.update(p.addedroots)
-    roots = list(rootset)
-    pats2 = lang.movefind(roots, True)
-    for s in sens2:
-        sens3 += s.transform(pats2) or [s]
-    return sens3
 def hfst(tagstrs, lang):
     mode = Language.getormake(lang).morph_mode
     if mode == 'hfst':
-        proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', DATA_PATH + 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+        proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', Globals.path + 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(tagstrs))
         if ls[0]:
             ret = [x.split('\t')[1] for x in ls[0].strip().split('\n\n')]
         else:
             ret = []
     elif mode == 'lttoolbox':
-        proc = Popen(['lt-proc', '-g', DATA_PATH + 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
+        proc = Popen(['lt-proc', '-g', Globals.path + 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]
         ret = ls.split('\n')
     else:
@@ -881,7 +883,7 @@ def dolinear(sen):
     lin = sen.linear()
     lang = Language.getormake(sen.lang)
     for i, m in enumerate(lin):
-        for pat in lang.linear[m.children[0]]:
+        for pat in lang.linear[m.root]:
             if not match(m, pat.form):
                 continue
             ok = True
@@ -896,12 +898,12 @@ def dolinear(sen):
             if ok:
                 for d, r in pat.result:
                     if r == 'inaudible':
-                        lin[i+d].props['audible'] = 'false'
+                        lin[i+d]['audible'] = 'false'
                     else:
                         lin[i+d] = r
     lintxt = hfst([x.tagify() for x in lin], sen.lang)
     for i, m in enumerate(lin):
-        for pat in lang.lineartext[m.children[0]]:
+        for pat in lang.lineartext[m.root]:
             ok = True
             if isinstance(pat.context, list):
                 for d, p in pat.context:
@@ -918,10 +920,10 @@ def dolinear(sen):
                 lintxt[i] = pat.result
     final = []
     for i, m in enumerate(lin):
-        if 'audible' in m.props and m.props['audible'] == 'false':
+        if 'audible' in m and m['audible'] == 'false':
             continue
-        elif 'display' in m.props:
-            final.append(m.props['display'])
+        elif 'display' in m:
+            final.append(m['display'])
         else:
             final.append(lintxt[i])
     return ' '.join(final).replace('+', ' ').replace('- -', '').replace('- ', '').replace(' -', '')
@@ -1027,7 +1029,7 @@ def toobj(s, lang, loc, at=None):
             d = {}
             if rest and rest[0] == '{':
                 d = destring()
-            if FLAT:
+            if Globals.flat:
                 return Node(lang, name+'P', ch, d)
             else:
                 bar = Node(lang, name+'bar', ch[2:])
@@ -1061,7 +1063,7 @@ def toobj(s, lang, loc, at=None):
             ret = None
             while nodes:
                 n = nodes.pop()
-                if FLAT:
+                if Globals.flat:
                     ret = Node(lang, n['name']+'P', [n['spec'], n['mod'], n['head'], ret])
                 else:
                     ret = Node(lang, n['name']+'bar', [n['head'], ret])
@@ -1098,20 +1100,19 @@ def toobj(s, lang, loc, at=None):
                 pos = cur
                 root = rest.pop(1)
                 rest.pop(0)
-                if lang not in AllMorphemes:
-                    loadlexicon(lang)
-                r = AllMorphemes[lang][pos][root]
-                if r == None:
-                    if UNKNOWN_MORPH == "CREATE_AND_LOG":
-                        r = Node(lang, pos, [root])
-                        f = open(DATA_PATH + 'missing_morphemes.txt', 'a')
-                        f.write(str(lang) + ': ' + pos + '=' + root + '\n')
-                        f.close()
-                    elif UNKNOWN_MORPH == "CREATE":
-                        r = Node(lang, pos, [root])
-                    else: #UNKNOWN_MORPH == "ERROR"
-                        raise ParseError('Unknown lang %d morpheme %s=%s at %s' % (lang, pos, root, loc))
-                return r
+                #if lang not in AllMorphemes:
+                #    loadlexicon(lang)
+                #r = AllMorphemes[lang][pos][root]
+                #if r == None:
+                #    if Globals.unknown_error:
+                #        raise ParseError('Unknown lang %d morpheme %s=%s at %s' % (lang, pos, root, loc))
+                #    else:
+                #        r = Node(lang, pos, [root])
+                #        f = open(Globals.path + 'missing_morphemes.txt', 'a')
+                #        f.write(str(lang) + ': ' + pos + '=' + root + '\n')
+                #        f.close()
+                #return r
+                return Morpheme(lang, pos, root, isref=True)
             else:
                 rest = ['$', ':'] + rest
                 return destring()
@@ -1305,25 +1306,52 @@ def readresult(node, lang, at=None):
         elif ch.label == 'print':
             ret.append(['print', ch.val])
     return ret
+def readrule(node, lfrom, _lto, mode, category, _stage):
+    if 'samelang' in node:
+        lto = lfrom
+    else:
+        lto = _lto
+    if 'stage' in node:
+        stage = int(node.firstval('stage'))
+    elif node.arg:
+        stage = int(node.arg)
+    else:
+        stage = _stage
+    if node.label == 'rule':
+        con = node.fvo('context', lfrom, Variable(' '), '@')
+        form = node.fvo('form', lfrom, Variable(' '), '@')
+        res = readresult(node, lto, None)
+        return Translation(form, res, category, [lfrom, lto], context=con, mode=mode, stage=stage, name=node.val)
+    elif node.label == 'multirule':
+        layers = []
+        for ly in node.children:
+            if ly.val and 'form' not in ly:
+                ly.children = [ParseLine(ly.num, 'form', [], ly.val, ly.children)]
+            if ly.label == 'layer?':
+                ly.children.append(ParseLine(-1, 'form', [], '@', [ParseLine(-1, 'result', [], '@', [])]))
+                ly.label = 'layer'
+            if ly.label != 'layer':
+                continue
+            l = []
+            for p in ly['form']:
+                op = [toobj(p.val, lfrom, p.num, Variable(' '))]
+                op += readresult(p, lfrom, Variable(' '))
+                l.append(op)
+            layers.append(l)
+        return MultiRule(layers, category, [lfrom, lto], mode=mode, stage=stage, name=node.val)
+    elif node.label == 'linear':
+        pass
+    elif node.label == 'linear-text':
+        pass
 def loadlexicon(lang):
-    rootslist = ParseLine.fromfile(DATA_PATH + 'langs/%s/lexicon.txt' % lang)
+    rootslist = ParseLine.fromfile(Globals.path + 'langs/%s/lexicon.txt' % lang)
     for root in rootslist:
-        m = Node(lang, root.arg, [root.label])
+        #m = Node(lang, root.arg, [root.label])
+        m = Morpheme(lang, root.arg, root.label, isref=False)
         m.props['output'] = []
         for p in root.children:
-            if p.label in ['form', 'conjugation']:
-                if p.label == 'form':
-                    mode = 'lex'
-                else:
-                    mode = 'conj'
-                c = p.fvo('context', lang, Variable(' '), '@')
-                form = p.fvo('structure', lang, m, '@')
-                for f in p['form']:
-                    fm = Node(lang, root.arg, [f.val])
-                    Translation(form, [fm], root.label, [lang, lang], context=c, mode=mode)
-                res = readresult(p, lang, m)
-                if res:
-                    Translation(form, res, root.label, [lang, lang], context=c, mode=mode)
+            if p.label in ['rule', 'multirule']:
+                readrule(p, lang, lang, 'lex', root.label, 1)
             elif p.label == 'output':
                 o = [p.arg, p.val, '#']
                 if '=' in p.arg:
@@ -1356,15 +1384,19 @@ def loadlexicon(lang):
                 Translation(m, p.val, root.label, [lang, lang], context=con, mode='linear-text')
             else:
                 m.props[p.label] = p.val
-        register(m)
+        #register(m)
         for pos in root['altpos']:
-            m2 = copy.deepcopy(m)
-            m2.ntype = pos.val
+            #m2 = copy.deepcopy(m)
+            #m2.ntype = pos.val
+            #for l in pos.children:
+            #    m2.props[l.label] = l.val
+            #register(m2)
+            p2 = m.props.copy()
             for l in pos.children:
-                m2.props[l.label] = l.val
-            register(m2)
+                p2[l.label] = l.val
+            Morpheme(lang, pos.val, m.root, props=p2, isref=False)
 def loadlang(lang):
-    things = ParseLine.fromfile(DATA_PATH + 'langs/%s/lang.txt' % lang)
+    things = ParseLine.fromfile(Globals.path + 'langs/%s/lang.txt' % lang)
     ret = Language(lang)
     loadlexicon(lang)
     for th in things:
@@ -1402,9 +1434,6 @@ def loadlang(lang):
                             else:
                                 st = op.first('structure')
                                 node = toobj(st.val, lang, st.num)
-                                for tr in op['translation']:
-                                    res = toobj(tr.val, int(tr.arg), tr.num)
-                                    Translation(node, [res], 'syntax', [lang, int(tr.arg)], mode='syntax')
                             conds.append([toobj(x, lang, op.num) for x in op.args])
                             ops.append(node)
                             req = []
@@ -1414,30 +1443,10 @@ def loadlang(lang):
                         ret.syntax[ty.label] = SyntaxPat(ty.label, conds, ops, vrs, require)
         if th.label == 'transform':
             for ch in th.children:
-                if ch.label == 'rule':
-                    tf = ch.fvo('form', lang, Variable(' '), '@')
-                    res = readresult(ch, lang, None)
-                    for tc in ch.avo('context', lang, Variable(' '), '@'):
-                        ret.transform.append(Translation(tf, res, 'transform', [lang, lang], context=tc, mode='syntax'))
-                elif ch.label == 'rotate':
+                if ch.label == 'rotate':
                     ret.rotate.append(ch.val)
-                elif ch.label == 'multirule':
-                    layers = []
-                    for ly in ch.children:
-                        if ly.val and 'form' not in ly:
-                            ly.children = [ParseLine(ly.num, 'form', [], ly.val, ly.children)]
-                        if ly.label == 'layer?':
-                            ly.children.append(ParseLine(-1, 'form', [], '@', [ParseLine(-1, 'result', [], '@', [])]))
-                            ly.label = 'layer'
-                        if ly.label != 'layer':
-                            continue
-                        l = []
-                        for p in ly['form']:
-                            op = [toobj(p.val, lang, p.num, Variable(' '))]
-                            op += readresult(p, lang, Variable(' '))
-                            l.append(op)
-                        layers.append(l)
-                    ret.transform.append(MultiRule(layers, 'transform', [lang, lang], mode='syntax'))
+                else:
+                    ret.transform.append(readrule(ch, lang, lang, 'syntax', '', 0))
         if th.label == 'metadata':
             if 'creator' in th:
                 ret.creator = th.firstval('creator')
@@ -1489,7 +1498,7 @@ def loadlang(lang):
                 ret.tags.append({'format': ch.firstval('format'), 'tags': tags, 'ntype': ch.label, 'conds': condlist(ch), 'defaults': defaults})
     return ret
 def loadtrans(lfrom, lto):
-    fname = DATA_PATH + 'langs/%s/translate/%s.txt' % (lfrom, lto)
+    fname = Globals.path + 'langs/%s/translate/%s.txt' % (lfrom, lto)
     ret = LangLink(lfrom, lto)
     if isfile(fname):
         trans = ParseLine.fromfile(fname)
@@ -1498,27 +1507,15 @@ def loadtrans(lfrom, lto):
         for i, stage in enumerate(trans):
             for lex in stage.children:
                 if lex.label == 'rule':
-                    c = lex.fvo('context', lfrom, Variable(' '), '@')
-                    f = lex.fvo('form', lfrom, None)
-                    if 'anylang' in lex and isinstance(f, Node):
-                        f.nodelang(Unknown())
-                    lgs = [lfrom, lto]
-                    if 'samelang' in lex:
-                        lgs[1] = lfrom
-                    r = lex.fvo('result', lgs[1], None)
-                    Translation(f, [r], '', lgs, context=c, mode='lex', stage=i)
+                    readrule(lex, lfrom, lto, 'lex', '', i)
                 else:
                     m = toobj(lex.label, lfrom, lex.num, None)
                     if lex.val:
                         for g in lex.vals:
-                            d = toobj(g.strip(), lto, lex.num, m)
-                            Translation(m, [d], m.children[0], [lfrom, lto], mode='lex', stage=i)
+                            d = toobj(g, lto, lex.num, m)
+                            Translation(m, [d], category=m.children[0], langs=[lfrom, lto], mode='lex', stage=i)
                     for tr in lex.children:
-                        if tr.label == 'translate':
-                            f = tr.fvo('from', lfrom, m)
-                            c = tr.fvo('context', lfrom, Variable(' '), '@')
-                            for t in tr.child_vals('to'):
-                                Translation(f, [toobj(t, lto, tr.num, m)], m.children[0], [lfrom, lto], context=c, mode='lex', stage=i)
+                        readrule(tr, lfrom, lto, 'lex', m.children[0], i)
     return ret
 def loadlangset(langs):
     loaded = []
@@ -1542,7 +1539,7 @@ def addmissing():
         p,r = s[1].split('=')
         if l != lang:
             f.close()
-            f = open(DATA_PATH + 'langs/%s/lexicon.txt' % l, 'a')
+            f = open(Globals.path + 'langs/%s/lexicon.txt' % l, 'a')
             f.write('\n\n#Generated from missing_morphemes.txt\n')
             lang = l
             print('Writing to langs/%s/lexicon.txt' % l)
@@ -1555,7 +1552,7 @@ def filltrans(lfrom, lto):
     Language.getormake(lfrom)
     Language.getormake(lto)
     LangLink.getormake(lfrom, lto)
-    fname = DATA_PATH + 'langs/%s/translate/%s.txt' % (lfrom, lto)
+    fname = Globals.path + 'langs/%s/translate/%s.txt' % (lfrom, lto)
     have = []
     out = '#Automatically generated from langs/%s/lexicon.txt\n' % lfrom
     if isfile(fname):
@@ -1599,36 +1596,36 @@ class Sentence:
             else:
                 ret.children.append(ParseLine(0, k, [], self.trees[k].writecompile(), []))
         return ret
-    def translate(self, tlang, check=False, normalize=True, keepgloss=True):
-        ret = Sentence(self.lang, self.name, {}, self.gloss if keepgloss else '')
+    def translate(self, tlang):
+        ret = Sentence(self.lang, self.name, {}, self.gloss if Globals.keepmeta else '')
         if not self.trees:
             return ret
         tr = LangLink.getormake(self.lang, tlang)
         for k in self.trees:
             for i, s in enumerate(tr.translate(self.trees[k])):
-                if normalize:
+                if Globals.normalize:
                     s.nodelang(tlang)
-                if not check or s.alllang(tlang):
+                if Globals.partial or s.alllang(tlang):
                     ret.trees[k+'-'+str(i) if k else str(i)] = s
         return ret
     def totext(self):
-        if '' in self.trees and self.trees['']:
-            return dolinear(movement1(self.trees['']))
-        else:
-            for k in sorted(self.trees.keys()):
-                if self.trees[k]:
-                    return dolinear(movement1(self.trees[k]))
-            return ''
+        lang = Language.getormake(self.lang)
+        for k in sorted(self.trees.keys()):
+            #this should default to tree ''
+            if self.trees[k]:
+                return lang.totext(self.trees[k])
+        return ''
     def graph(self):
         for k in sorted(self.trees.keys()):
             self.trees[k].flatten()
-            f = open(DATA_PATH + 'test/%s-%s.dot' % (self.name, k), 'w')
+            f = open(Globals.path + 'test/%s-%s.dot' % (self.name, k), 'w')
             f.write(self.trees[k].graph('n', True))
             f.close()
             yield '<h3>%s</h3>' % (k or '(default)'), '%s-%s.dot' % (self.name, k)
 def readfile(fname):
     pl = ParseLine.fromfile(fname)
     lang = int(pl[0].firstval('lang'))
+    Language.getormake(lang)
     return lang, [Sentence.fromparseline(l, lang) for l in pl[1:]]
 def graphtext(infile, outfile):
     gls = []
@@ -1642,23 +1639,23 @@ def graphtext(infile, outfile):
     f.write('</body></html>')
     f.close()
     proc = Popen(['dot', '-Tsvg', '-O'] + gls, stdin=PIPE, stdout=PIPE, universal_newlines=True)
-def translatefile(infile, outfile, tlang, check=False, normalize=True, keepgloss=True, keepmeta=True):
+def translatefile(infile, outfile, tlang):
     pl = ParseLine.fromfile(infile)
     flang = int(pl[0].firstval('lang'))
     if isinstance(outfile, str):
         f = open(outfile, 'w')
     else:
         f = outfile
-    if keepmeta:
+    if Globals.keepmeta:
         meta = pl[0]
         for x in meta.children:
             if x.label == 'lang':
                 x.vals = [str(tlang)]
     else:
-        meta = ParseLine(0, 'metadata', children=[ParseLine(7, 'lang', val=str(tlang))])
+        meta = ParseLine(0, 'metadata', children=[ParseLine(1, 'lang', val=str(tlang))])
     f.write(meta.tofilestr(0))
     for l in pl[1:]:
-        f.write(Sentence.fromparseline(l, flang).translate(tlang, check, normalize, keepgloss).toparseline().tofilestr(0))
+        f.write(Sentence.fromparseline(l, flang).translate(tlang).toparseline().tofilestr(0))
     if isinstance(outfile, str):
         f.close()
 class GeneratorError(Exception):
@@ -1721,7 +1718,7 @@ def makeall(words):
     pats = lang.getpats()
     for k in pats:
         if isinstance(pats[k], list):
-            many = [x for x in pats[k] if 'audible' in x.props and x.props['audible'] == 'false']
+            many = [x for x in pats[k] if 'audible' in x and x['audible'] == 'false']
             few = [x for x in words if x.ntype == k]
             pats[k] = LimitList(few, many)
     def product(ls):
@@ -1775,7 +1772,7 @@ def makeall(words):
     return genall(pats[lang.syntaxstart], {})
 def parse(lang, num, text):
     ret = Sentence(lang, str(num), {}, text)
-    hfst = DATA_PATH + 'langs/%d/.generated/parse.hfst' % lang
+    hfst = Globals.path + 'langs/%d/.generated/parse.hfst' % lang
     pip = subprocess.PIPE
     tok = subprocess.Popen(['hfst-proc', '-x', '-w', hfst], stdin=pip, stdout=pip, universal_newlines=True)
     tokplus = subprocess.Popen(['hfst-proc', '-x', '-w', hfst], stdin=pip, stdout=pip, universal_newlines=True)
@@ -1789,19 +1786,21 @@ def parse(lang, num, text):
         for t in tags:
             if r.search(t):
                 w.append(m)
+    ln = Language.getormake(lang)
     n = 0
     for x in makeall(w):
-        if dolinear(movement1(x)) == text:
+        #if dolinear(movement1(x)) == text:
+        if ln.totext(x) == text:
             n += 1
             ret.trees[str(n)] = x
     return ret
-def trans(sen, tlang, checklang=True):
+def trans(sen, tlang):
     tr = LangLink.getormake(sen.lang, tlang).translate(sen)
     ret = []
     for s in tr:
-        if NORMALIZE_NODES:
+        if Globals.normalize:
             s.nodelang(tlang)
-        if not checklang or s.alllang(tlang):
+        if Globals.partial or s.alllang(tlang):
             ret.append(s)
     return ret
 if __name__ == '__main__':
@@ -1892,7 +1891,8 @@ if __name__ == '__main__':
                     f = open(values[0], 'w')
                 else:
                     f = sys.stdout
-                f.write(dolinear(movement1(toobj(line, lang, where))) + '\n')
+                txt = Language.getormake(lang).totext(toobj(line, lang, where))
+                f.write(txt + '\n')
                 if values:
                     f.close()
             else:
@@ -1912,23 +1912,23 @@ if __name__ == '__main__':
             else:
                 addmissing()
     class SetGlobal(argparse.Action):
-        #Horrible? Yes. Effective? Also yes.
         def __init__(self, *args, **kwargs):
-            self.command = 'global {0}; {0} = {1}'.format(*kwargs['todo'])
+            self.todo = kwargs['todo']
             del kwargs['todo']
             kwargs['nargs'] = 0
             argparse.Action.__init__(self, *args, **kwargs)
         def __call__(self, parser, namespace, values, option_string=None):
-            exec(self.command)
+            global Globals
+            Globals.__dict__[self.todo[0]] = self.todo[1]
     parser.add_argument('-t', '--translate', type=str, nargs='*', action=TranslateAction, metavar='ARG', help="Translate trees (run 'doodle.py -t' for detailed help)")
     parser.add_argument('-g', '--generate', type=str, nargs='+', action=GenerateAction, metavar=('LANG', 'DEST'), help='Randomly generate a tree in LANG and output to DEST or stdout')
     parser.add_argument('-p', '--parse', type=str, nargs='+', action=ParseAction, metavar=('[SRC] LANG', 'DEST'), help='Attempt to parse SRC or next line of std into trees in LANG, output to DEST or stdout')
     parser.add_argument('-d', '--display', type=str, nargs='+', action=DisplayAction, metavar=('SRC [LANG]', 'DEST'), help='Get trees from SRC or stdin, convert to text and output to DEST or stdout')
-    parser.add_argument('-F', '--flatten', action=SetGlobal, todo=('FLAT', True), help='Start flattening phrases into single nodes')
-    parser.add_argument('-DF', '--dont-flatten', action=SetGlobal, todo=('FLAT', False), help='Stop flattening phrases')
-    parser.add_argument('-N', '--normalize', action=SetGlobal, todo=('NORMALIZE_NODES', True), help='Start ignoring the language of non-lexical nodes')
-    parser.add_argument('-DN', '--dont-normalize', action=SetGlobal, todo=('NORMALIZE_NODES', False), help='Stop ignoring node language (ignoring is the default)')
-    parser.add_argument('-U', '--use-unknown', action=SetGlobal, todo=('UNKNOWN_MORPH', '"CREATE_AND_LOG"'), help='Begin logging unknown morphemes to missing_morphemes.txt, don\'t error')
+    parser.add_argument('-F', '--flatten', action=SetGlobal, todo=('flat', True), help='Start flattening phrases into single nodes')
+    parser.add_argument('-DF', '--dont-flatten', action=SetGlobal, todo=('flat', False), help='Stop flattening phrases')
+    parser.add_argument('-N', '--normalize', action=SetGlobal, todo=('normalize', True), help='Start ignoring the language of non-lexical nodes')
+    parser.add_argument('-DN', '--dont-normalize', action=SetGlobal, todo=('normalize', False), help='Stop ignoring node language (ignoring is the default)')
+    parser.add_argument('-U', '--use-unknown', action=SetGlobal, todo=('unknown_error', False), help='Begin logging unknown morphemes to missing_morphemes.txt, don\'t error')
     parser.add_argument('-am', '--add-missing', nargs=0, action=BlankAction, help='Append everything in missing_morphemes.txt to the relevant lexicon files')
     parser.add_argument('-ft', '--fill-trans', nargs=2, action=BlankAction, metavar=('LANG1', 'LANG2'), help='Add blank entries in translation file from LANG1 to LANG2 for any morpheme not already listed')
     args = parser.parse_args()

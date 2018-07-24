@@ -164,7 +164,7 @@ transform
       result: |[$DP $subj]
   multirule: agreement and subject position
     layer
-      form: |[IP <I $tense? $aspect? $mood?> @]
+      form: |[IP <I $tense:tense $aspect:aspect? $mood:mood?> @]
         result: |[IP $subj <I $tense $mood? $aspect?> @]
         distribute (conj; tense): $tense; $mood; $aspect; $verb
         distribute (person; person): $tense; $mood; $aspect; $verb
@@ -190,9 +190,8 @@ transform
       form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:rel-pronoun]]]
         result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
   rule: plural marking
-    context: |[?DP $head |[?NP @]]
-    form: $noun
-    setprop (number): $head.number
+    form: |[?DP $head |[?NP $noun]]
+    setprop ($noun.number): $head.number
   rule: attach genitive suffix
     form: |[DP $spec:DP $mod? $head $comp?]
     result: |[DP [GEN $spec $head] $mod ~ $comp]
