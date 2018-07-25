@@ -15,6 +15,8 @@ Globals = SimpleNamespace(path=os.path.abspath(__file__)[:-9], unknown_error=Tru
 class PatternElement:
     pass
 class DataElement(PatternElement):
+    def __setitem__(self, key, val):
+        self.props[key] = val
     def matchcondlist(self, cndls):
         for c in cndls:
             if c[0] not in self:
@@ -246,6 +248,8 @@ class Morpheme(DataElement):
                     f = open(Globals.path + 'missing_morphemes.txt', 'a')
                     f.write(str(lang) + ': ' + ntype + '=' + root + '\n')
                     f.close()
+    def itermorph(lang):
+        return Morpheme.__AllMorphemes[lang]
     def tagify(self, regex=False):
         lang = Language.get(self.lang)
         format = ''
@@ -355,13 +359,15 @@ class Node(DataElement):
             if self.ntype != form.ntype:
                 vrs[' failed'] = 'ntype'
             else:
+                found = set()
                 for c in self.children:
                     if not c:
                         continue
-                    for v in form.children:
+                    for i, v in enumerate(form.children):
                         if isinstance(v, Variable):
                             v.setvars(c, vrs)
                             if not vrs[' failed']:
+                                found.add(i)
                                 break
                             else:
                                 vrs[' failed'] = False
@@ -369,18 +375,22 @@ class Node(DataElement):
                             v2 = c.getvars(v, vrs.copy())
                             if not v2[' failed']:
                                 vrs = v2
+                                found.add(i)
                                 break
                     else:
                         vrs[' failed'] = 'no matching variables found for %s' % c
                         break
                 else:
-                    for v in form.children:
+                    for i, v in enumerate(form.children):
                         if isinstance(v, Variable) and v.label not in vrs:
                             if v.opt:
                                 vrs[v.label] = None
+                                found.add(i)
                             else:
                                 vrs[' failed'] = 'unmatched variable'
                                 break
+                if len(found) < len(form.children):
+                    vrs[' failed'] = 'unmatched element'
         elif type(self) != type(form):
             vrs[' failed'] = 'type'
         elif not match(self.ntype, form.ntype):
@@ -678,7 +688,7 @@ class MultiRule(Rule):
             self.ntypelist = [x[0].ntype for x in layers[0]]
         Rule.__init__(self, langs, category, mode, stage, name)
 def applyrule(rule, vrs):
-    if isinstance(rule, Node) or isinstance(rule, UnorderedCollector):
+    if isinstance(rule, DataElement) or isinstance(rule, UnorderedCollector):
         #vrs[' '] = copy.deepcopy(rule).putvars(vrs)
         vrs[' '] = rule.putvars(vrs)
     elif isinstance(rule, list):
@@ -810,9 +820,10 @@ class Language:
     def allnames():
         return [(x, Language.__alllangs[x].name) for x in sorted(Language.__alllangs.keys())]
     def iterlex(self):
-        for ntype in AllMorphemes[self.lang]:
-            for root in AllMorphemes[self.lang][ntype]:
-                yield AllMorphemes[self.lang][ntype][root]
+        dct = Morpheme.itermorph(self.lang)
+        for ntype in dct:
+            for root in dct[ntype]:
+                yield dct[ntype][root]
 class LangLink:
     __alllinks = {}
     def __init__(self, fromlang, tolang):
@@ -821,9 +832,6 @@ class LangLink:
         self.syntax = []
         self.pats = defaultdict(list)
         LangLink.__alllinks['%s-%s' % (fromlang, tolang)] = self
-        #sl = Language.getormake(fromlang).setlang
-        #for s in sl:
-        #    Translation(Variable('node', value=s), [['setlang', tolang]], 'syntax', [fromlang, tolang], mode='syntax')
     def find(self, _roots):
         roots = _roots + ['']
         s = set(roots)
@@ -841,7 +849,6 @@ class LangLink:
             return loadtrans(fromlang, tolang)
     def translate(self, sen):
         pats = self.find(sen.roots())
-        #pats.append(self.syntax) #unnecessary due to sen.nodelang()
         tr = [sen]
         for p in pats:
             ntr = []
@@ -944,6 +951,7 @@ def tokenize(s):
     return ret
 def toobj(s, lang, loc, at=None):
     assert(isinstance(lang, int))
+    Language.getormake(lang)
     rest = tokenize(s)
     def destring():
         nonlocal rest
@@ -1320,9 +1328,14 @@ def readrule(node, lfrom, _lto, mode, category, _stage):
         pass
 def loadlexicon(lang):
     rootslist = ParseLine.fromfile(Globals.path + 'langs/%s/lexicon.txt' % lang)
+    defaults = defaultdict(lambda: defaultdict(dict))
+    if rootslist[0].label == 'defaults':
+        for pat in rootslist.pop(0).children:
+            defaults[pat.label][pat.val] = {ch.label:ch.val for ch in pat.children}
     for root in rootslist:
-        m = Morpheme(lang, root.arg, root.label, isref=False)
-        m.props['output'] = []
+        m = Morpheme(lang, root.arg, root.label, isref=False, props=defaults[root.arg][root.val].copy())
+        if 'output' not in m.props:
+            m.props['output'] = []
         for p in root.children:
             if p.label in ['rule', 'multirule']:
                 readrule(p, lang, lang, 'lex', root.label, 1)
@@ -1487,9 +1500,9 @@ def loadtrans(lfrom, lto):
                     if lex.val:
                         for g in lex.vals:
                             d = toobj(g, lto, lex.num, m)
-                            Translation(m, [d], category=m.children[0], langs=[lfrom, lto], mode='lex', stage=i)
+                            Translation(m, [d], category=m.root, langs=[lfrom, lto], mode='lex', stage=i)
                     for tr in lex.children:
-                        readrule(tr, lfrom, lto, 'lex', m.children[0], i)
+                        readrule(tr, lfrom, lto, 'lex', m.root, i)
     return ret
 def loadlangset(langs):
     loaded = []

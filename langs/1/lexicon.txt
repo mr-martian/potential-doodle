@@ -1,3 +1,30 @@
+defaults
+  determiner: S
+    person: 3
+    number: SG
+    is-rel: false
+    hasspec: false
+  determiner: P
+    person: 3
+    number: PL
+    is-rel: false
+    hasspec: false
+  determiner: SR
+    person: 3
+    number: SG
+    is-rel: true
+    hasspec: false
+  determiner: PR
+    person: 3
+    number: PL
+    is-rel: true
+    hasspec: false
+  pronoun
+    person: 3
+    number: SG
+    is-rel: false
+    hasspec: false
+
 -Q (complementizer)
   audible: false
 +Q (complementizer)
@@ -51,6 +78,8 @@ don't (aux)
   conj: inf
 have (aspect)
   conj: pstprt
+have (perfect)
+  conj: pstprt
 have (verb)
   objects: 1
   object1: NP
@@ -61,6 +90,8 @@ be (aspect)
   conj: prsprt
 have+been (aspect)
   conj: pstprt
+be (continuous)
+  conj: prsprt
 haven't (aspect)
   altpos: verb
   conj: pstprt
@@ -73,24 +104,16 @@ haven't+been (aspect)
   conj: pstprt
 not (mood)
   conj: inf
-    rule (-1)
-      form: [I $tense? ~ @]
-      result: [I $tense ~ aux=don't]
-    rule (-1)
-      form: [I $tense? aspect=have @]
-      result: [I $tense aspect=haven't ~]
-    rule (-1)
-      form: [I $tense? aspect=be @]
-      result: [I $tense aspect=aren't ~]
-    rule (-1)
-      form: [I $tense? aspect=have+been @]
-      result: [I $tense aspect=haven't+been ~]
+do (aux)
+  conj: inf
+not (negative)
+  rule (-1)
+    form: <I $tense:tense negative=not $invis+?(audible=false)>
+    result: <I $tense aux=do negative=not $invis+>
 must (mood)
   conj: inf
 will (mood)
   output (tense=nonpst; person=3; number=SG): will
-  conj: inf
-do (aux)
   conj: inf
 does (aux)
   conj: inf
@@ -106,80 +129,26 @@ to (mood)
   conj: inf
   display: to
 
-a (determiner)
-  hasspec: false
-  person: 3
-  number: SG
-  is-rel: false
+a (determiner): S
   linear-text: an
     1: /^[aeiou]/
-the (determiner)
-  hasspec: false
-  person: 3
-  number: SG
-  is-rel: false
-a#PL (determiner)
-  hasspec: false
-  person: 3
-  number: PL
-  is-rel: false
+the (determiner): S
+a#PL (determiner): P
   linear-text: an
     1: /^[aeiou]/
-the#PL (determiner)
-  hasspec: false
-  person: 3
-  number: PL
-  is-rel: false
-'s (determiner)
+the#PL (determiner): P
+'s (determiner): S
   hasspec: true
-  person: 3
-  number: SG
-  is-rel: false
-'s#PL (determiner)
+'s#PL (determiner): P
   hasspec: true
-  person: 3
-  number: PL
-  is-rel: false
-her (determiner)
-  hasspec: false
-  number: SG
-  person: 3
-  is-rel: false
-her#PL (determiner)
-  hasspec: false
-  number: PL
-  person: 3
-  is-rel: false
-his (determiner)
-  hasspec: false
-  number: SG
-  person: 3
-  is-rel: false
-his#PL (determiner)
-  hasspec: false
-  number: PL
-  person: 3
-  is-rel: false
-that (determiner)
-  hasspec: false
-  number: SG
-  person: 3
-  is-rel: false
-those (determiner)
-  hasspec: false
-  number: PL
-  person: 3
-  is-rel: false
-your (determiner)
-  hasspec: false
-  number: SG
-  person: 3
-  is-rel: false
-your#PL (determiner)
-  hasspec: false
-  number: PL
-  person: 3
-  is-rel: false
+her (determiner): S
+her#PL (determiner): P
+his (determiner): S
+his#PL (determiner): P
+that (determiner): S
+those (determiner): P
+your (determiner): S
+your#PL (determiner): P
 anyone (pronoun)
   number: SG
   person: 3
@@ -193,43 +162,15 @@ any (quantifier)
   number: SG
 some (quantifier)
   number: PL
-some#PL (determiner)
-  number: PL
-  hasspec: false
-  person: 3
-  is-rel: false
-many (determiner)
-  number: PL
-  hasspec: false
-  person: 3
-  is-rel: false
-SG (determiner)
-  number: SG
+some#PL (determiner): P
+many (determiner): P
+SG (determiner): S
   audible: false
-  person: 3
-  is-rel: false
-  hasspec: false
-PL (determiner)
-  number: PL
+PL (determiner): P
   audible: false
-  person: 3
-  is-rel: false
-  hasspec: false
-our (determiner)
-  number: SG
-  person: 3
-  is-rel: false
-  hasspec: false
-this (determiner)
-  number: SG
-  person: 3
-  is-rel: false
-  hasspec: false
-vocative (determiner)
-  number: SG
-  person: 3
-  is-rel: false
-  hasspec: false
+our (determiner): S
+this (determiner): S
+vocative (determiner): S
   inaudible
 
 I (pronoun)

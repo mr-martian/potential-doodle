@@ -144,8 +144,8 @@ transform
         result: |[conjP |[CP $CPspec $CPmod $comp @] $conj $ccomp]
       form: |[CP $CPspec? $CPmod? $comp? @]
         result: |[CP $CPspec $CPmod $comp @]
-    layer: |[IP <I $tense $aspect? $mood?> @]
-      result: |[IP <I $tense $aspect? $mood?> @]
+    layer: |[IP <I $tense:tense $other+?> @]
+      result: |[IP <I $tense:tense $other+> @]
       cond
         option ($notrel)
           setprop ($tense.person): $notrel.person
@@ -164,19 +164,22 @@ transform
       result: |[$DP $subj]
   multirule: agreement and subject position
     layer
-      form: |[IP <I $tense:tense $aspect:aspect? $mood:mood?> @]
-        result: |[IP $subj <I $tense $mood? $aspect?> @]
-        distribute (conj; tense): $tense; $mood; $aspect; $verb
-        distribute (person; person): $tense; $mood; $aspect; $verb
-        distribute (number; number): $tense; $mood; $aspect; $verb
+      form: |[IP <I $tense:tense $perfect:perfect? $continuous:continuous? $neg:negative? $mood?> @]
+        result: |[IP $subj <I $tense $mood? $perfect? $continuous? $neg?> @]
+        distribute (conj; tense): $tense; $mood; $perfect; $continuous; $verb
+        distribute (person; person): $tense; $mood; $perfect; $continuous; $verb
+        distribute (number; number): $tense; $mood; $perfect; $continuous; $verb
     layer
       form: |[?vP $subj? ~ |[?VP $verb]]
         result: |[$vP ~ $verb |[$VP ~]]
       form: |[?VP $subj? $verb $c?]
         result: |[$VP ~ $verb $c]
+  rule: negative position
+    form: <I $tense:tense? $neg:negative $first? $rest+?>
+    result: <I $tense $first $neg $rest+>
   rule: aux-inversion
-    form: |[CP ~ $mod? complementizer=+Q |[?IP <I $tense? $first $other+?>]]
-    result: |[CP $first $mod complementizer=+Q |[$IP <I $tense $other+>]]
+    form: |[CP ~ $mod? complementizer=+Q |[?IP <I $tense:tense? $neg:negative? $first $other+?>]]
+    result: |[CP [aux $first $neg] $mod complementizer=+Q |[$IP <I $tense $other+>]]
   multirule: relative pronoun position
     layer: |[NP $NPspec? $NPmod? $NPhead? @]
       result: |[NP $NPspec $NPmod $NPhead @]
