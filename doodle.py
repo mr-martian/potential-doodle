@@ -187,7 +187,9 @@ class Variable(PatternElement):
             vrs[' failed'] = 'variable condition'
         return vrs
     def putvars(self, vrs):
-        if self.multi and self.idx != None:
+        if self.opt and self.label not in vrs:
+            return None
+        elif self.multi and self.idx != None:
             return vrs[self.label][self.idx]
         else:
             return vrs[self.label]
@@ -248,6 +250,8 @@ class Morpheme(DataElement):
                     f = open(Globals.path + 'missing_morphemes.txt', 'a')
                     f.write(str(lang) + ': ' + ntype + '=' + root + '\n')
                     f.close()
+    def getref(self):
+        return Morpheme(self.lang, self.ntype, self.root, isref=True)
     def itermorph(lang):
         return Morpheme.__AllMorphemes[lang]
     def tagify(self, regex=False):
@@ -296,7 +300,7 @@ class Morpheme(DataElement):
         else:
             d = Morpheme.__AllMorphemes[lang]
             if ntype not in d:
-                raise Exception('Error at %s: Non-existent part of speech %s' (loc, ntype))
+                raise Exception('Error at %s: Non-existent part of speech %s' % (loc, ntype))
             else:
                 d = d[ntype]
                 if root not in d:
@@ -357,7 +361,7 @@ class Node(DataElement):
                 vrs[form.label] = self
         elif isinstance(form, UnorderedCollector):
             if self.ntype != form.ntype:
-                vrs[' failed'] = 'ntype'
+                vrs[' failed'] = 'ntype of unordered collector'
             else:
                 found = set()
                 for c in self.children:
@@ -869,7 +873,8 @@ def hfst(tagstrs, lang):
     elif mode == 'lttoolbox':
         proc = Popen(['lt-proc', '-g', Globals.path + 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
         ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]
-        ret = ls.split('\n')
+        ret = [x[1:] if x[0] == '~' else x for x in ls.split('\n')]
+        #print('\n' + ' '.join(t for t,r in zip(tagstrs, ret) if r[0] == '#'))
     else:
         raise Exception('Unknown morphology mode %s' % mode)
     return ret
@@ -880,38 +885,36 @@ def dolinear(sen, _lang):
         for pat in lang.linear[m.root]:
             if not match(m, pat.form):
                 continue
-            ok = True
             if isinstance(pat.context, list):
                 for d, p in pat.context:
                     if i+d < 0 or i+d >= len(lin):
-                        ok = False
                         break
-                    if not match(lin[i+d], p):
-                        ok = False
+                    if isinstance(p, Variable):
+                        if not p.check(lin[i+d]):
+                            break
+                    elif not match(lin[i+d], p):
                         break
-            if ok:
-                for d, r in pat.result:
-                    if r == 'inaudible':
-                        lin[i+d]['audible'] = 'false'
-                    else:
-                        lin[i+d] = r
+                else:
+                    for d, r in pat.result:
+                        if r == 'inaudible':
+                            lin[i+d]['audible'] = 'false'
+                        elif isinstance(r, list) and r[0] == 'display':
+                            lin[i+d]['display'] = r[1]
+                        else:
+                            lin[i+d] = r
     lintxt = hfst([x.tagify() for x in lin], _lang)
     for i, m in enumerate(lin):
         for pat in lang.lineartext[m.root]:
-            ok = True
             if isinstance(pat.context, list):
                 for d, p in pat.context:
                     if i+d < 0 or i+d >= len(lintxt):
-                        ok = False
                         break
                     if isinstance(p, str) and lintxt[i+d] != p:
-                        ok = False
                         break
                     if not isinstance(p, str) and not p.match(lintxt[i+d]):
-                        ok = False
                         break
-            if ok:
-                lintxt[i] = pat.result
+                else:
+                    lintxt[i] = pat.result
     final = []
     for i, m in enumerate(lin):
         if 'audible' in m and m['audible'] == 'false':
@@ -1081,7 +1084,8 @@ def toobj(s, lang, loc, at=None):
             while rest[0] != '}':
                 p = rest.pop(0)
                 assert(rest.pop(0) == '=')
-                d[p] = destring()
+                #d[p] = destring()
+                d[p] = rest.pop(0)
             rest.pop(0)
             return d
         elif cur == '(':
@@ -1095,7 +1099,10 @@ def toobj(s, lang, loc, at=None):
                 pos = cur
                 root = rest.pop(1)
                 rest.pop(0)
-                return Morpheme(lang, pos, root, isref=True)
+                d = {}
+                if rest and rest[0] == '{':
+                    d = destring()
+                return Morpheme(lang, pos, root, isref=True, props=d)
             else:
                 rest = ['$', ':'] + rest
                 return destring()
@@ -1359,11 +1366,13 @@ def loadlexicon(lang):
                         res.append([idx, 'inaudible'])
                     elif 'to' in ch:
                         res.append([idx, ch.fvo('to', lang, None)])
-                Translation(m, res, root.label, [lang, lang], context=con, mode='linear')
+                    elif 'display' in ch:
+                        res.append([idx, ['display', ch.firstval('display')]])
+                Translation(m.getref(), res, root.label, [lang, lang], context=con, mode='linear')
             elif p.label == 'linear-text':
                 con = []
                 for ch in p.children:
-                    if ch.label.isnumeric():
+                    if ch.label.isnumeric() or (ch.label[0] == '-' and ch.label[1:].isnumeric()):
                         if ch.val[0] == '/' and ch.val[-1] == '/':
                             con.append([int(ch.label), re.compile(ch.val[1:-1])])
                         else:

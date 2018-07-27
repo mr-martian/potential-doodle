@@ -1,0 +1,376 @@
+defaults
+  determiner: 3S
+    number: sg
+    person: 3
+  determiner: 3P
+    number: pl
+    person: 3
+  pronoun: S
+    number: sg
+    person: 3
+    is-rel: false
+  pronoun: P
+    number: pl
+    person: 3
+    is-rel: false
+  noun: f
+    gender: f
+  noun: m
+    gender: m
+  noun: fp
+    proper: true
+    gender: f
+  noun: mp
+    proper: true
+    gender: m
+  tense
+    audible: false
+  mood
+    audible: false
+-Q (complementizer)
+  audible: false
+future (tense)
+  audible: false
+  tense: fut
+present (tense)
+  audible: false
+  tense: prs
+past (tense)
+  audible: false
+  tense: pst
+gerund (tense)
+  conj: ger
+inf (tense)
+  conj: inf
+object (tense)
+  conj: prsprt
+preterite (tense)
+  conj: pret
+  
+a (preposition)
+  display: a
+con (preposition)
+de (preposition)
+  display: de
+en (preposition)
+para (preposition)
+porque+de (preposition)
+  display: porque de
+
+el (determiner): 3S
+  type: def
+  linear-text: -l
+    -1: /(^|\+| )(de|a)$/
+    0: el
+esos (determiner): 3P
+  diplay: esos
+null (determiner): 3S
+  audible: false
+sus-f (determiner): 3P
+  display: sus
+  output: sus
+uno (determiner): 3S
+uno#PL (determiner): 3P
+PL (determiner): 3P
+  audible: false
+SG (determiner): 3S
+  audible: false
+eso (determiner): 3S
+  display: eso
+este (determiner): 3S
+  type: dem
+los (determiner): 3P
+  type: def
+  root: el
+nuestro (determiner): 3S
+  type: pos
+  morphpos: adj
+sus (determiner): 3P
+  display: sus
+tu (determiner): 3S
+  display: tu
+tus (determiner): 3P
+  display: tus
+unos (determiner): 3P
+
+2S (null-pro)
+  audible: false
+  number: sg
+  person: 2
+  is-rel: false
+3S (null-pro)
+  audible: false
+  number: sg
+  person: 3
+  is-rel: false
+3PL (null-pro)
+  audible: false
+  number: pl
+  person: 3
+  is-rel: false
+
+nos (proclitic)
+  person: p1
+  gender: mf
+  number: pl
+me (proclitic)
+  person: p1
+  gender: mf
+  number: sg
+te (proclitic)
+  person: p2
+  gender: mf
+  number: sg
+le (proclitic)
+  person: p3
+  gender: mf
+  number: sg
+te (enclitic)
+  display: -te
+nosotros (pronoun): P
+  person: 1
+  gender: m
+  rule (10)
+    form: |[?IP |[DP pronoun=nosotros] $I? $VP?]
+    result: |[$IP ~ $I $VP]
+  rule (10)
+    form: |[VP $verb? |[DP pronoun=nosotros]]
+    result: |[VP |[DP proclitic=nos] $verb ~]
+yo (pronoun): S
+  person: 1
+esto (pronoun): S
+  person: 3
+  display: esto
+tú (pronoun): S
+  person: 2
+  rule (10)
+    form: |[?IP |[DP pronoun=tú] $I? $VP?]
+    result: |[$IP ~ $I $VP]
+  rule (9)
+    form: |[?IP <I tense=inf $other+?> |[?VP $verb |[?DP pronoun=tú]]]
+    result: |[$IP <I tense=inf $other+?> |[$VP $verb |[$DP enclitic=te]]]
+  rule (10)
+    form: |[VP $verb? |[?DP pronoun=tú]]
+    result: |[VP |[DP proclitic=te] $verb |[$DP ~]]
+  rule (10)
+    form: |[?vP ~ $mod? $verb? |[?VP |[?DP pronoun=tú] ~ $obj?]]
+    result: |[vP |[DP proclitic=te] $mod $verb |[$VP |[$DP ~] ~ $obj]]
+él (pronoun): S
+  gender: m
+  rule (10)
+    form: |[vP ~ $mod? $verb? |[VP |[?DP pronoun=él] $mod2? ~ $obj?]]
+    result: |[vP |[DP proclitic=le] $mod $verb |[VP |[$DP ~] $mod2 ~ $obj]]
+alguien (pronoun): S
+  person: 3
+  display: alguien
+
+no (quantifier)
+  display: no
+que (rel-pronoun)
+  person: 3
+  number: sg
+  type: an
+  display: que
+quien (rel-pronoun)
+  person: 3
+  number: sg
+  type: nn
+quienes (rel-pronoun)
+  person: 3
+  number: pl
+  root: quien
+  type: nn
+
+# LEXICON
+  
+electado (adjective)
+solo (adjective)
+
+también (adverb)
+
+y (conjunction)
+  display: y
+pero (conjunction)
+  
+hijo (noun): m
+mujer (noun): f
+todo (noun): m
+verdad (noun): f
+viejo (noun): m
+
+amar (verb)
+  objects: 1
+estar (verb)
+  objects: 1
+saber (verb)
+  objects: 1
+vivir (verb)
+  objects: 0
+
+
+#Generated from missing_morphemes.txt
+completo (adjective)
+lleno (adjective)
+malo (adjective)
+mucho (adjective)
+nuevo (adjective)
+otro (adjective)
+  type: ind
+para+siempre (adverb)
+  display: para siempre
++Q (complementizer)
+que (complementizer)
+  display: que
+para (conjunction)
+  display: para
+lpar (punct)
+  display: (-
+rpar (punct)
+  display: -)
+paren (conjunction)
+  inaudible
+  audible: false
+  rule (15)
+    form: |[conjP $s? $m? conjunction=paren $c]
+    result: |[conjP $s $m ~ [par punct=lpar $c punct=rpar]]
+por (conjunction)
+  display: por
+porque (conjunction)
+  display: porque
+sí (pre-conj)
+  display: sí
+luego (conjunction)
+  display: luego
+sí-luego (conjunction)
+  rule (7)
+    form: |[conjP $a? conjunction=sí-luego $b?]
+    result: |[conjP pre-conj=sí $a conjunction=luego $b]
+estar (continuous)
+2S (dup-pro)
+  person: 2
+  number: sg
+  is-rel: false
+  audible: false
+imperative (mood)
+  mood: imp
+subjunctive (mood)
+  mood: subj
+indicative (mood)
+  mood: ind
+no (negative)
+  display: no
+  rule (-10)
+    form: <I negative=no mood=imperative $other+?>
+    result: <I negative=no mood=subjunctive $other+?>
+Dios (noun): m
+Jesus (noun): m
+  display: Jesus
+amor (noun): m
+cara (noun): f
+casa (noun): f
+cosa (noun): f
+hermana (noun): f
+mundo (noun): m
+niño (noun): m
+padre (noun): m
+papel (noun): m
+paz (noun): f
+persona (noun): f
+haber (perfect)
+  conj: pstprt
+entre (preposition)
+según (preposition)
+vocative (preposition)
+  audible: false
+untranslated (theremin)
+caminar (verb)
+celebrar (verb)
+compartir (verb)
+dar (verb)
+encontrar (verb)
+escribir (verb)
+esperar (verb)
+hablar (verb)
+ir (verb)
+mandar (verb)
+mirar (verb)
+oír (verb)
+quedar (verb)
+querer (verb)
+pedir (verb)
+recibir (verb)
+tener (verb)
+trabajar (verb)
+traer (verb)
+venir (verb)
+visitar (verb)
+
+
+#Generated from missing_morphemes.txt
+ahora (adverb)
+exactamente (adverb)
+muy (adverb)
+no (adverb)
+así (conjunction)
+  display: así
+aunque (pre-conj)
+  display: aunque
+como (conjunction)
+  display: como
+tanto (pre-conj)
+  display: tanto
+aunque-null (conjunction)
+  rule (7)
+    form: |[conjP $a? conjunction=aunque-null $b?]
+    result: |[conjP pre-conj=aunque $a $b]
+tanto-como (conjunction)
+  rule (7)
+    form: |[conjP $a? conjunction=tanto-como $b?]
+    result: |[conjP pre-conj=tanto $a conjunction=como $b]
+todo (determiner): S
+  person: 3
+  number: sg
+  # add rules for e.g. "todo de nosotros"
+todos (determiner)
+  person: 3
+  number: pl
+  display: todos
+alegría (noun): f
+anciano (noun): m
+carne (noun): f
+comienzo (noun): m
+enseñanza (noun): f
+gracia (noun): f
+hecho (noun): m
+mentiroso (noun): m
+misericordia (noun): f
+precepto (noun): m
+premio (noun): m
+saludo (noun): m
+tinta (noun): f
+uno (noun): m
+deber (verb)
+poder (verb)
+selecto (adjective)
+adelante (adverb)
+tan (adverb)
+  display: tan
+como+si (conjunction)
+  display: como si
+salir (verb)
+Cristo (noun): mp
+Jesucristo (noun): mp
+anticristo (noun): m
+  display: anticristo
+confesar (verb)
+hacer (verb)
+perder (verb)
+muchos (determiner): P
+  number: pl
+  display: muchos
+  linear
+    0: $x(gender=f)
+      display: muchas
+cuidado (noun): m
+saludar (verb)
+mucho (adverb)

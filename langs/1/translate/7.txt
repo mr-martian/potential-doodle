@@ -1,0 +1,203 @@
+stage
+  verb=go
+    rule
+      form: |[?VP verb=go |[PP preposition=out $thing]]
+      result: |[$VP verb=salir $thing]
+  verb=watch
+    rule
+      form: |[?VP verb=watch |[PP preposition=out]]
+      result: |[$VP verb=tener |[DP determiner=SG |[NP noun=cuidado]]]
+  quantifier=any
+    rule
+      context: |[*IP <I negative=not $other+?> |[*vP * |[*VP * |[DP @ $NP]]]]
+      form: quantifier=any
+      result: determiner=PL
+  quantifier=all
+    rule
+      form: |[?DP quantifier=all $rest:DP]
+      result: |[$DP determiner=todos |[PP preposition=de $rest]]
+  quantifier=many
+    rule
+      form: |[?DP quantifier=many $rest:DP]
+      result: |[$DP determiner=muchos |[PP preposition=de $rest]]
+    rule
+      form: |[?DP quantifier=many $rest:NP]
+      result: |[$DP determiner=muchos $rest]
+stage
+  adjective=alone: adjective=solo
+  adjective=complete: adjective=completo
+  adjective=elect: adjective=selecto
+  adjective=evil: adjective=malo
+  adjective=full: adjective=lleno
+  adjective=new: adjective=nuevo
+  adjective=other: adjective=otro
+  adverb=also: adverb=también
+  adverb=forever: adverb=para+siempre
+  adverb=greatly: adverb=mucho
+  adverb=just: adverb=exactamente
+  adverb=not: adverb=no
+  adverb=now: adverb=ahora
+  continuous=be: continuous=estar
+  perfect=have: perfect=haber
+  negative=not: negative=no
+  complementizer=+Q: complementizer=+Q
+  complementizer=that: complementizer=que
+  conjunction=and: conjunction=y
+  conjunction=because: conjunction=porque
+  conjunction=both-and: conjunction=tanto-como
+  conjunction=but: conjunction=pero
+  conjunction=for: conjunction=por
+  conjunction=if-then: conjunction=sí-luego
+  conjunction=paren: conjunction=paren
+  conjunction=so+that: conjunction=para
+  conjunction=though-null: conjunction=aunque-null
+  conjunction=thus: conjunction=así
+  determiner=PL: determiner=PL
+  determiner=SG: determiner=SG
+  determiner=a: determiner=uno
+  determiner=her#PL: determiner=sus
+  determiner=his#PL: determiner=sus
+  determiner=many
+    rule
+      form: |[?DP determiner=many |[?NP ~ $n? $nc?]]
+      result: |[$DP determiner=PL |[$NP |[AP adjective=mucho] $n $nc]]
+  determiner=our: determiner=nuestro
+  determiner=some#PL: determiner=uno#PL
+  determiner=the#PL: determiner=los
+  determiner=the: determiner=el
+  determiner=this: determiner=este
+  determiner=those: determiner=eso
+  determiner=your#PL: determiner=tus
+  determiner=your: determiner=tu
+  dup-pro=2S: dup-pro=2S
+  mood=imperative: mood=imperative
+  mood=may: mood=subjunctive
+    #rule
+    #  form: |[?CP $comp? |[?IP <I $tense:tense mood=may $other+?> |[VP $subj? $mod? $v? $obj?]]]
+    #  result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=poder |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]
+  mood=should
+    rule
+      form: |[?CP $comp? |[?IP <I $tense:tense mood=should $other+?> |[VP $subj? $mod? $v? $obj?]]]
+      result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=deber |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]
+  mood=subjunctive: mood=subjunctive
+  mood=to
+    rule
+      form: <I mood=to $other+?>
+      result: <I $other+?>
+  mood=will
+    rule
+      form: |[?CP $comp? |[?IP <I $tense:tense mood=will $other+?> |[VP $subj? $mod? $v? $obj?]]]
+      result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=ir |[PP preposition=a |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]]
+  noun=Christ: noun=Cristo
+  noun=God: noun=Dios
+  noun=Jesus+Christ: noun=Jesucristo
+  noun=Jesus: noun=Jesus
+  noun=antichrist: noun=anticristo
+  noun=beginning: noun=comienzo
+  noun=child: noun=hijo
+  noun=commandment: noun=precepto
+  noun=deceiver: noun=mentiroso
+  noun=deed: noun=hecho
+  noun=elder: noun=anciano
+  noun=everyone
+    rule
+      form: |[?DP determiner=SG |[?NP noun=everyone]]
+      result: |[$DP determiner=todos |[$NP ~]]
+  noun=face: noun=cara
+  noun=father: noun=padre
+  noun=flesh: noun=carne
+  noun=grace: noun=gracia
+  noun=greeting: noun=saludo
+  noun=house: noun=casa
+  noun=ink: noun=tinta
+  noun=joy: noun=alegría
+  noun=lady: noun=mujer
+  noun=love: noun=amor
+  noun=mercy: noun=misericordia
+  noun=one+another
+    rule
+      context: |[*VP |[*DP $subj:pronoun] $v? @]
+      form: |[DP determiner=SG |[NP noun=one+another]]
+      result: |[DP $subj]
+  noun=one: noun=uno
+  noun=paper: noun=papel
+  noun=peace: noun=paz
+  noun=person: noun=persona
+  noun=reward: noun=premio
+  noun=sister: noun=hermana
+  noun=son: noun=hijo
+  noun=teaching: noun=enseñanza
+  noun=thing: noun=cosa
+  noun=truth: noun=verdad
+  noun=world: noun=mundo
+  null-pro=2S: null-pro=2S
+  null-pro=3PL: null-pro=3PL
+  null-pro=3S: null-pro=3S
+  preposition=according+to: preposition=según
+  preposition=ahead
+    rule
+      form: |[PP preposition=on |[PP preposition=ahead]]
+      result: |[AP adverb=adelante]
+  preposition=as+if
+    rule
+      form: |[PP ~ |[AP adverb=not] preposition=as+if $clause]
+      result: |[conjP ~ |[AP adverb=no] conjunction=como+si $clause]
+  preposition=as: adverb=tan
+  preposition=because+of: preposition=porque+de
+  preposition=for: preposition=para
+  preposition=from: preposition=de
+  preposition=in: preposition=en
+  preposition=into: preposition=entre
+  preposition=of: preposition=de
+  preposition=on: preposition=en
+  preposition=to: preposition=a
+  preposition=vocative: preposition=vocative
+  preposition=with: preposition=con
+  pronoun=I: pronoun=yo
+  pronoun=anyone: pronoun=alguien
+  pronoun=him: pronoun=él
+  pronoun=it: pronoun=él
+  pronoun=this: pronoun=esto
+  pronoun=us: pronoun=nosotros
+  pronoun=we: pronoun=nosotros
+  pronoun=you: pronoun=tú
+  quantifier=not: quantifier=no
+  rel-pronoun=that: rel-pronoun=que
+  rel-pronoun=who: rel-pronoun=quien
+  rel-pronoun=who#PL: rel-pronoun=quienes
+  tense=gerund: tense=gerund
+  tense=inf: tense=inf
+  tense=nonpast: tense=present
+  tense=object: tense=object
+  tense=past: tense=preterite
+  verb=ask: verb=pedir
+  verb=be: verb=estar
+  verb=bring: verb=traer
+  verb=come#PP: verb=venir
+  verb=come#IP: verb=venir
+  verb=command: verb=mandar
+  verb=confess: verb=confesar
+  verb=do+so: verb=hacer
+  verb=find: verb=encontrar
+  verb=give: verb=dar
+  verb=go: verb=ir
+  verb=greet: verb=saludar
+  verb=have: verb=tener
+  verb=hear: verb=oír
+  verb=hope: verb=esperar
+  verb=know: verb=saber
+  verb=live: verb=vivir
+  verb=lose: verb=perder
+  verb=love: verb=amar
+  verb=receive: verb=recibir
+  verb=rejoice: verb=celebrar
+  verb=remain: verb=quedar
+  verb=reside: verb=vivir
+  verb=share: verb=compartir
+  verb=speak: verb=hablar
+  verb=visit: verb=visitar
+  verb=walk: verb=caminar
+  verb=want: verb=querer
+  verb=watch: verb=mirar
+  verb=work: verb=trabajar
+  verb=write: verb=escribir

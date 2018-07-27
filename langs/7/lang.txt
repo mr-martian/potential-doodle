@@ -1,0 +1,340 @@
+# this language file relies on
+# https://github.com/apertium/apertium-spa/blob/master/apertium-spa.spa.dix
+# being downloaded into the directory as lang.dix
+metadata
+  name
+    local: Español
+    1: Spanish
+  creator: Natlang
+syntax
+  start-with: CP
+  auto-setlang: AP; CP; IP; NP; PP; DP; VP; conjP; I
+  node-types
+    AP
+      xbar: ~; ~; adjective; ~
+    CP
+      xbar: ~; ~; complementizer; IP
+    IP
+      xbar: ~; ~; I; VP
+    NP
+      xbar: ~; AP?; noun; ~
+    PP
+      xbar: ~; ~; preposition; DP
+    I
+      structure: [I tense aspect mood]
+    DP
+      variable: $head:determiner
+      option ($head(hasspec=true))
+        xbar: DP; ~; $head; NP
+      option ($head(hasspec=false))
+        xbar: ~; ~; $head; NP
+    VP
+      variable: $head:verb
+      option ($head(objects=1); $head(object1=NP))
+        xbar: DP; adverb?; $head; DP
+      option ($head(objects=1); $head(object1=PP))
+        xbar: DP; adverb?; $head; PP
+      option ($head(objects=1); $head(object1=AP))
+        xbar: DP; adverb?; $head; AP
+      option ($head(objects=0))
+        xbar: DP; adverb?; $head; ~
+      option ($head(objects=1); $head(object1=CP))
+        xbar: DP; adverb?; $head; CP
+lexc: lttoolbox
+  split-root: _
+  noun (proper=true)
+    format: {root[0]}<np><ant>
+    in: s
+    to: s
+  noun
+    format: {root[0]}<n>{gender}{plural}
+    tags
+      plural: number
+        default: <sg>
+      gender: gender
+        default: <m>
+    in: NounRoot
+    to: NounInfl
+  verb (tense=inf)
+    format: {root[0]}<vblex><inf>
+    tags
+    in: blah
+    to: also blah
+  verb (tense=ger)
+    format: {root[0]}<vblex><ger>
+    tags
+    in: blah
+    to: also blah
+  verb (tense=prsprt)
+    format: {root[0]}<vblex><ger>
+    tags
+    in: blah
+    to: also blah
+  verb (tense=pstprt)
+    format: {root[0]}<vblex><pp><m><sg>
+    tags
+    in: blah
+    to: also blah
+  verb
+    format: {root[0]}<vblex>{tense}{person}{number}
+    tags
+      tense
+        case (tense=prs; mood=ind): <pri>
+        case (tense=prs; mood=subj): <prs>
+        case (tense=imp): <imp>
+        case (tense=pret): <ifi>
+        case (tense=back; mood=ind): <pii>
+        case (tense=back; mood=subj): <pis>
+        case (mood=cond): <cni>
+        case (tense=fut; mood=ind): <fti>
+        case (tense=fut; mood=subj): <fts>
+        default: <pri>
+      person
+        case (person=1): <p1>
+        case (person=2): <p2>
+        case (person=3): <p3>
+        default: <p4>
+      number: number
+        default: <sg>
+    lexicon
+      case (objects=1)
+        in: VerbRoot
+        to: VerbInfl-Transitive
+        regex-match: ^(.*)([aei])r$
+        regex-replace: \1%{V\2%}
+      case (objects=0)
+        in: VerbRoot
+        to: VerbInfl-Intransitive
+        regex-match: ^(.*)([aei])r$
+        regex-replace: \1%{V\2%}
+  perfect (tense=inf)
+    format: {root[0]}<vbhaver><inf>
+    tags
+    in: blah
+    to: also blah
+  perfect (tense=ger)
+    format: {root[0]}<vbhaver><ger>
+    tags
+    in: blah
+    to: also blah
+  perfect (tense=prsprt)
+    format: {root[0]}<vbhaver><ger>
+    tags
+    in: blah
+    to: also blah
+  perfect (tense=pstprt)
+    format: {root[0]}<vbhaver><pp><m><sg>
+    tags
+    in: blah
+    to: also blah
+  perfect
+    format: {root[0]}<vbhaver>{tense}{person}{number}
+    tags
+      tense
+        case (tense=prs; mood=ind): <pri>
+        case (tense=prs; mood=subj): <prs>
+        case (tense=imp): <imp>
+        case (tense=pret): <ifi>
+        case (tense=back; mood=ind): <pii>
+        case (tense=back; mood=subj): <pis>
+        case (mood=cond): <cni>
+        case (tense=fut; mood=ind): <fti>
+        case (tense=fut; mood=subj): <fts>
+        default: <pri>
+      person
+        case (person=1): <p1>
+        case (person=2): <p2>
+        case (person=3): <p3>
+        default: <p4>
+      number: number
+        default: <sg>
+    in: h
+    to: h
+  mood
+    format: {root[0]}<aux>{tense}{person}{number}
+    tags
+      tense: tense
+        default: <error>
+      person: person
+        #default: <3>
+        default: <7>
+      number: number
+        default: <sg>
+    in: AuxRoot
+    to: AuxInfl
+  aux
+    format: {root[0]}<aux>{tense}{person}{number}
+    tags
+      tense: tense
+        default: <error>
+      person: person
+        default: <3>
+      number: number
+        default: <sg>
+    in: AuxRoot
+    to: AuxInfl
+  adjective
+    format: {root[0]}<adj>{type}{gender}{number}
+    tags
+      type: type
+        default: _
+      gender: gender
+        #default: <mmm>
+        default: <m>
+      number: number
+        #default: <sggg>
+        default: <sg>
+    in: h
+    to: h
+  determiner
+    format: {root[0]}{pos}{type}{gender}{number}
+    tags
+      pos: morphpos
+        default: <det>
+      type: type
+        case (pos=true): <pos>
+        default: <ind>
+      gender: gender
+        default: <mf>
+      number: number
+        default: <sg>
+    in: s
+    to: s
+  pronoun
+    format: {root[0]}<prn>{type}{person}{gender}{number}
+    tags
+      type
+        default: <tn>
+      person
+        case (person=1): <p1>
+        case (person=2): <p2>
+        case (person=3): <p3>
+        default: <p4>
+      gender: gender
+        default: <mf>
+      number: number
+        default: <sg>
+    in: s
+    to: so
+  rel-pronoun
+    format: {root[0]}<rel>{type}{gender}{number}
+    tags
+      type: type
+        default: <nn>
+      gender: gender
+        default: <mf>
+      number: number
+        default: <sg>
+    in: s
+    to: so
+  preposition
+    bland: <pr>
+  conjunction
+    bland: <cnjcoo>
+  adverb
+    bland: <adv>
+  quantifier
+    bland: <quant>
+  complementizer
+    bland: <comp>
+  rel-pronoun
+    bland: <prn>
+  contraction
+    bland: <c't>
+  proclitic
+    format: {root[0]}<prn><pro>{person}{gender}{number}
+    tags
+      person: person
+        default: <p4>
+      gender: gender
+        default: <mf>
+      number: number
+        default: <sg>
+    in: s
+    to: s
+transform
+  multirule (-1): gather person/number
+    layer?: |[DP $spec? $mod? $notrel |[NP $nspec? $nmod? $noun @]]
+      result: |[DP $spec? $mod? $notrel |[NP $nspec? $nmod? $noun @]]
+    layer?
+      form: |[conjP |[CP $CPspec? $CPmod? $comp? @] $conj? $ccomp?]
+        result: |[conjP |[CP $CPspec $CPmod $comp @] $conj $ccomp]
+      form: |[CP $CPspec? $CPmod? $comp? @]
+        result: |[CP $CPspec $CPmod $comp @]
+    layer: |[IP <I $tense:tense $other+?> @]
+      result: |[IP <I $tense:tense $other+> @]
+      cond
+        option ($notrel)
+          setprop ($tense.person): $notrel.person
+          setprop ($tense.number): $notrel.number
+        option
+          setprop ($tense.person): $subj.person
+          setprop ($tense.number): $subj.number
+    layer
+      form: |[vP @ $m? $h? $c?]
+        result: |[vP @ $m $h $c]
+      form: |[VP @ $m? $h? $c?]
+        result: |[VP @ $m $h $c]
+    layer?: |[conjP @ $conj2? $ccomp2?]
+      result: |[conjP @ $conj2? $ccomp2?]
+    layer: |[?DP $subj]
+      result: |[$DP $subj]
+  multirule (0): agreement and subject position
+    layer
+      form: |[IP <I $tense:tense $perfect:perfect? $continuous:continuous? $neg:negative? $mood?> @]
+        result: |[IP $subj <I $tense $mood? $perfect? $continuous? $neg?> @]
+        distribute (conj; tense): $tense; $mood; $perfect; $continuous; $verb
+        distribute (person; person): $tense; $mood; $perfect; $continuous; $verb
+        distribute (number; number): $tense; $mood; $perfect; $continuous; $verb
+        if ($mood)
+          distribute (mood; mood): $mood; $perfect; $continuous; $verb
+    layer
+      form: |[?vP $subj? ~ |[?VP $verb]]
+        result: |[$vP ~ $verb |[$VP ~]]
+      form: |[?VP $subj? $verb $c?]
+        result: |[$VP ~ $verb $c]
+  multirule (1): relative pronoun position
+    layer: |[NP $NPspec? $NPmod? $NPhead? @]
+      result: |[NP $NPspec $NPmod $NPhead @]
+    layer?: |[conjP @ $conj? $conjcomp?]
+      result: |[conjP @ $conj $conjcomp]
+    layer: |[CP ~ $CPmod? ~ @]
+      result: |[CP ~ $CPmod |[$DP $rel] @]
+    layer
+      form: |[IP |[?DP $rel:rel-pronoun] $m? $h? $c?]
+        result: |[IP ~ $m $h $c]
+      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:rel-pronoun]]]
+        result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
+  rule: plural marking and determiner gender
+    form: |[?DP $head |[?NP $noun]]
+    setprop ($noun.number): $head.number
+    setprop ($head.gender): $noun.gender
+  multirule: adjective gender and number
+    layer: |[NP @ $mod? $head $comp?]
+      result: |[NP @ $mod $head $comp]
+    layer
+      form: |[?AP $adj]
+        result: |[$AP $adj]
+        setprop ($adj.number): $head.number
+        setprop ($adj.gender): $head.gender
+      form: |[conjP |[AP $adj1] $conj? |[AP $adj2]]
+        result: |[conjP |[AP $adj1] $conj |[AP $adj2]]
+        setprop ($adj1.number): $head.number
+        setprop ($adj1.gender): $head.gender
+        setprop ($adj2.number): $head.number
+        setprop ($adj2.gender): $head.gender
+  rule (1): multiple determiners
+    form: |[*DP $det |[*PP $prep? |[*DP $det2(gender)]]]
+    setprop ($det.gender): $det2.gender
+  rule (1): multiple determiners
+    form: |[*DP $det |[*NP ~ |[*PP $prep? |[*DP $det2(gender)]]]]
+    setprop ($det.gender): $det2.gender
+  rotate: Vmod
+  rotate: Nmod
+  rule
+    form: [Dmod $m:PP $b]
+    rotate
+
+#rotations
+  rotate: Vmod
+  rotate: Nmod
