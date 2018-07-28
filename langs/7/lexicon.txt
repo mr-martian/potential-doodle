@@ -35,15 +35,22 @@ future (tense)
 present (tense)
   audible: false
   tense: prs
+  conj: prs
 past (tense)
   audible: false
   tense: pst
 gerund (tense)
   conj: ger
+  person: 3
+  number: sg
 inf (tense)
   conj: inf
+  person: 3
+  number: sg
 object (tense)
   conj: prsprt
+  person: 3
+  number: sg
 preterite (tense)
   conj: pret
   

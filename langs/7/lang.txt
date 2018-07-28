@@ -305,11 +305,11 @@ transform
         result: |[IP ~ $m $h $c]
       form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:rel-pronoun]]]
         result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
-  rule: plural marking and determiner gender
+  rule (0): plural marking and determiner gender
     form: |[?DP $head |[?NP $noun]]
     setprop ($noun.number): $head.number
     setprop ($head.gender): $noun.gender
-  multirule: adjective gender and number
+  multirule (1): adjective gender and number
     layer: |[NP @ $mod? $head $comp?]
       result: |[NP @ $mod $head $comp]
     layer

@@ -7,11 +7,11 @@ stage
     rule
       form: |[?VP verb=watch |[PP preposition=out]]
       result: |[$VP verb=tener |[DP determiner=SG |[NP noun=cuidado]]]
-  quantifier=any
-    rule
-      context: |[*IP <I negative=not $other+?> |[*vP * |[*VP * |[DP @ $NP]]]]
-      form: quantifier=any
-      result: determiner=PL
+  quantifier=any: determiner=PL
+    #rule
+    #  context: |[*IP <I negative=not $other+?> |[*vP * |[*VP * |[DP @ $NP]]]]
+    #  form: quantifier=any
+    #  result: determiner=PL
   quantifier=all
     rule
       form: |[?DP quantifier=all $rest:DP]
@@ -23,6 +23,40 @@ stage
     rule
       form: |[?DP quantifier=many $rest:NP]
       result: |[$DP determiner=muchos $rest]
+stage
+  preposition=as+if
+    rule
+      form: |[PP ~ |[AP adverb=not] preposition=as+if $clause]
+      result: |[conjP ~ |[AP adverb=no] conjunction=como+si $clause]
+  noun=one+another
+    rule
+      context: |[*VP |[*DP $subj:pronoun] $v? @]
+      form: |[DP determiner=SG |[NP noun=one+another]]
+      result: |[DP $subj]
+  noun=everyone
+    rule
+      form: |[?DP determiner=SG |[?NP noun=everyone]]
+      result: |[$DP determiner=todos |[$NP ~]]
+  preposition=ahead
+    rule
+      form: |[PP preposition=on |[PP preposition=ahead]]
+      result: |[AP adverb=adelante]
+  determiner=many
+    rule
+      form: |[?DP determiner=many |[?NP ~ $n? $nc?]]
+      result: |[$DP determiner=PL |[$NP |[AP adjective=mucho] $n $nc]]
+  mood=should
+    rule
+      form: |[?CP $comp? |[?IP <I $tense:tense mood=should $other+?> |[VP $subj? $mod? $v? $obj?]]]
+      result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=deber |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]
+  mood=to
+    rule
+      form: <I mood=to $other+?>
+      result: <I $other+?>
+  mood=will
+    rule
+      form: |[?CP $comp? |[?IP <I $tense:tense mood=will $other+?> |[VP $subj? $mod? $v? $obj?]]]
+      result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=ir |[PP preposition=a |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]]
 stage
   adjective=alone: adjective=solo
   adjective=complete: adjective=completo
@@ -57,10 +91,6 @@ stage
   determiner=a: determiner=uno
   determiner=her#PL: determiner=sus
   determiner=his#PL: determiner=sus
-  determiner=many
-    rule
-      form: |[?DP determiner=many |[?NP ~ $n? $nc?]]
-      result: |[$DP determiner=PL |[$NP |[AP adjective=mucho] $n $nc]]
   determiner=our: determiner=nuestro
   determiner=some#PL: determiner=uno#PL
   determiner=the#PL: determiner=los
@@ -75,19 +105,7 @@ stage
     #rule
     #  form: |[?CP $comp? |[?IP <I $tense:tense mood=may $other+?> |[VP $subj? $mod? $v? $obj?]]]
     #  result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=poder |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]
-  mood=should
-    rule
-      form: |[?CP $comp? |[?IP <I $tense:tense mood=should $other+?> |[VP $subj? $mod? $v? $obj?]]]
-      result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=deber |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]
   mood=subjunctive: mood=subjunctive
-  mood=to
-    rule
-      form: <I mood=to $other+?>
-      result: <I $other+?>
-  mood=will
-    rule
-      form: |[?CP $comp? |[?IP <I $tense:tense mood=will $other+?> |[VP $subj? $mod? $v? $obj?]]]
-      result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=ir |[PP preposition=a |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]]
   noun=Christ: noun=Cristo
   noun=God: noun=Dios
   noun=Jesus+Christ: noun=Jesucristo
@@ -99,10 +117,6 @@ stage
   noun=deceiver: noun=mentiroso
   noun=deed: noun=hecho
   noun=elder: noun=anciano
-  noun=everyone
-    rule
-      form: |[?DP determiner=SG |[?NP noun=everyone]]
-      result: |[$DP determiner=todos |[$NP ~]]
   noun=face: noun=cara
   noun=father: noun=padre
   noun=flesh: noun=carne
@@ -114,11 +128,6 @@ stage
   noun=lady: noun=mujer
   noun=love: noun=amor
   noun=mercy: noun=misericordia
-  noun=one+another
-    rule
-      context: |[*VP |[*DP $subj:pronoun] $v? @]
-      form: |[DP determiner=SG |[NP noun=one+another]]
-      result: |[DP $subj]
   noun=one: noun=uno
   noun=paper: noun=papel
   noun=peace: noun=paz
@@ -134,14 +143,6 @@ stage
   null-pro=3PL: null-pro=3PL
   null-pro=3S: null-pro=3S
   preposition=according+to: preposition=según
-  preposition=ahead
-    rule
-      form: |[PP preposition=on |[PP preposition=ahead]]
-      result: |[AP adverb=adelante]
-  preposition=as+if
-    rule
-      form: |[PP ~ |[AP adverb=not] preposition=as+if $clause]
-      result: |[conjP ~ |[AP adverb=no] conjunction=como+si $clause]
   preposition=as: adverb=tan
   preposition=because+of: preposition=porque+de
   preposition=for: preposition=para

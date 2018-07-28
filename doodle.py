@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import shlex, re, itertools, random, copy, os
+import re, itertools, random, copy, os
 from collections import defaultdict
 from subprocess import Popen, PIPE
 from os.path import isfile
@@ -8,31 +8,61 @@ Globals = SimpleNamespace(path=os.path.abspath(__file__)[:-9], unknown_error=Tru
 #path: The directory containing the program
 #unknown_error: Should an error be raised when trying parse a non-existent morpheme?
 #flat: Read |[XP] as [XP a b c d] rather than [XP a [Xmod b [Xbar c d]]]
-#normalize: The language of non-morpheme Nodes will be ignored
 #partial: Return incomplete translations
 #keepmeta: Copy glosses and metadata from input to output
-#These are to clean up isinstance() or isinstance() lines
+
 class PatternElement:
-    pass
-class DataElement(PatternElement):
-    def __setitem__(self, key, val):
-        self.props[key] = val
+    CheckType = False
+    def __init__(self, ntype, props=None):
+        self.ntype = ntype
+        self.props = props
+    def __getitem__(self, key):
+        return self.props[key]
+    def __setitem__(self, key, value):
+        self.props[key] = value
+    def __contains__(self, key):
+        return key in self.props
+    def __str__(self):
+        return type(self).__name__ + self.ntype + str(self.props)
+    def __repr__(self):
+        return self.__str__()
     def matchcondlist(self, cndls):
-        for c in cndls:
-            if c[0] not in self:
-                return False
-            if self[c[0]] != c[1]:
-                return False
-        return True
+        return all(k in self and self[k] == v for k,v in cndls)
+    def getvars(self, tree, vrs):
+        if self.CheckType and type(tree) != type(self):
+            vrs[' failed'] = 'type'
+            return vrs
+        if tree == None:
+            vrs[' failed'] = 'tree is None'
+            return vrs
+        if self.ntype and self.ntype != tree.ntype:
+            vrs[' failed'] = 'ntype'
+            return vrs
+        for p in self.props:
+            if p not in tree:
+                vrs[' failed'] = 'nonexistent property'
+                return vrs
+            if isinstance(self.props[p], str) or self.props[p] == None:
+                if self.props[p] != tree[p]:
+                    vrs[' failed'] = 'property value mismatch'
+                    return vrs
+            else:
+                self.props[p].getvars(tree[p], vrs)
+                if vrs[' failed']:
+                    return vrs
+        return vrs
+    def putvars(self, vrs):
+        return self
+class DataElement(PatternElement):
+    #thing that can occur in a sentence (rather than just a rule)
+    CheckType = True
     def trans(self, tr):
-        vrs = self.getvars(tr.context, {' failed': False})
+        vrs = tr.context.getvars(self, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], DataElement):
             return []
-        vrs = vrs[' '].getvars(tr.form, vrs)
+        vrs = tr.form.getvars(vrs[' '], vrs)
         if vrs[' failed']:
             return []
-        #if not isinstance(tr.result[0], Node):
-        #    vrs[' '] = copy.deepcopy(vrs[' '])
         for act in tr.result:
             applyrule(act, vrs)
         return copy.deepcopy(tr.context).putvars(vrs)
@@ -43,15 +73,13 @@ class DataElement(PatternElement):
         path = []
         for l in tr.layers:
             for i, f in enumerate(l):
-                vrs2 = vrs[' '].getvars(f[0], vrs.copy())
-                # don't need deepcopy because the values aren't ever modified
+                vrs2 = f[0].getvars(vrs[' '], vrs.copy())
                 if not vrs2[' failed']:
                     vrs = vrs2
                     path.append(f[1:])
                     break
             else:
                 return []
-        #vrs = copy.deepcopy(vrs)
         for result in reversed(path):
             for act in result:
                 applyrule(act, vrs)
@@ -78,32 +106,29 @@ class DataElement(PatternElement):
             return []
 ###VARIABLES
 class Variable(PatternElement):
-    pattern = re.compile('^\\$?([^:?!^+\\.&]*):?([^:?!^+\\.&]*)\\.?([^:?!^+\\.&]*)([?!^+&]*)$')
-    def __init__(self, label, value=None, prop=None, opt=False, neg=False, multi=False, group=False, descend=False, idx=None, cond=None):
+    pattern = re.compile('^\\$?([^:?!+\\.&]*):?([^:?!+\\.&]*)\\.?([^:?!+\\.&]*)([?!+&]*)$')
+    def __init__(self, label, ntype=None, prop=None, opt=False, neg=False, group=False, descend=False, cond=None):
         self.label = label
-        self.value = value
+        self.ntype = ntype
         self.prop = prop
         self.opt = opt
         self.neg = neg
-        self.multi = multi
         self.group = group
         self.descend = descend
-        self.idx = idx
         self.cond = cond
+        self.props = {}
     def fromstring(s):
         m = Variable.pattern.match(s)
         if m:
             g = m.groups()
-            return Variable(g[0], g[1], g[2], '?' in g[3], '!' in g[3], '^' in g[3], '+' in g[3], '&' in g[3])
+            return Variable(g[0], g[1], g[2], '?' in g[3], '!' in g[3], '+' in g[3], '&' in g[3])
         else:
             print('no match with %s' % s)
     def checkset(self, vrs):
         if self.label not in vrs:
-            return self.neg
+            return self.neg or self.opt
         if self.group:
             return all(self.check(x) for x in vrs[self.label])
-        elif self.multi:
-            return self.check(vrs[self.label][self.idx])
         else:
             return self.check(vrs[self.label])
     def check(self, v):
@@ -113,7 +138,7 @@ class Variable(PatternElement):
             return self.opt
         if not isinstance(v, DataElement):
             return False
-        if self.value and v.ntype != self.value:
+        if self.ntype and v.ntype != self.ntype:
             return False
         if self.cond:
             if isinstance(self.cond, list):
@@ -166,45 +191,40 @@ class Variable(PatternElement):
                     v.props[self.prop] = val
             else:
                 vrs[self.label].props[self.prop] = val
-    def setvars(self, node, vrs):
-        """Equivalent to Node.getvars(), but applied to the pattern rather than the tree"""
-        if self.check(node):
-            if self.group or self.multi:
-                if self.label not in vrs:
-                    vrs[self.label] = [node]
-                elif not isinstance(vrs[self.label], list):
-                    vrs[' failed'] = 'variable reuse'
-                else:
+    def getvars(self, node, vrs):
+        PatternElement.getvars(self, node, vrs)
+        if not vrs[' failed'] and self.cond:
+            self.cond.getvars(node)
+        if node == None and (self.opt or self.neg):
+            vrs[' failed'] = False
+        if self.neg and node:
+            vrs[' failed'] = 'node is not None'
+        if not vrs[' failed']:
+            if self.label in vrs:
+                if self.group:
                     vrs[self.label].append(node)
-            elif self.label in vrs:
-                if match(node, vrs[self.label]):
-                    pass
                 else:
-                    vrs[' failed'] = 'variable reuse or value mismatch'
+                    #perhaps overwriting the previous value is the wrong approach
+                    #but since this hasn't yet come up in practice I'm inclined to ignore it
+                    #  -D.S. 2018-07-27
+                    vrs[self.label] = node
             else:
-                vrs[self.label] = node
-        else:
-            vrs[' failed'] = 'variable condition'
+                vrs[self.label] = [node] if self.group else node
         return vrs
     def putvars(self, vrs):
-        if self.opt and self.label not in vrs:
+        if self.label not in vrs:
             return None
-        elif self.multi and self.idx != None:
-            return vrs[self.label][self.idx]
         else:
             return vrs[self.label]
     def __str__(self):
         return '$'+self.label + \
-               ((':'+self.value) if self.value else '') + \
+               ((':'+self.ntype) if self.ntype else '') + \
                (('.'+self.prop) if self.prop else '') + \
                ('?' if self.opt else '') + \
                ('!' if self.neg else '') + \
-               ('^' if self.multi else '') + \
                ('+' if self.group else '') + \
                ('&' if self.descend else '') + \
                (('(' + str(self.cond) + ')') if self.cond else '')
-    def __repr__(self):
-        return self.__str__()
     def __deepcopy__(self, memo):
         return self
         #Variables aren't modified, so we don't care about copying them
@@ -213,11 +233,12 @@ class Unknown(Variable):
     def __init__(self):
         Variable.__init__(self, ' '+str(Unknown.count), opt=True)
         Unknown.count += 1
+    def getvars(self, tree, vrs):
+        vrs[self.label] = tree
+        return vrs
     def check(self, v):
         return True
     def __str__(self):
-        return '*'
-    def __repr__(self):
         return '*'
 class Option(list):
     pass
@@ -250,6 +271,8 @@ class Morpheme(DataElement):
                     f = open(Globals.path + 'missing_morphemes.txt', 'a')
                     f.write(str(lang) + ': ' + ntype + '=' + root + '\n')
                     f.close()
+    def __str__(self):
+        return self.ntype + '=' + self.root
     def getref(self):
         return Morpheme(self.lang, self.ntype, self.root, isref=True)
     def itermorph(lang):
@@ -323,19 +346,11 @@ class Morpheme(DataElement):
         if self.isref:
             return key in Morpheme.get(self.lang, self.ntype, self.root, None).props
         return False
-    def __repr__(self):
-        return '%s=%s' % (self.ntype, self.root)
-    def getvars(self, form, vrs={' failed': False}):
-        if isinstance(form, Morpheme):
-            if self.lang != form.lang or self.ntype != form.ntype or self.root != form.root:
-                vrs[' failed'] = True
-        elif isinstance(form, Variable):
-            if form.check(self):
-                vrs[form.label] = self
-            else:
-                vrs[' failed'] = True
-        else:
-            vrs[' failed'] = True
+    def getvars(self, tree, vrs):
+        PatternElement.getvars(self, tree, vrs)
+        if not vrs[' failed']:
+            if self.lang != tree.lang or self.root != tree.root:
+                vrs[' failed'] = 'lang or root'
         return vrs
     def putvars(self, vrs):
         return self
@@ -347,88 +362,18 @@ class Node(DataElement):
         self.rotate = False
     def swapchildren(self, ls):
         return Node(self.ntype, ls, self.props.copy())
-    def __contains__(self, key):
-        return key in self.props
-    def __getitem__(self, key):
-        return self.props[key]
-    def getvars(self, form, vrs={' failed': False}):
-        if isinstance(form, Unknown):
-            vrs[form.label] = self
-        elif isinstance(form, Variable):
-            if not form.check(self):
-                vrs[' failed'] = 'variable condition'
-            else:
-                vrs[form.label] = self
-        elif isinstance(form, UnorderedCollector):
-            if self.ntype != form.ntype:
-                vrs[' failed'] = 'ntype of unordered collector'
-            else:
-                found = set()
-                for c in self.children:
-                    if not c:
-                        continue
-                    for i, v in enumerate(form.children):
-                        if isinstance(v, Variable):
-                            v.setvars(c, vrs)
-                            if not vrs[' failed']:
-                                found.add(i)
-                                break
-                            else:
-                                vrs[' failed'] = False
-                        else:
-                            v2 = c.getvars(v, vrs.copy())
-                            if not v2[' failed']:
-                                vrs = v2
-                                found.add(i)
-                                break
-                    else:
-                        vrs[' failed'] = 'no matching variables found for %s' % c
-                        break
-                else:
-                    for i, v in enumerate(form.children):
-                        if isinstance(v, Variable) and v.label not in vrs:
-                            if v.opt:
-                                vrs[v.label] = None
-                                found.add(i)
-                            else:
-                                vrs[' failed'] = 'unmatched variable'
-                                break
-                if len(found) < len(form.children):
-                    vrs[' failed'] = 'unmatched element'
-        elif type(self) != type(form):
-            vrs[' failed'] = 'type'
-        elif not match(self.ntype, form.ntype):
-            vrs[' failed'] = 'ntype'
-        elif match(self, form):
-            pass
-        elif len(self.children) != len(form.children):
-            vrs[' failed'] = 'len(children)'
-        elif not set(form.props.keys()) <= set(self.props.keys()):
-            vrs[' failed'] = 'too many properties: %s not <= %s' % (form.props.keys(), self.props.keys())
-        else:
-            for s, f in zip(self.children, form.children):
-                if isinstance(s, DataElement):
-                    s.getvars(f, vrs)
-                    if vrs[' failed']:
-                        return vrs
-                elif isinstance(f, Variable):
-                    if not f.check(s):
-                        vrs[' failed'] = 'variable condition on child'
-                        return vrs
-                    else:
-                        vrs[f.label] = s
-                elif match(s, f):
-                    pass
-                else:
-                    vrs[' failed'] = 'failed on child %s (%s) with form %s %s' % (s, type(s), f, type(f))
-                    return vrs
-            for k in form.props.keys():
-                if isinstance(form.props[k], Variable):
-                    vrs[form.props[k].label] = self.props[k]
-                elif match(self.props[k], form.props[k]):
-                    pass
-                else:
-                    vrs[' failed'] = 'failed on property %s with value %s and form %s' % (k, self.props[k], form.props[k])
+    def getvars(self, tree, vrs):
+        PatternElement.getvars(self, tree, vrs)
+        if not vrs[' failed']:
+            if len(self.children) != len(tree.children):
+                vrs[' failed'] = 'number of children'
+                return vrs
+            for s,t in zip(self.children, tree.children):
+                if s:
+                    s.getvars(t, vrs)
+                elif t:
+                    vrs[' failed'] = 'non-null child'
+                if vrs[' failed']:
                     return vrs
         return vrs
     def putvars(self, vrs):
@@ -444,16 +389,15 @@ class Node(DataElement):
                 ch.append(c)
         return Node(self.ntype, ch, self.props.copy())
     def transform(self, pats, returnself=True):
-        ret = []
-        for n in DataElement.transform(self, pats, True):
-            chs = []
-            for c in n.children:
-                if isinstance(c, DataElement):
-                    chs.append(c.transform(pats))
-                else:
-                    chs.append([c])
-            ret += [n.swapchildren(list(cl)) for cl in itertools.product(*chs)]
-        if not ret and returnself:
+        chs = []
+        for c in self.children:
+            if c:
+                chs.append(c.transform(pats, True))
+            else:
+                chs.append([c])
+        swap = map(lambda x: self.swapchildren(list(x)), itertools.product(*chs))
+        ret = list(itertools.chain.from_iterable(map(lambda x: DataElement.transform(x, pats, True), swap)))
+        if returnself and not ret:
             ret = [self]
         return ret
     def __str__(self):
@@ -462,8 +406,6 @@ class Node(DataElement):
         else:
             s = str(self.children)
         return '%s%s%s' % (self.ntype, s, str(self.props))
-    def __repr__(self):
-        return self.__str__()
     def debug(self, depth=0):
         ls = [('  '*depth) + ('%s[' % self.ntype)]
         for c in self.children:
@@ -574,9 +516,42 @@ class Node(DataElement):
                 return False
         return True
 class UnorderedCollector(PatternElement):
-    def __init__(self, lang, ntype, children):
+    def __init__(self, ntype, children):
         self.ntype = ntype
         self.children = children
+        self.props = {}
+    def getvars(self, tree, vrs):
+        PatternElement.getvars(self, tree, vrs)
+        if not vrs[' failed']:
+            if not isinstance(tree, Node):
+                vrs[' failed'] = 'UnorderedCollector only matches Nodes'
+                return vrs
+            found = set()
+            for c in tree.children:
+                if not c:
+                    continue
+                for i, v in enumerate(self.children):
+                    v.getvars(c, vrs)
+                    if not vrs[' failed']:
+                        found.add(i)
+                        break
+                    else:
+                        vrs[' failed'] = False
+                else:
+                    vrs[' failed'] = 'no matching variables found for %s' % c
+                    break
+            else:
+                for i, v in enumerate(self.children):
+                    if isinstance(v, Variable) and v.label not in vrs:
+                        if v.opt:
+                            vrs[v.label] = None
+                            found.add(i)
+                        else:
+                            vrs[' failed'] = 'unmatched variable'
+                            break
+            if len(found) < len(self.children):
+                vrs[' failed'] = 'unmatched element'
+        return vrs
     def putvars(self, vrs):
         ch = []
         for v in self.children:
@@ -588,8 +563,6 @@ class UnorderedCollector(PatternElement):
         return Node(self.ntype, ch)
     def __str__(self):
         return '<%s %s>' % (self.ntype, ' '.join(str(x) for x in self.children))
-    def __repr__(self):
-        return self.__str__()
 def match(a, b):
     #a is thing, b is pattern
     #only matters for nodes, where b's properties must be a subset of a's
@@ -971,21 +944,19 @@ def toobj(s, lang, loc, at=None):
             ret = Variable.fromstring(rest.pop(0))
             if not ret:
                 raise ParseError('Badly formed variable at %s' % loc)
-            cond = None
             if rest and rest[0] == '(':
                 rest.pop(0)
                 if len(rest) >= 2 and rest[1] == ')':
-                    cond = rest.pop(0)
+                    ret[rest.pop(0)] = Unknown()
                     rest.pop(0)
                 elif len(rest) >= 4 and ok(rest[0]) and rest[1] == '=' and ok(rest[2]) and rest[3] == ')':
-                    cond = [rest[0], rest[2]]
+                    ret[rest[0]] = rest[2]
                     rest = rest[4:]
                 else:
-                    cond = destring()
+                    ret.cond = destring()
                     if rest[0] != ')':
                         raise ParseError('Badly formed variable condition on line %s (remainder was %s).' % (loc, rest))
                     rest.pop(0)
-            ret.cond = cond
             return ret
         elif cur == '[': #Syntax
             ntype = rest.pop(0)
@@ -1078,7 +1049,7 @@ def toobj(s, lang, loc, at=None):
             if not rest:
                 raise ParseError('Incomplete Unordered Collector, missing > at %s' % loc)
             rest.pop(0)
-            return UnorderedCollector(lang, ntype, ch)
+            return UnorderedCollector(ntype, ch)
         elif cur == '{': #props pattern
             d = {}
             while rest[0] != '}':
@@ -1669,7 +1640,7 @@ def gen(pats, tree, depth, setvars):
             if tree.label in setvars:
                 return setvars[tree.label]
             else:
-                newtree = pats[tree.value]
+                newtree = pats[tree.ntype]
                 if isinstance(newtree, list):
                     newtree = random.choice(newtree)
                 return gen(pats, newtree, depth+1, setvars)
@@ -1734,16 +1705,16 @@ def makeall(words):
         elif isinstance(tree, Variable):
             if tree.label in setvars:
                 yield setvars[tree.label]
-            elif isinstance(pats[tree.value], LimitList):
-                old = pats[tree.value]
+            elif isinstance(pats[tree.ntype], LimitList):
+                old = pats[tree.ntype]
                 for r, l in old.each():
-                    pats[tree.value] = l
+                    pats[tree.ntype] = l
                     yield r
-                pats[tree.value] = old
+                pats[tree.ntype] = old
             else:
-                #for x in genall(pats[tree.value], setvars):
+                #for x in genall(pats[tree.ntype], setvars):
                 #    yield x
-                yield from genall(pats[tree.value], setvars)
+                yield from genall(pats[tree.ntype], setvars)
             if tree.opt:
                 yield None
         elif isinstance(tree, SyntaxPat):
