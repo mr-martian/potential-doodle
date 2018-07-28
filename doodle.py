@@ -53,6 +53,8 @@ class PatternElement:
         return vrs
     def putvars(self, vrs):
         return self
+    def check(self, tree):
+        return self.getvars(tree, {' failed': False}) == False
 class DataElement(PatternElement):
     #thing that can occur in a sentence (rather than just a rule)
     CheckType = True
@@ -136,19 +138,10 @@ class Variable(PatternElement):
             return v == None
         if v == None:
             return self.opt
-        if not isinstance(v, DataElement):
-            return False
-        if self.ntype and v.ntype != self.ntype:
+        if not PatternElement.check(self, v):
             return False
         if self.cond:
-            if isinstance(self.cond, list):
-                if self.cond[0] not in v:
-                    return False
-                if len(self.cond) > 1 and v[self.cond[0]] != self.cond[1]:
-                    return False
-            else:
-                if not match(v, self.cond):
-                    return False
+            return self.cond.check(v)
         return True
     def retrieve(self, vrs):
         if self.label in vrs:
@@ -334,7 +327,6 @@ class Morpheme(DataElement):
         if key in self.props:
             return self.props[key]
         elif self.isref:
-            #ref = AllMorphemes[self.lang][self.ntype][self.root].props
             ref = Morpheme.get(self.lang, self.ntype, self.root, None)
             if key in ref.props:
                 return ref.props[key]
@@ -563,52 +555,6 @@ class UnorderedCollector(PatternElement):
         return Node(self.ntype, ch)
     def __str__(self):
         return '<%s %s>' % (self.ntype, ' '.join(str(x) for x in self.children))
-def match(a, b):
-    #a is thing, b is pattern
-    #only matters for nodes, where b's properties must be a subset of a's
-    #otherwise match(b, a) should be identical
-    if isinstance(a, Unknown) or isinstance(b, Unknown):
-        return True
-    elif isinstance(a, Option):
-        for ac in a:
-            if match(ac, b):
-                return True
-        return False
-    elif isinstance(b, Option):
-        for bc in b:
-            if match(a, bc):
-                return True
-        return False
-    elif isinstance(a, Node) and isinstance(b, Node):
-        if not match(a.ntype, b.ntype):
-            return False
-        if isinstance(a.children, Unknown) or isinstance(b.children, Unknown):
-            pass
-        elif len(a.children) != len(b.children):
-            return False
-        elif isinstance(a.children, list) and isinstance(b.children, list):
-            for ac, bc in zip(a.children, b.children):
-                if not match(ac, bc):
-                    return False
-        for k in b.props:
-            if k not in a.props or not match(a.props[k], b.props[k]):
-                return False
-        return True
-    elif isinstance(a, Morpheme) and isinstance(b, Morpheme):
-        if a.lang != b.lang:
-            return False
-        if a.ntype != b.ntype:
-            return False
-        if a.root != b.root:
-            return False
-        for k in b.props:
-            if k not in a or not match(a[k], b[k]):
-                return False
-        return True
-    elif isinstance(a, Translation) and isinstance(b, Translation):
-        return match(a.form, b.form) and match(a.result, b.result)
-    else:
-        return a == b
 ###TRANSFORMATIONS
 class Rule:
     def __init__(self, langs, category='', mode='syntax', stage=0, name=''):
@@ -666,7 +612,6 @@ class MultiRule(Rule):
         Rule.__init__(self, langs, category, mode, stage, name)
 def applyrule(rule, vrs):
     if isinstance(rule, DataElement) or isinstance(rule, UnorderedCollector):
-        #vrs[' '] = copy.deepcopy(rule).putvars(vrs)
         vrs[' '] = rule.putvars(vrs)
     elif isinstance(rule, list):
         if rule[0] == 'setlang':
@@ -739,11 +684,8 @@ class Language:
         #General
         self.lang = lang
         self.syntax = {}
-        self.morphology = defaultdict(list)
-        self.transform = []
         self.rotate = []
         self.syntaxstart = None
-        self.setlang = []
         #Movement
         self.movement = defaultdict(list)
         self.linear = defaultdict(list)
@@ -753,10 +695,8 @@ class Language:
         self.lexc_lexicons = []
         self.tags = []
         self.tags_rootsplit = '' #for cases where it's easiest to have tags between parts of the root
-        self.morph_mode = '' #hfst of lttoolbox
+        self.morph_mode = '' #hfst or lttoolbox
         Language.__alllangs[lang] = self
-    def addmorphopt(self, ntype, struct):
-        self.morphology[ntype].append(struct)
     def isloaded(lang):
         return lang in Language.__alllangs
     def get(lang):
@@ -768,11 +708,8 @@ class Language:
             return loadlang(lang)
     def getpats(self):
         r = {}
-        for k in self.syntax:
-            r[k] = self.syntax[k]
-        for k in self.morphology:
-            r[k] = self.morphology[k]
-        for k, v in AllMorphemes[self.lang].items():
+        r.update(self.syntax)
+        for k, v in Morpheme.itermorph(self.lang).items():
             r[k] = list(v.values())
         return r
     def movefind(self, roots):
@@ -856,16 +793,13 @@ def dolinear(sen, _lang):
     lang = Language.getormake(_lang)
     for i, m in enumerate(lin):
         for pat in lang.linear[m.root]:
-            if not match(m, pat.form):
+            if not pat.form.check(m):
                 continue
             if isinstance(pat.context, list):
                 for d, p in pat.context:
                     if i+d < 0 or i+d >= len(lin):
                         break
-                    if isinstance(p, Variable):
-                        if not p.check(lin[i+d]):
-                            break
-                    elif not match(lin[i+d], p):
+                    if p.check(lin[i+d]):
                         break
                 else:
                     for d, r in pat.result:
@@ -903,7 +837,7 @@ def tokenize(s):
     add = False
     digraph = False
     for c in s:
-        if c in '[]<>$(){}=@%~*':
+        if c in '[]<>$(){}=@~*':
             if digraph:
                 ret[-1] += c
                 digraph = False
@@ -933,7 +867,7 @@ def toobj(s, lang, loc, at=None):
         nonlocal rest
         cur = rest.pop(0)
         def ok(th):
-            return isinstance(th, str) and th[0] not in '[]<>$(){}=@|%~*'
+            return th[0] not in '[]<>$(){}=@|~*'
         if cur == '~':
             return None
         elif cur == '*':
@@ -1004,43 +938,6 @@ def toobj(s, lang, loc, at=None):
                 bar = Node(name+'bar', ch[2:])
                 mod = Node(name+'mod', [ch[1], bar])
                 return Node(name+'P', [ch[0], mod], d)
-        elif cur == '%': #Text entry
-            nodes = []
-            while True:
-                add = defaultdict(lambda: None)
-                add['name'] = rest.pop(0)[:-1]
-                add[' props'] = []
-                if rest[0] == '(':
-                    rest.pop(0)
-                    while rest[0] != ')':
-                        p = rest.pop(0)
-                        v = destring()
-                        if p == 's':
-                            add['spec'] = v
-                        elif p == 'm':
-                            add['mod'] = v
-                        else:
-                            add[p] = v
-                            add[' props'].append(p)
-                    rest.pop(0)
-                add['head'] = destring()
-                nodes.append(add)
-                if not rest or rest[0] != '>':
-                    break
-                else:
-                    rest.pop(0)
-            ret = None
-            while nodes:
-                n = nodes.pop()
-                if Globals.flat:
-                    ret = Node(n['name']+'P', [n['spec'], n['mod'], n['head'], ret])
-                else:
-                    ret = Node(n['name']+'bar', [n['head'], ret])
-                    ret = Node(n['name']+'mod', [n['mod'], ret])
-                    ret = Node(n['name']+'P', [n['spec'], ret])
-                for k in n[' props']:
-                    ret.props[k] = n[k]
-            return ret
         elif cur == '<': #UnorderedCollector
             ntype = rest.pop(0)
             ch = []
@@ -1055,7 +952,6 @@ def toobj(s, lang, loc, at=None):
             while rest[0] != '}':
                 p = rest.pop(0)
                 assert(rest.pop(0) == '=')
-                #d[p] = destring()
                 d[p] = rest.pop(0)
             rest.pop(0)
             return d
@@ -1075,7 +971,7 @@ def toobj(s, lang, loc, at=None):
                     d = destring()
                 return Morpheme(lang, pos, root, isref=True, props=d)
             else:
-                rest = ['$', ':'] + rest
+                rest = ['$', ':'+cur] + rest
                 return destring()
     try:
         ret = destring()
@@ -1351,13 +1247,7 @@ def loadlexicon(lang):
                 Translation(m, p.val, root.label, [lang, lang], context=con, mode='linear-text')
             else:
                 m.props[p.label] = p.val
-        #register(m)
         for pos in root['altpos']:
-            #m2 = copy.deepcopy(m)
-            #m2.ntype = pos.val
-            #for l in pos.children:
-            #    m2.props[l.label] = l.val
-            #register(m2)
             p2 = m.props.copy()
             for l in pos.children:
                 p2[l.label] = l.val
@@ -1371,12 +1261,6 @@ def loadlang(lang):
             for ch in th.children:
                 if ch.label == 'start-with':
                     ret.syntaxstart = ch.val
-                elif ch.label == 'auto-setlang':
-                    for n in ch.vals:
-                        if n[-1] == 'P':
-                            ret.setlang += [n, n[:-1]+'mod', n[:-1]+'bar']
-                        else:
-                            ret.setlang.append(n)
                 elif ch.label == 'node-types':
                     for ty in ch.children:
                         vrs = [toobj(s, lang, ty.num) for s in ty.child_vals('variable')]
@@ -1413,7 +1297,7 @@ def loadlang(lang):
                 if ch.label == 'rotate':
                     ret.rotate.append(ch.val)
                 else:
-                    ret.transform.append(readrule(ch, lang, lang, 'syntax', '', 0))
+                    readrule(ch, lang, lang, 'syntax', '', 0)
         if th.label == 'metadata':
             if 'creator' in th:
                 ret.creator = th.firstval('creator')
@@ -1699,8 +1583,6 @@ def makeall(words):
             for ch in product([[c, setvars] for c in tree.children]):
                 yield tree.swapchildren(ch)
         elif isinstance(tree, list):
-            #for x in tree:
-            #    yield x
             yield from tree
         elif isinstance(tree, Variable):
             if tree.label in setvars:
@@ -1712,8 +1594,6 @@ def makeall(words):
                     yield r
                 pats[tree.ntype] = old
             else:
-                #for x in genall(pats[tree.ntype], setvars):
-                #    yield x
                 yield from genall(pats[tree.ntype], setvars)
             if tree.opt:
                 yield None
@@ -1732,8 +1612,6 @@ def makeall(words):
                                 yield x
         else:
             yield tree
-    #for x in genall(pats[lang.syntaxstart], {}):
-    #    yield x
     return genall(pats[lang.syntaxstart], {})
 def parse(lang, num, text):
     ret = Sentence(lang, str(num), {}, text)
