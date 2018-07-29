@@ -27,8 +27,34 @@ defaults
     audible: false
   mood
     audible: false
+colon (punct)
+  display: -:
+period (punct)
+  display: -.
+comma (punct)
+  display: -,
+lexcl (punct)
+  display: ¡-
+rexcl (punct)
+  display: -!
+lquest (punct)
+  display: ¿-
+rquest (punct)
+  display: -?
 -Q (complementizer)
   audible: false
+exclaim (complementizer)
+  audible: false
+  rule (20)
+    form: |[?CP complementizer=exclaim]
+    result: [ex punct=lexcl |[$CP ~] punct=rexcl]
++Q (complementizer)
+  audible: false
+  rule (20)
+    form: |[?CP complementizer=+Q]
+    result: [ex punct=lquest |[$CP ~] punct=rquest]
+que (complementizer)
+  display: que
 future (tense)
   audible: false
   tense: fut
@@ -225,9 +251,6 @@ otro (adjective)
   type: ind
 para+siempre (adverb)
   display: para siempre
-+Q (complementizer)
-que (complementizer)
-  display: que
 para (conjunction)
   display: para
 lpar (punct)

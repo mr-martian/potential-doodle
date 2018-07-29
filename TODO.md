@@ -8,6 +8,7 @@
     - [ ] lexicon.txt
     - [ ] translation files
     - [ ] .lexc, .twol, and .dix
+  - [ ] clean and comment code
   - [ ] check speed on larger corpora
   - [ ] list words in text that could not be translated
   - [ ] measure translation distance

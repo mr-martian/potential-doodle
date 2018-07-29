@@ -42,6 +42,7 @@ syntax
         xbar: DP; adverb?; $head; CP
 lexc: lttoolbox
   split-root: _
+  capitalize-first-letter
   noun (proper=true)
     format: {root[0]}<np><ant>
     in: s
@@ -303,8 +304,16 @@ transform
     layer
       form: |[IP |[?DP $rel:rel-pronoun] $m? $h? $c?]
         result: |[IP ~ $m $h $c]
+      form: |[IP |[?DP $rel:null-pro] $m? $h? $c?]
+        result: |[IP ~ $m $h $c]
       form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:rel-pronoun]]]
         result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
+      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:null-pro]]]
+        result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
+      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?PP $p? |[?DP $rel:rel-pronoun]]]]
+        result: |[IP $is $im $ih |[VP $vs $vm $vh |[$PP $p ~]]]
+      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?PP $p? |[?DP $rel:null-pro]]]]
+        result: |[IP $is $im $ih |[VP $vs $vm $vh |[$PP $p ~]]]
   rule (0): plural marking and determiner gender
     form: |[?DP $head |[?NP $noun]]
     setprop ($noun.number): $head.number
@@ -331,10 +340,37 @@ transform
     setprop ($det.gender): $det2.gender
   rotate: Vmod
   rotate: Nmod
-  rule
-    form: [Dmod $m:PP $b]
-    rotate
-
-#rotations
-  rotate: Vmod
-  rotate: Nmod
+  multirule (6): relative clause with no relative pronoun
+    layer: |[?NP $noun? @]
+      result: |[$NP $noun @]
+    layer?: |[conjP @ $conj? $other?]
+    layer: |[CP ~ $m? $h?(% complementizer=que) $c?]
+      result: |[CP punct=colon $m $h $c]
+  multirule (6): periods
+    layer: [SEN @]
+      result: [SEN @]
+    layer?: |[?conjP $conj? @]
+      result: |[$conjP $conj @]
+    layer?: |[conjP $a? $b? $conj2? @]
+      result: |[conjP $a $b $conj2 @]
+    layer
+      form: |[?CP ~]
+        result: [punct |[$CP ~] punct=period]
+      form: |[?DP]
+        result: [punct |[$DP] punct=period]
+  rule (6): periods for sentence fragments
+    form: [SEN $x:PP]
+    result: [SEN $x punct=period]
+  rule (8): oxford comma
+    form: |[conjP $a? $b? $c1? |[conjP $d? $e? $c2? $f?]]
+    cond
+      option ($a)
+        result: |[conjP $a $b [cm punct=comma $c1] |[conjP $d $e [cm punct=comma $c2] $f]]
+      option
+        result: |[conjP $a $b $c1 |[conjP $d $e [cm punct=comma $c2] $f]]
+  rule (8): pronoun appositive
+    form: |[?DP $det:pronoun $PP:PP]
+    result: |[$DP $det [cm punct=comma $PP punct=comma]]
+  rule (8): noun appositive
+    form: |[?NP $det $PP:DP]
+    result: |[$NP $det [cm punct=comma $PP punct=comma]]

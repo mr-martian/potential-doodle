@@ -4,7 +4,6 @@ metadata
   creator: Natlang
 syntax
   start-with: CP
-  auto-setlang: AP; CP; IP; NP; PP; DP; VP; conjP; I
   node-types
     AP
       xbar: ~; ~; adjective; ~
@@ -59,6 +58,7 @@ syntax
         structure: |[VP $head]
         #default to intransitive if unspecified
 lexc: hfst
+  capitalize-first-letter
   split-root: _
   noun
     format: {root[0]}<n>{plural}{case}
@@ -132,11 +132,11 @@ lexc: hfst
   rel-pronoun
     bland: <prn>
 transform
-  rule: do insertion
+  rule (0): do insertion
     context: |[*CP complementizer=+Q |[*IP @]]
     form: <I $tense?>
     result: [I $tense aux=do]
-  multirule: gather person/number
+  multirule (1): gather person/number
     layer?: |[DP $spec? $mod? $notrel |[NP $nspec? $nmod? $noun @]]
       result: |[DP $spec? $mod? $notrel |[NP $nspec? $nmod? $noun @]]
     layer?
@@ -162,7 +162,7 @@ transform
       result: |[conjP @ $conj2? $ccomp2?]
     layer: |[?DP $subj]
       result: |[$DP $subj]
-  multirule: agreement and subject position
+  multirule (2): agreement and subject position
     layer
       form: |[IP <I $tense:tense $perfect:perfect? $continuous:continuous? $neg:negative? $mood?> @]
         result: |[IP $subj <I $tense $mood? $perfect? $continuous? $neg?> @]
@@ -174,13 +174,13 @@ transform
         result: |[$vP ~ $verb |[$VP ~]]
       form: |[?VP $subj? $verb $c?]
         result: |[$VP ~ $verb $c]
-  rule: negative position
+  rule (3): negative position
     form: <I $tense:tense? $neg:negative $first? $rest+?>
     result: <I $tense $first $neg $rest+>
-  rule: aux-inversion
+  rule (4): aux-inversion
     form: |[CP ~ $mod? complementizer=+Q |[?IP <I $tense:tense? $neg:negative? $first $other+?>]]
     result: |[CP [aux $first $neg] $mod complementizer=+Q |[$IP <I $tense $other+>]]
-  multirule: relative pronoun position
+  multirule (5): relative pronoun position
     layer: |[NP $NPspec? $NPmod? $NPhead? @]
       result: |[NP $NPspec $NPmod $NPhead @]
     layer?: |[conjP @ $conj? $conjcomp?]
@@ -190,20 +190,59 @@ transform
     layer
       form: |[IP |[?DP $rel:rel-pronoun] $m? $h? $c?]
         result: |[IP ~ $m $h $c]
+      form: |[IP |[?DP $rel:null-pro] $m? $h? $c?]
+        result: |[IP ~ $m $h $c]
       form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:rel-pronoun]]]
         result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
-  rule: plural marking
+      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:null-pro]]]
+        result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
+      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?PP $p? |[?DP $rel:rel-pronoun]]]]
+        result: |[IP $is $im $ih |[VP $vs $vm $vh |[$PP $p ~]]]
+      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?PP $p? |[?DP $rel:null-pro]]]]
+        result: |[IP $is $im $ih |[VP $vs $vm $vh |[$PP $p ~]]]
+  multirule (6): relative clause with no relative pronoun
+    layer: |[?NP $noun? @]
+      result: |[$NP $noun @]
+    layer?: |[conjP @ $conj? $other?]
+    layer: |[CP ~ $m? $h?(% complementizer=that) $c?]
+      result: |[CP punct=colon $m $h $c]
+  multirule (6): periods
+    layer: [SEN @]
+      result: [SEN @]
+    layer?: |[?conjP $conj? @]
+      result: |[$conjP $conj @]
+    layer?: |[conjP $a? $b? $conj2? @]
+      result: |[conjP $a $b $conj2 @]
+    layer
+      form: |[?CP ~]
+        result: [punct |[$CP ~] punct=period]
+      form: |[?DP]
+        result: [punct |[$DP] punct=period]
+  rule (6): periods for sentence fragments
+    form: [SEN $x:PP]
+    result: [SEN $x punct=period]
+  rule (8): oxford comma
+    form: |[conjP $a? $b? $c1? |[conjP $d? $e? $c2? $f?]]
+    cond
+      option ($a)
+        result: |[conjP $a $b [cm punct=comma $c1] |[conjP $d $e [cm punct=comma $c2] $f]]
+      option
+        result: |[conjP $a $b $c1 |[conjP $d $e [cm punct=comma $c2] $f]]
+  rule (8): pronoun appositive
+    form: |[?DP $det $PP:PP]
+    result: |[$DP $det [cm punct=comma $PP punct=comma]]
+  rule (8): noun appositive
+    form: |[?NP $det $PP:DP]
+    result: |[$NP $det [cm punct=comma $PP punct=comma]]
+  rule (0): plural marking
     form: |[?DP $head |[?NP $noun]]
     setprop ($noun.number): $head.number
-  rule: attach genitive suffix
+  rule (1): attach genitive suffix
     form: |[DP $spec:DP $mod? $head $comp?]
     result: |[DP [GEN $spec $head] $mod ~ $comp]
-  rule: switch to case marking, if applicable
+  rule (2): switch to case marking, if applicable
     form: [GEN |[?DP $dh? |[?NP $noun ~]] $gen]
     result: |[?DP $dh |[?NP $noun ~]]
     setval ($noun.case): gen
   rotate: Vmod
   rotate: Nmod
-  rule
-    form: [Dmod $m:PP $b]
-    rotate

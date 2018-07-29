@@ -40,7 +40,7 @@ class PatternElement:
             return vrs
         for p in self.props:
             if p not in tree:
-                vrs[' failed'] = 'nonexistent property'
+                vrs[' failed'] = 'nonexistent property %s' % p
                 return vrs
             if isinstance(self.props[p], str) or self.props[p] == None:
                 if self.props[p] != tree[p]:
@@ -187,7 +187,7 @@ class Variable(PatternElement):
     def getvars(self, node, vrs):
         PatternElement.getvars(self, node, vrs)
         if not vrs[' failed'] and self.cond:
-            self.cond.getvars(node)
+            self.cond.getvars(node, vrs)
         if node == None and (self.opt or self.neg):
             vrs[' failed'] = False
         if self.neg and node:
@@ -696,6 +696,7 @@ class Language:
         self.tags = []
         self.tags_rootsplit = '' #for cases where it's easiest to have tags between parts of the root
         self.morph_mode = '' #hfst or lttoolbox
+        self.capitalize = False
         Language.__alllangs[lang] = self
     def isloaded(lang):
         return lang in Language.__alllangs
@@ -830,7 +831,13 @@ def dolinear(sen, _lang):
             final.append(m['display'])
         else:
             final.append(lintxt[i])
-    return ' '.join(final).replace('+', ' ').replace('- -', '').replace('- ', '').replace(' -', '')
+    ret = ' '.join(final).replace('+', ' ').replace('- -', '').replace('- ', '').replace(' -', '')
+    if lang.capitalize:
+        for i, c in enumerate(ret):
+            if c.isalpha():
+                ret = ret[:i] + ret[i].capitalize() + ret[i+1:]
+                break
+    return ret
 ###PARSING
 def tokenize(s):
     ret = []
@@ -887,6 +894,8 @@ def toobj(s, lang, loc, at=None):
                     ret[rest[0]] = rest[2]
                     rest = rest[4:]
                 else:
+                    if rest[0] == '%': rest.pop(0) #@TODO total hack
+                    # later go through and switch to {} for properties and have () be only .cond
                     ret.cond = destring()
                     if rest[0] != ')':
                         raise ParseError('Badly formed variable condition on line %s (remainder was %s).' % (loc, rest))
@@ -1162,6 +1171,8 @@ def readresult(node, lang, at=None):
             ret.append(['log', toobj(ch.val, lang, ch.num, at)])
         elif ch.label == 'print':
             ret.append(['print', ch.val])
+        elif ch.label == 'makevar':
+            ret.append(['makevar', ch.arg, toobj(ch.val, lang, ch.num, at)])
     return ret
 def readrule(node, lfrom, _lto, mode, category, _stage):
     if 'samelang' in node:
@@ -1313,6 +1324,9 @@ def loadlang(lang):
             for ch in th.children:
                 if ch.label == 'split-root':
                     ret.tags_rootsplit = ch.val
+                    continue
+                elif ch.label == 'capitalize-first-letter':
+                    ret.capitalize = True
                     continue
                 cases = []
                 if 'lexicon' not in ch:

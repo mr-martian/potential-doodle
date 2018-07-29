@@ -202,3 +202,4 @@ stage
   verb=watch: verb=mirar
   verb=work: verb=trabajar
   verb=write: verb=escribir
+  complementizer=exclaim: complementizer=exclaim

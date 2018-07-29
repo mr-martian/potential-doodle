@@ -262,7 +262,7 @@ though (pre-conj)
   display: though
 though-null (conjunction)
   rule (7)
-    form: |[conjP $a conjunction=though-null @ $b]
+    form: |[conjP $a conjunction=though-null $b]
     result: |[conjP pre-conj=though $a ~ $b]
 
 at (preposition)
@@ -737,7 +737,7 @@ now (adverb)
 imp (complementizer)
 because (conjunction)
 comma (punct)
-  display: ,
+  display: -,
 lpar (punct)
   display: (-
 rpar (punct)
@@ -745,9 +745,9 @@ rpar (punct)
 paren (conjunction)
   inaudible
   audible: false
-  rule (1)
-    form: |[conjP $s? $m? @ $c]
-    result: |[conjP $s $m @ [par punct=lpar $c punct=rpar]]
+  rule (7)
+    form: |[conjP $s? $m? conjunction=paren $c]
+    result: |[conjP $s $m ~ [par punct=lpar $c punct=rpar]]
 vocative (preposition)
   inaudible
   audible: false
@@ -798,7 +798,6 @@ wife (noun)
 woman (noun)
 world (noun)
 if (pre-conj)
-though (pre-conj)
 according+to (preposition)
 ahead (preposition)
 as (preposition)
@@ -847,3 +846,15 @@ want (verb)
 watch (verb)
 work (verb)
 write (verb)
+
+colon (punct)
+  display: -:
+period (punct)
+  display: -.
+excl (punct)
+  display: -!
+exclaim (complementizer)
+  audible: false
+  rule (20)
+    form: |[?CP complementizer=exclaim]
+    result: [ex |[$CP ~] punct=excl]
