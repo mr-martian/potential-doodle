@@ -4,18 +4,24 @@ from collections import defaultdict
 from subprocess import Popen, PIPE
 from os.path import isfile
 from types import SimpleNamespace
-Globals = SimpleNamespace(path=os.path.abspath(__file__)[:-9], unknown_error=True, flat=False, partial=True, keepmeta=True)
+Globals = SimpleNamespace(path=os.path.abspath(__file__)[:-9], unknown_error=True, flat=False, partial=True, keepmeta=True, spacing=1, blob=True, treebank=[], output=None, usetreebank=False)
 #path: The directory containing the program
 #unknown_error: Should an error be raised when trying parse a non-existent morpheme?
 #flat: Read |[XP] as [XP a b c d] rather than [XP a [Xmod b [Xbar c d]]]
 #partial: Return incomplete translations
 #keepmeta: Copy glosses and metadata from input to output
+#spacing: Number of newlines to put between segments of output
+#blob: Write all lines in one operation rather than as they are generated
+#treebank: Local storage for trees to be reused by later commands
+#output: Where to write output (use None for treebank or stdout)
+#usetreebank: Write to treebank rather than stdout
 
 class PatternElement:
     CheckType = False
-    def __init__(self, ntype, props=None):
+    def __init__(self, ntype, props=None, loc=None):
         self.ntype = ntype
-        self.props = props
+        self.props = props or {}
+        self.loc = loc or ''
     def __getitem__(self, key):
         return self.props[key]
     def __setitem__(self, key, value):
@@ -61,12 +67,17 @@ class DataElement(PatternElement):
     def trans(self, tr):
         vrs = tr.context.getvars(self, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], DataElement):
+            #if tr.name == 'test':
+            #    print(self)
+            #    print(vrs[' failed'])
             return []
         vrs = tr.form.getvars(vrs[' '], vrs)
         if vrs[' failed']:
+            #if tr.name == 'test':
+            #    print(self)
+            #    print(vrs[' failed'])
             return []
-        for act in tr.result:
-            applyrule(act, vrs)
+        applyrules(tr.result, vrs)
         return copy.deepcopy(tr.context).putvars(vrs)
     def transmulti(self, tr):
         if tr.ntypelist and self.ntype not in tr.ntypelist:
@@ -83,8 +94,7 @@ class DataElement(PatternElement):
             else:
                 return []
         for result in reversed(path):
-            for act in result:
-                applyrule(act, vrs)
+            applyrules(result, vrs)
         return vrs[' ']
     def transform(self, pats, returnself=True):
         if len(pats) > 0:
@@ -109,16 +119,15 @@ class DataElement(PatternElement):
 ###VARIABLES
 class Variable(PatternElement):
     pattern = re.compile('^\\$?([^:?!+\\.&]*):?([^:?!+\\.&]*)\\.?([^:?!+\\.&]*)([?!+&]*)$')
-    def __init__(self, label, ntype=None, prop=None, opt=False, neg=False, group=False, descend=False, cond=None):
+    def __init__(self, label, ntype=None, prop=None, opt=False, neg=False, group=False, descend=False, cond=None, loc=None):
+        PatternElement.__init__(self, ntype, loc=loc)
         self.label = label
-        self.ntype = ntype
         self.prop = prop
         self.opt = opt
         self.neg = neg
         self.group = group
         self.descend = descend
         self.cond = cond
-        self.props = {}
     def fromstring(s):
         m = Variable.pattern.match(s)
         if m:
@@ -239,10 +248,9 @@ class Option(list):
 class Morpheme(DataElement):
     __AllMorphemes = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
     def __init__(self, lang, ntype, root, props=None, isref=False, loc=None):
+        PatternElement.__init__(self, ntype, props, loc)
         self.lang = lang
-        self.ntype = ntype
         self.root = root
-        self.props = props or {}
         self.isref = isref
         if not isref:
             roots = [root]
@@ -347,10 +355,9 @@ class Morpheme(DataElement):
     def putvars(self, vrs):
         return self
 class Node(DataElement):
-    def __init__(self, ntype, children, props=None):
-        self.ntype = ntype
+    def __init__(self, ntype, children, props=None, loc=None):
+        PatternElement.__init__(self, ntype, props, loc)
         self.children = children
-        self.props = props or {}
         self.rotate = False
     def swapchildren(self, ls):
         return Node(self.ntype, ls, self.props.copy())
@@ -508,10 +515,9 @@ class Node(DataElement):
                 return False
         return True
 class UnorderedCollector(PatternElement):
-    def __init__(self, ntype, children):
-        self.ntype = ntype
+    def __init__(self, ntype, children, loc):
+        PatternElement.__init__(self, ntype, None, loc)
         self.children = children
-        self.props = {}
     def getvars(self, tree, vrs):
         PatternElement.getvars(self, tree, vrs)
         if not vrs[' failed']:
@@ -610,58 +616,66 @@ class MultiRule(Rule):
         if all(isinstance(x[0], Node) for x in layers[0]):
             self.ntypelist = [x[0].ntype for x in layers[0]]
         Rule.__init__(self, langs, category, mode, stage, name)
-def applyrule(rule, vrs):
-    if isinstance(rule, DataElement) or isinstance(rule, UnorderedCollector):
-        vrs[' '] = rule.putvars(vrs)
-    elif isinstance(rule, list):
-        if rule[0] == 'setlang':
-            vrs[' '].lang = rule[1]
-        elif rule[0] == 'setdisplay':
-            vrs[' '].props['display'] = rule[1]
-        elif rule[0] == 'set':
-            vrs[' '].props.update(rule[1])
-        elif rule[0] == 'setprop':
-            rule[1].place(vrs, rule[2].retrieve(vrs))
-        elif rule[0] == 'rotate':
-            vrs[' '].rotate = True
-        elif rule[0] == 'makevar':
-            vrs[rule[1]] = copy.deepcopy(rule[2])
-        elif rule[0] == 'order':
-            ch = []
-            for v in rule[2:]:
-                if v.label in vrs and vrs[v.label]:
-                    ch.append(vrs[v.label])
-            vrs[' '] = Node(rule[1], ch)
-        elif rule[0] == 'node':
-            vrs[' '] = toobj(*rule[1:], at=vrs[' ']).putvars(vrs)
-        elif rule[0] == 'cond':
-            for op in rule[1:]:
-                if all(v.checkset(vrs) for v in op[0]):
-                    for r in op[1:]:
-                        applyrule(r, vrs)
-                    break
-        elif rule[0] == 'distribute':
-            src = rule[1]
-            dst = rule[2]
-            try:
-                val = vrs[rule[3].label][src]
-            except:
-                print(vrs[' '])
-                print(rule)
-                raise
-            for l in rule[4:]:
-                nv = None
-                for v in (l if isinstance(l, list) else [l]):
+def applyrules(rules, vrs):
+    putback = {}
+    for rule in rules:
+        if isinstance(rule, DataElement) or isinstance(rule, UnorderedCollector):
+            vrs[' '] = rule.putvars(vrs)
+        elif isinstance(rule, list):
+            if rule[0] == 'setlang':
+                vrs[' '].lang = rule[1]
+            elif rule[0] == 'setdisplay':
+                vrs[' '].props['display'] = rule[1]
+            elif rule[0] == 'set':
+                vrs[' '].props.update(rule[1])
+            elif rule[0] == 'setprop':
+                rule[1].place(vrs, rule[2].retrieve(vrs))
+            elif rule[0] == 'rotate':
+                vrs[' '].rotate = True
+            elif rule[0] == 'makevar':
+                vrs[rule[1]] = copy.deepcopy(rule[2])
+            elif rule[0] == 'order':
+                ch = []
+                for v in rule[2:]:
                     if v.label in vrs and vrs[v.label]:
-                        vrs[v.label].props[dst] = val
-                        if src in vrs[v.label]:
-                            nv = vrs[v.label][src]
-                if nv:
-                    val = nv
-        elif rule[0] == 'log':
-            print(rule[1].retrieve(vrs))
-        elif rule[0] == 'print':
-            print(rule[1])
+                        ch.append(vrs[v.label])
+                vrs[' '] = Node(rule[1], ch)
+            elif rule[0] == 'node':
+                vrs[' '] = toobj(*rule[1:], at=vrs[' ']).putvars(vrs)
+            elif rule[0] == 'cond':
+                for op in rule[1:]:
+                    if all(v.checkset(vrs) for v in op[0]):
+                        applyrules(op[1:], vrs)
+                        break
+            elif rule[0] == 'distribute':
+                src = rule[1]
+                dst = rule[2]
+                try:
+                    val = vrs[rule[3].label][src]
+                except:
+                    print(vrs[' '])
+                    print(rule)
+                    raise
+                for l in rule[4:]:
+                    nv = None
+                    for v in (l if isinstance(l, list) else [l]):
+                        if v.label in vrs and vrs[v.label]:
+                            vrs[v.label].props[dst] = val
+                            if src in vrs[v.label]:
+                                nv = vrs[v.label][src]
+                    if nv:
+                        val = nv
+            elif rule[0] == 'log':
+                print(rule[1].retrieve(vrs))
+            elif rule[0] == 'print':
+                print(rule[1])
+            elif rule[0] == 'pull':
+                putback[rule[1]] = vrs[rule[1]]
+                vrs[rule[1]] = None
+            elif rule[0] == 'replace':
+                putback[rule[1]] = vrs[rule[1]]
+                vrs[rule[1]] = vrs[rule[2]]
+    vrs.update(putback)
 ###GENERATION
 class SyntaxPat:
     def __init__(self, name, conds, opts, vrs, require):
@@ -866,7 +880,7 @@ def tokenize(s):
             ret.append(c)
             add = True
     return ret
-def toobj(s, lang, loc, at=None):
+def toobj(s, lang, loc):
     assert(isinstance(lang, int))
     Language.getormake(lang)
     rest = tokenize(s)
@@ -880,11 +894,14 @@ def toobj(s, lang, loc, at=None):
         elif cur == '*':
             return Unknown()
         elif cur == '@':
-            return at
+            return Variable(' ', loc=loc)
         elif cur == '$': #Variable
             ret = Variable.fromstring(rest.pop(0))
             if not ret:
                 raise ParseError('Badly formed variable at %s' % loc)
+            ret.loc = loc
+            if rest and rest[0] == '{':
+                ret.props.update(destring())
             if rest and rest[0] == '(':
                 rest.pop(0)
                 if len(rest) >= 2 and rest[1] == ')':
@@ -910,7 +927,7 @@ def toobj(s, lang, loc, at=None):
             rest.pop(0)
             if rest and rest[0] == '{':
                 d = destring()
-            return Node(ntype, ch, d)
+            return Node(ntype, ch, d, loc=loc)
         elif cur == '|[': #xbar Sytnax
             if rest[0][0] == '?':
                 rest = ['?', rest[0][1:]] + rest[1:]
@@ -920,8 +937,8 @@ def toobj(s, lang, loc, at=None):
             name = rest.pop(0)[:-1]
             spots = ['spec', 'mod', 'head', 'comp']
             sub = {'*': [Unknown(), Unknown(), Unknown(), Unknown()],
-                   '?': [Variable(name+s, opt=True) for s in spots],
-                   '$': [Variable(name+s) for s in spots],
+                   '?': [Variable(name+s, opt=True, loc=loc) for s in spots],
+                   '$': [Variable(name+s, loc=loc) for s in spots],
                    '~': [None, None, None, None]}[mode]
             ch = []
             while rest and rest[0] != ']':
@@ -942,11 +959,11 @@ def toobj(s, lang, loc, at=None):
             if rest and rest[0] == '{':
                 d = destring()
             if Globals.flat:
-                return Node(name+'P', ch, d)
+                return Node(name+'P', ch, d, loc=loc)
             else:
-                bar = Node(name+'bar', ch[2:])
-                mod = Node(name+'mod', [ch[1], bar])
-                return Node(name+'P', [ch[0], mod], d)
+                bar = Node(name+'bar', ch[2:], loc=loc)
+                mod = Node(name+'mod', [ch[1], bar], loc=loc)
+                return Node(name+'P', [ch[0], mod], d, loc=loc)
         elif cur == '<': #UnorderedCollector
             ntype = rest.pop(0)
             ch = []
@@ -955,7 +972,7 @@ def toobj(s, lang, loc, at=None):
             if not rest:
                 raise ParseError('Incomplete Unordered Collector, missing > at %s' % loc)
             rest.pop(0)
-            return UnorderedCollector(ntype, ch)
+            return UnorderedCollector(ntype, ch, loc=loc)
         elif cur == '{': #props pattern
             d = {}
             while rest[0] != '}':
@@ -978,7 +995,7 @@ def toobj(s, lang, loc, at=None):
                 d = {}
                 if rest and rest[0] == '{':
                     d = destring()
-                return Morpheme(lang, pos, root, isref=True, props=d)
+                return Morpheme(lang, pos, root, isref=True, props=d, loc=loc)
             else:
                 rest = ['$', ':'+cur] + rest
                 return destring()
@@ -1090,23 +1107,23 @@ class ParseLine:
                 return ch
     def firstval(self, key):
         return self.first(key).val
-    def fvo(self, key, lang, at, default=None): #first val object
+    def fvo(self, key, lang, default=None): #first val object
         f = self.first(key)
         if f:
-            return toobj(f.val, lang, f.num, at)
+            return toobj(f.val, lang, f.num)
         elif default:
-            return toobj(default, lang, self.num, at)
+            return toobj(default, lang, self.num)
         else:
             raise ParseError('Line %s does not have required child %s.' % (self.num, key))
-    def avo(self, key, lang, at, default=None): #all val objects
+    def avo(self, key, lang, default=None): #all val objects
         c = 0
         for ch in self.children:
             if ch.label == key:
                 c += 1
-                yield toobj(ch.val, lang, ch.num, at)
+                yield toobj(ch.val, lang, ch.num)
         if c == 0:
             if default:
-                yield toobj(default, lang, self.num, at)
+                yield toobj(default, lang, self.num)
             else:
                 raise ParseError('Line %s does not have required child(ren) %s.' % (self.num, key))
 def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c', 'd']]
@@ -1115,11 +1132,11 @@ def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c',
         k,v = s.split('=')
         ret.append([k.strip(), v.strip()])
     return ret
-def readresult(node, lang, at=None):
+def readresult(node, lang):
     ret = []
     for ch in node.children:
         if ch.label == 'result':
-            ret.append(toobj(ch.val, lang, ch.num, at))
+            ret.append(toobj(ch.val, lang, ch.num))
         elif ch.label == 'setprop':
             a = ['setprop']
             if '$' in ch.arg or '@' in ch.arg:
@@ -1159,20 +1176,24 @@ def readresult(node, lang, at=None):
             com = ['cond']
             for op in ch.children:
                 if op.label == 'option':
-                    com.append([[toobj(x, lang, op.num, at) for x in op.args]] + readresult(op, lang, at))
+                    com.append([[toobj(x, lang, op.num) for x in op.args]] + readresult(op, lang))
             ret.append(com)
         elif ch.label == 'if':
-            ret.append(['cond', [[toobj(x, lang, ch.num, at) for x in ch.args]] + readresult(ch, lang, at)])
+            ret.append(['cond', [[toobj(x, lang, ch.num) for x in ch.args]] + readresult(ch, lang)])
         elif ch.label == 'distribute':
-            ret.append(['distribute'] + ch.args + [toobj(x, lang, ch.num, at) for x in ch.vals])
+            ret.append(['distribute'] + ch.args + [toobj(x, lang, ch.num) for x in ch.vals])
         elif ch.label == 'order':
-            ret.append(['order', ch.arg] + [toobj(x, lang, ch.num, at) for x in ch.vals])
+            ret.append(['order', ch.arg] + [toobj(x, lang, ch.num) for x in ch.vals])
         elif ch.label == 'log':
-            ret.append(['log', toobj(ch.val, lang, ch.num, at)])
+            ret.append(['log', toobj(ch.val, lang, ch.num)])
         elif ch.label == 'print':
             ret.append(['print', ch.val])
         elif ch.label == 'makevar':
-            ret.append(['makevar', ch.arg, toobj(ch.val, lang, ch.num, at)])
+            ret.append(['makevar', ch.arg, toobj(ch.val, lang, ch.num)])
+        elif ch.label == 'pull':
+            ret.append(['pull', ch.val])
+        elif ch.label == 'replace':
+            ret.append(['replace', ch.arg, ch.val])
     return ret
 def readrule(node, lfrom, _lto, mode, category, _stage):
     if 'samelang' in node:
@@ -1186,13 +1207,16 @@ def readrule(node, lfrom, _lto, mode, category, _stage):
     else:
         stage = _stage
     if node.label == 'rule':
-        con = node.fvo('context', lfrom, Variable(' '), '@')
-        form = node.fvo('form', lfrom, Variable(' '), '@')
-        res = readresult(node, lto, None)
+        con = node.fvo('context', lfrom, '@')
+        form = node.fvo('form', lfrom, '@')
+        res = readresult(node, lto)
         return Translation(form, res, category, [lfrom, lto], context=con, mode=mode, stage=stage, name=node.val)
     elif node.label == 'multirule':
         layers = []
         for ly in node.children:
+            if ly.val and 'form' not in ly and ly.label[-1] == '~':
+                ly.label = ly.label[:-1]
+                ly.children.append(ParseLine(ly.num, 'result', [], ly.val, []))
             if ly.val and 'form' not in ly:
                 ly.children = [ParseLine(ly.num, 'form', [], ly.val, ly.children)]
             if ly.label == 'layer?':
@@ -1200,10 +1224,13 @@ def readrule(node, lfrom, _lto, mode, category, _stage):
                 ly.label = 'layer'
             if ly.label != 'layer':
                 continue
+            for p in ly['form~']:
+                p.label = 'form'
+                p.children.append(ParseLine(p.num, 'result', [], p.val, []))
             l = []
             for p in ly['form']:
-                op = [toobj(p.val, lfrom, p.num, Variable(' '))]
-                op += readresult(p, lfrom, Variable(' '))
+                op = [toobj(p.val, lfrom, p.num)]
+                op += readresult(p, lfrom)
                 l.append(op)
             layers.append(l)
         return MultiRule(layers, category, [lfrom, lto], mode=mode, stage=stage, name=node.val)
@@ -1235,15 +1262,15 @@ def loadlexicon(lang):
                 con = []
                 res = []
                 if p.val:
-                    res.append([0, toobj(p.val, lang, p.num, None)])
+                    res.append([0, toobj(p.val, lang, p.num)])
                 for ch in p.children:
                     try: idx = int(ch.label)
                     except: continue
-                    con.append([idx, toobj(ch.val, lang, ch.num, None)])
+                    con.append([idx, toobj(ch.val, lang, ch.num)])
                     if 'inaudible' in ch:
                         res.append([idx, 'inaudible'])
                     elif 'to' in ch:
-                        res.append([idx, ch.fvo('to', lang, None)])
+                        res.append([idx, ch.fvo('to', lang)])
                     elif 'display' in ch:
                         res.append([idx, ['display', ch.firstval('display')]])
                 Translation(m.getref(), res, root.label, [lang, lang], context=con, mode='linear')
@@ -1374,10 +1401,10 @@ def loadtrans(lfrom, lto):
                 if lex.label == 'rule':
                     readrule(lex, lfrom, lto, 'lex', '', i)
                 else:
-                    m = toobj(lex.label, lfrom, lex.num, None)
+                    m = toobj(lex.label, lfrom, lex.num)
                     if lex.val:
                         for g in lex.vals:
-                            d = toobj(g, lto, lex.num, m)
+                            d = toobj(g, lto, lex.num)
                             Translation(m, [d], category=m.root, langs=[lfrom, lto], mode='lex', stage=i)
                     for tr in lex.children:
                         readrule(tr, lfrom, lto, 'lex', m.root, i)
@@ -1445,10 +1472,10 @@ class Sentence:
     def fromparseline(pl, lang):
         trees = {'':None}
         if pl.val:
-            trees[''] = toobj(pl.val, lang, pl.num, None)
+            trees[''] = toobj(pl.val, lang, pl.num)
         for l in pl.children:
             if l.label != 'gloss':
-                trees[l.label] = toobj(l.val, lang, l.num, None)
+                trees[l.label] = toobj(l.val, lang, l.num)
         g = pl.first('gloss')
         return Sentence(lang, pl.label, trees, g.val if g else '')
     def toparseline(self):
@@ -1660,6 +1687,24 @@ def trans(sen, flang, tlang):
 if __name__ == '__main__':
     import argparse, sys
     parser = argparse.ArgumentParser(description='Generate, translate, and parse sentences.')
+    def writelines(lines, where):
+        j = '\n'*Globals.spacing or ' '
+        if where:
+            f = open(where[0], 'w')
+            if Globals.blob:
+                f.write(j.join(lines) + '\n')
+            else:
+                for l in lines:
+                    f.write(l + j)
+            f.close()
+        elif Globals.blob:
+            print(j.join(lines))
+        else:
+            for l in lines:
+                print(l, end=j)
+    def readline(lang, src):
+        if src.isnumeric():
+            pass
     STDINLINE = 1
     class TranslateAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
@@ -1686,12 +1731,7 @@ if __name__ == '__main__':
                     f.close()
                 tree = toobj(line, flang, where)
                 tr = trans(tree, int(values.pop(0)))
-                if values:
-                    f = open(values[0], 'w')
-                    f.write('\n'.join(t.writecompile() for t in tr))
-                    f.close()
-                else:
-                    print('\n'.join(t.writecompile() for t in tr))
+                writelines((t.writecompile() for t in tr), values)
             else:
                 if len(values) >= 3:
                     translatefile(values[0], values[2], int(values[1]))
@@ -1701,12 +1741,7 @@ if __name__ == '__main__':
         def __call__(self, parser, namespace, values, option_string=None):
             lang = Language.getormake(int(values.pop(0)))
             sen = make(lang)
-            if values:
-                f = open(values[0], 'w')
-                f.write(sen.writecompile())
-                f.close()
-            else:
-                print(sen.writecompile())
+            writelines([sen.writecompile()], values)
     class ParseAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             if values[0].isnumeric():
@@ -1751,14 +1786,7 @@ if __name__ == '__main__':
                     f.close()
             else:
                 lines = readfile(values.pop(0))[1]
-                if values:
-                    f = open(values[0], 'w')
-                else:
-                    f = sys.stdout
-                for l in lines:
-                    f.write(l.totext() + '\n')
-                if values:
-                    f.close()
+                writelines((l.totext() for l in lines), values)
     class BlankAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             if values:
