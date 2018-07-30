@@ -23,6 +23,10 @@ stage
     rule
       form: |[?DP quantifier=many $rest:NP]
       result: |[$DP determiner=muchos $rest]
+  mood=will
+    rule: test
+      form: |[?CP $comp? |[?IP <I $tense:tense mood=will $other+?> |[VP $subj? $mod? $v? $obj?]]]
+      result: |[$CP $comp |[$IP [I $tense mood=indicative] |[VP $subj verb=ir |[PP preposition=a |[CP ~ |[IP <I tense=inf $other+?> |[VP ~ $mod $v $obj]]]]]]]
 stage
   preposition=as+if
     rule
@@ -139,9 +143,9 @@ stage
   noun=thing: noun=cosa
   noun=truth: noun=verdad
   noun=world: noun=mundo
-  null-pro=2S: null-pro=2S
-  null-pro=3PL: null-pro=3PL
-  null-pro=3S: null-pro=3S
+  pronoun=2Snull: null-pro=2S
+  pronoun=3PLnull: null-pro=3PL
+  pronoun=3Snull: null-pro=3S
   preposition=according+to: preposition=según
   preposition=as: adverb=tan
   preposition=because+of: preposition=porque+de
@@ -163,9 +167,9 @@ stage
   pronoun=we: pronoun=nosotros
   pronoun=you: pronoun=tú
   quantifier=not: quantifier=no
-  rel-pronoun=that: rel-pronoun=que
-  rel-pronoun=who: rel-pronoun=quien
-  rel-pronoun=who#PL: rel-pronoun=quienes
+  pronoun=that: rel-pronoun=que
+  pronoun=who: rel-pronoun=quien
+  pronoun=who#PL: rel-pronoun=quienes
   tense=gerund: tense=gerund
   tense=inf: tense=inf
   tense=nonpast: tense=present

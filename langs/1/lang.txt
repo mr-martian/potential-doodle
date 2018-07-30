@@ -129,23 +129,17 @@ lexc: hfst
     bland: <quant>
   complementizer
     bland: <comp>
-  rel-pronoun
-    bland: <prn>
 transform
   rule (0): do insertion
     context: |[*CP complementizer=+Q |[*IP @]]
     form: <I $tense?>
     result: [I $tense aux=do]
   multirule (1): gather person/number
-    layer?: |[DP $spec? $mod? $notrel |[NP $nspec? $nmod? $noun @]]
-      result: |[DP $spec? $mod? $notrel |[NP $nspec? $nmod? $noun @]]
+    layer?~: |[DP $spec? $mod? $notrel |[NP $nspec? $nmod? $noun @]]
     layer?
-      form: |[conjP |[CP $CPspec? $CPmod? $comp? @] $conj? $ccomp?]
-        result: |[conjP |[CP $CPspec $CPmod $comp @] $conj $ccomp]
-      form: |[CP $CPspec? $CPmod? $comp? @]
-        result: |[CP $CPspec $CPmod $comp @]
-    layer: |[IP <I $tense:tense $other+?> @]
-      result: |[IP <I $tense:tense $other+> @]
+      form~: |[conjP |[?CP $comp? @] $conj? $ccomp?]
+      form~: |[?CP $comp? @]
+    layer~: |[IP <I $tense:tense $other+?> @]
       cond
         option ($notrel)
           setprop ($tense.person): $notrel.person
@@ -154,14 +148,10 @@ transform
           setprop ($tense.person): $subj.person
           setprop ($tense.number): $subj.number
     layer
-      form: |[vP @ $m? $h? $c?]
-        result: |[vP @ $m $h $c]
-      form: |[VP @ $m? $h? $c?]
-        result: |[VP @ $m $h $c]
-    layer?: |[conjP @ $conj2? $ccomp2?]
-      result: |[conjP @ $conj2? $ccomp2?]
-    layer: |[?DP $subj]
-      result: |[$DP $subj]
+      form~: |[vP @ $m? $h? $c?]
+      form~: |[VP @ $m? $h? $c?]
+    layer?~: |[conjP @ $conj2? $ccomp2?]
+    layer~: |[?DP $subj]
   multirule (2): agreement and subject position
     layer
       form: |[IP <I $tense:tense $perfect:perfect? $continuous:continuous? $neg:negative? $mood?> @]
@@ -172,8 +162,8 @@ transform
     layer
       form: |[?vP $subj? ~ |[?VP $verb]]
         result: |[$vP ~ $verb |[$VP ~]]
-      form: |[?VP $subj? $verb $c?]
-        result: |[$VP ~ $verb $c]
+      form~: |[?VP $subj? $verb $c?]
+        pull: subj
   rule (3): negative position
     form: <I $tense:tense? $neg:negative $first? $rest+?>
     result: <I $tense $first $neg $rest+>
@@ -181,38 +171,26 @@ transform
     form: |[CP ~ $mod? complementizer=+Q |[?IP <I $tense:tense? $neg:negative? $first $other+?>]]
     result: |[CP [aux $first $neg] $mod complementizer=+Q |[$IP <I $tense $other+>]]
   multirule (5): relative pronoun position
-    layer: |[NP $NPspec? $NPmod? $NPhead? @]
-      result: |[NP $NPspec $NPmod $NPhead @]
-    layer?: |[conjP @ $conj? $conjcomp?]
-      result: |[conjP @ $conj $conjcomp]
-    layer: |[CP ~ $CPmod? ~ @]
-      result: |[CP ~ $CPmod |[$DP $rel] @]
+    layer~: |[?NP $NPhead? @]
+    layer?~: |[conjP @ $conj? $conjcomp?]
+    layer~: |[CP ~ $CPmod? $relspot! @]
+      replace (relspot): rel
     layer
-      form: |[IP |[?DP $rel:rel-pronoun] $m? $h? $c?]
-        result: |[IP ~ $m $h $c]
-      form: |[IP |[?DP $rel:null-pro] $m? $h? $c?]
-        result: |[IP ~ $m $h $c]
-      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:rel-pronoun]]]
-        result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
-      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?DP $rel:null-pro]]]
-        result: |[IP $is $im $ih |[VP $vs $vm $vh ~]]
-      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?PP $p? |[?DP $rel:rel-pronoun]]]]
-        result: |[IP $is $im $ih |[VP $vs $vm $vh |[$PP $p ~]]]
-      form: |[IP $is? $im? $ih? |[VP $vs? $vm? $vh? |[?PP $p? |[?DP $rel:null-pro]]]]
-        result: |[IP $is $im $ih |[VP $vs $vm $vh |[$PP $p ~]]]
+      form~: |[IP $rel(|[?DP $rel:pronoun{is-rel=true}]) $m? $h? $c?]
+        pull: rel
+      form~: |[?IP $I? |[?VP $V? $rel(|[?DP $rel:pronoun{is-rel=true}])]]
+        pull: rel
+      form~: |[?IP $I? |[?VP $V? |[?PP $P? $rel(|[?DP $rel:pronoun{is-rel=true}])]]]
+        pull: rel
   multirule (6): relative clause with no relative pronoun
-    layer: |[?NP $noun? @]
-      result: |[$NP $noun @]
-    layer?: |[conjP @ $conj? $other?]
+    layer~: |[?NP $noun? @]
+    layer?~: |[conjP @ $conj? $other?]
     layer: |[CP ~ $m? $h?(% complementizer=that) $c?]
       result: |[CP punct=colon $m $h $c]
   multirule (6): periods
-    layer: [SEN @]
-      result: [SEN @]
-    layer?: |[?conjP $conj? @]
-      result: |[$conjP $conj @]
-    layer?: |[conjP $a? $b? $conj2? @]
-      result: |[conjP $a $b $conj2 @]
+    layer~: [SEN @]
+    layer?~: |[?conjP $conj? @]
+    layer?~: |[conjP $a? $b? $conj2? @]
     layer
       form: |[?CP ~]
         result: [punct |[$CP ~] punct=period]

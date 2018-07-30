@@ -210,37 +210,29 @@ not (quantifier)
 many (quantifier)
   number: PL
 all (quantifier)
-who (rel-pronoun)
-  person: 3
-  number: SG
-who#PL (rel-pronoun)
-  person: 3
-  number: PL
-that (rel-pronoun)
-  person: 3
-  number: SG
-2S (null-pro)
-  person: 2
-  number: SG
-  audible: false
+who (pronoun)
   is-rel: true
+who#PL (pronoun)
+  number: PL
+  is-rel: true
+that (pronoun)
+  is-rel: true
+2Snull (pronoun)
+  is-rel: true
+  audible: false
+  person: 2
+3Snull (pronoun)
+  is-rel: true
+  audible: false
+3PLnull (pronoun)
+  is-rel: true
+  audible: false
+  number: PL
 2S (dup-pro)
   person: 2
   number: SG
   audible: false
   is-rel: false
-3S (null-pro)
-  person: 3
-  plural: false
-  number: SG
-  audible: false
-  is-rel: true
-3PL (null-pro)
-  person: 3
-  plural: true
-  number: PL
-  audible: false
-  is-rel: true
 
 and (conjunction)
 but (conjunction)
