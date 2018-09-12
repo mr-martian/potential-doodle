@@ -57,11 +57,13 @@ stage
   aspect=be: aspect=feh
   aspect=have+been: aspect=dah
   aspect=have: aspect=dah
+  perfect=have: aspect=dah
   complementizer=+Q
     rule
       form: |[?CP complementizer=+Q]
       result: |[$CP ~]
   complementizer=that: ~
+  complementizer=exclaim: complementizer=exclaim
   conjunction=and: conjunction=keh
   conjunction=because: suffix=vah
   conjunction=both-and: conjunction=keh
@@ -112,6 +114,7 @@ stage
   mood=imperative: mood=s_n
   mood=may: mood=shn_n
   mood=not: mood=m_t
+  negative=not: mood=m_t
   mood=should: mood=j_m
   mood=subjunctive: mood=fm_k
   mood=to
@@ -160,12 +163,13 @@ stage
   noun=thing: noun=thing
   noun=truth: noun=cult
   noun=world: noun=cadelk
-  null-pro=2S: noun=do
-  null-pro=3PL: noun=du
-  null-pro=3S: noun=du
+  pronoun=2Snull: noun=do
+  pronoun=3PLnull: noun=du
+  pronoun=3Snull: noun=du
   preposition=according+to: suffix=vah+shan
   preposition=ahead: postposition=kac
-  preposition=as+if: mood=fmolk
+  #preposition=as+if: mood=fmolk
+  preposition=as+if: mood=fm_k
   preposition=as: ~
   preposition=because+of: suffix=vah
   preposition=for: suffix=thot
@@ -189,14 +193,18 @@ stage
   quantifier=any: quantifier=mehn
   quantifier=many: quantifier=xulm
   quantifier=not: suffix=xeht
-  rel-pronoun=that
+  pronoun=that
     rule
-      form: |[DP rel-pronoun=that]
+      form: |[DP pronoun=that]
       result: |[DP determiner=SG |[NP noun=du]]
-  rel-pronoun=who
+  pronoun=who
     rule
-      form: |[DP rel-pronoun=who]
+      form: |[DP pronoun=who]
       result: |[DP determiner=SG |[NP noun=du]]
+  pronoun=who#PL
+    rule
+      form: |[DP pronoun=who#PL]
+      result: |[DP determiner=PL |[NP noun=du]]
   tense=gerund: tense=thnu
   tense=inf: tense=nonpast
   tense=nonpast: tense=nonpast
@@ -212,7 +220,11 @@ stage
   verb=command: suffix=zhut
   verb=confess: verb=snedelmxehttan
   verb=do+so: verb=fmyvuhk
-  verb=find: verb=sezhulfen
+  verb=find
+    #verb=sezhulfen
+    rule
+      form: |[?CP $c? |[?IP $i? |[vP $subj? ~ |[VP $obj? verb=find $clause?]]]]
+      result: |[conjP |[?CP $c? |[?IP $i? |[VP $subj? verb=sezhulfen $obj]]] conjunction=keh $clause?]
   verb=give: verb=snam
   verb=go: verb=sazyc
   verb=greet: verb=xanoln
@@ -239,3 +251,7 @@ stage
   rule
     form: <I $tense:tense? $mood:mood+?>
     result: <I $tense $mood+ aspect=feh>
+stage
+  rule
+    form: <I tense=object $other+?>
+    result: <I $other+>

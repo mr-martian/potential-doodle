@@ -8,7 +8,7 @@ preposition=to: preposition=إلى
 determiner=a: determiner=indef-sg
 adjective=elect: adjective=مختارة
 conjunction=and: conjunction=و
-determiner=herPL
+determiner=her#PL
   translate
     from: |[DP ~ ~ @ |[NP $ns? ~ $nh $nc?]]
     #deal with modifiers later
@@ -18,7 +18,7 @@ tense=nonpast: tense=present
 preposition=in: preposition=في
 noun=truth: noun=حقيقة
 verb=love: verb=أحب
-rel-pronoun=who: rel-pronoun=التي
+pronoun=who: rel-pronoun=التي
 quantifier=not: quantifier=ليس
 adjective=alone: adjective=فقط
 adverb=also: adverb=أيضا
@@ -30,17 +30,177 @@ quantifier=all
 determiner=those: determiner=هم
 verb=know: verb=عرف
 preposition=because+of: preposition=بسبب
-rel-pronoun=that: rel-pronoun=التي
+pronoun=that: rel-pronoun=التي
 verb=reside: verb=عاش
 pronoun=us: pronoun=نحن
 mood=will
   translate
     from: [I tense=nonpast $asp @]
     to: [I tense=future $asp ~]
-null-pro=3S: null-pro=3S
+pronoun=3Snull: null-pro=3S
 adverb=forever
   translate
     from: @
     to: |[PP preposition=إلى |[DP determiner=ال |[NP noun=أبد]]]
 verb=be: verb=كان
 preposition=with: preposition=مع
+
+adjective=alone: adjective=وحده
+adjective=complete: adjective=كامل
+adjective=elect: adjective=~
+adjective=evil: adjective=شرير
+adjective=full: adjective=كامل
+adjective=new: adjective=جديد
+adjective=other: adjective=آخر
+adverb=also: adverb=أيضاً
+adverb=forever: adverb=إلى+الأبد
+adverb=greatly: adverb=جداً
+#(comes after adjectives)
+adverb=just: adverb=عادل
+#(e.g. “fair, equitable”)
+adverb=not: adverb=ليس
+#(only before adjectives)
+adverb=now: adverb=الآن
+aspect=be: aspect=~
+aspect=have+been: aspect=~
+aspect=have: aspect=~
+complementizer=+Q: complementizer=~
+complementizer=-Q: complementizer=~
+complementizer=that: complementizer=~
+conjunction=and: conjunction=و
+conjunction=because: conjunction=لأن
+conjunction=both-and: conjunction=و
+conjunction=but: conjunction=ولكن
+conjunction=for: conjunction=ل
+conjunction=if-then: conjunction=ف
+conjunction=paren: conjunction=~
+conjunction=so+that: conjunction=لذلك
+conjunction=though-null: conjunction=~
+conjunction=thus: conjunction=لذلك
+determiner=PL: determiner=~
+determiner=SG: determiner=~
+determiner=a: determiner=~
+determiner=her#PL: determiner=~
+determiner=his#PL: determiner=هم
+# (suffix)
+determiner=many: determiner=كثير
+determiner=our: determiner=نا
+determiner=some#PL: determiner=~
+determiner=the#PL: determiner=ال
+determiner=the: determiner=ال
+determiner=this: determiner=هذا
+determiner=those: determiner=ذلك
+determiner=your#PL: determiner=~
+determiner=your: determiner=ك
+# (suffix)
+dup-pro=2S: dup-pro=2S
+mood=imperative-not: mood=~
+mood=imperative: mood=~
+mood=may: mood=~
+mood=not: mood=~
+mood=should: mood=~
+mood=subjunctive: mood=~
+mood=to: mood=~
+mood=will: mood=سوف
+noun=Christ: noun=المسيح
+noun=God: noun=الله
+noun=Jesus+Christ: noun=يسوع+المسيح
+noun=Jesus: noun=يسوع
+noun=antichrist: noun=عدو+المسيح
+noun=beginning: noun=بداية
+noun=child: noun=طفل
+noun=commandment: noun=أمر
+noun=deceiver: noun=خائن
+noun=deed: noun=عمل
+noun=elder: noun=زعيم
+noun=everyone: noun=كا+الناس
+noun=face: noun=وجه
+noun=father: noun=والد
+noun=flesh: noun=بشر
+noun=grace: noun=فضل
+noun=greeting: noun=~
+noun=house: noun=بيت
+noun=ink: noun=حبر
+noun=joy: noun=فرح
+noun=lady: noun=سيدة
+noun=love: noun=حب
+noun=mercy: noun=رحمة
+noun=one+another: noun=~
+noun=one: noun=واحد
+noun=paper: noun=ورقة
+noun=peace: noun=سلام
+noun=person: noun=شخص
+noun=reward: noun=مكافأة
+noun=sister: noun=أخت
+noun=son: noun=إبن
+noun=teaching: noun=تعليم
+noun=thing: noun=شيء
+noun=truth: noun=حقيقة
+noun=world: noun=عالم
+pronoun=3PLnull: pronoun=3PLnull
+pronoun=3Snull: pronoun=3PLnull
+preposition=according+to: preposition=~
+preposition=ahead: preposition=~
+preposition=as+if: preposition=ك
+preposition=as: preposition=ك
+preposition=because+of: preposition=بسبب
+preposition=for: preposition=ل
+preposition=from: preposition=من
+preposition=in: preposition=في
+preposition=into: preposition=إلى
+preposition=of: preposition=ب
+preposition=on: preposition=على
+preposition=out: preposition=خارج
+preposition=to: preposition=إلى
+preposition=vocative: preposition=~
+preposition=with: preposition=مع
+pronoun=I: pronoun=أنا
+pronoun=anyone: pronoun=أي+شخص
+pronoun=him: pronoun=هو
+pronoun=it: pronoun=هو
+pronoun=this: pronoun=هذا
+pronoun=us: pronoun=نا
+pronoun=we: pronoun=نحن
+pronoun=you: pronoun=~
+quantifier=all: quantifier=كل
+quantifier=any: quantifier=أي
+quantifier=many: quantifier=كثير
+quantifier=not: quantifier=~
+pronoun=that: pronoun=الذي
+pronoun=who: pronoun=الذي
+tense=gerund: tense=~
+tense=inf: tense=~
+tense=nonpast: tense=~
+tense=object: tense=~
+tense=past: tense=كان
+verb=ask: verb=سءل
+verb=be: verb=كون
+verb=bring: verb=حضر
+verb=come#PP: verb=جيء
+verb=command: verb=أمر
+verb=confess: verb=عرف
+verb=do+so: verb=فعل+ذلك
+verb=find: verb=وجد
+verb=give: verb=عطي
+verb=go: verb=ذهب
+verb=greet: verb=رحب
+#verb=have: verb="عند" (“to”) + possessive suffix used – not expressed with a verb
+verb=hear: verb=سمع
+verb=hope: verb=أمل
+verb=know: verb=عرف
+verb=live: verb=عيش
+verb=lose: verb=فقد
+verb=love: verb=أحب
+verb=receive: verb=قبل
+#(root of “to receive” as in “to welcome”)
+verb=rejoice: verb=مرح
+verb=remain: verb=بقي
+verb=reside: verb=عيش
+verb=share: verb=شرك
+verb=speak: verb=كلم
+verb=visit: verb=زور
+verb=walk: verb=مشي
+verb=want: verb=رود
+verb=watch: verb=شهد
+verb=work: verb=عمل
+verb=write: verb=كتب

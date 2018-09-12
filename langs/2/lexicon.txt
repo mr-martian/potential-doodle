@@ -14,6 +14,13 @@ jahk (complementizer)
   valency: goal
 sun (complementizer)
   valency: pass
+excl (punct)
+  display: -!
+exclaim (complementizer)
+  audible: false
+  rule (20)
+    form: |[?CP complementizer=exclaim]
+    result: [ex |[$CP ~] punct=excl]
 g_m (mood)
   root: golm
   vowel: ol
@@ -454,16 +461,27 @@ mehn (quantifier)
 xulm (quantifier)
 xyt (quantifier)
 deh (suffix)
+  display: -deh
 jahk (suffix)
+  display: -jahk
 jot (suffix)
+  display: -jot
 kah (suffix)
+  display: -kah
 o (suffix)
+  display: -o
 thot (suffix)
+  display: -thot
 uk (suffix)
+  display: -uk
 vah (suffix)
+  display: -vah
 vah+shan (suffix)
+  display: -vah+shan
 xeht (suffix)
+  display: -xeht
 zhut (suffix)
+  display: -zhut
 dac (tense)
 null (tense)
 thnu (tense)
