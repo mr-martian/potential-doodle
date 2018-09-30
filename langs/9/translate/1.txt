@@ -1,25 +1,40 @@
 stage
   rule
-    form: |[DP determiner=def |[NP $noun |[PP preposition=constr |[DP pronoun=3Sm]]]]
+    form: |[DP determiner=defSG |[NP $noun |[PP preposition=constr |[DP pronoun=3Sm]]]]
     result: |[DP determiner=his |[NP $noun]]
   rule
     form: |[DP determiner=defPL |[NP $noun |[PP preposition=constr |[DP pronoun=3Sm]]]]
-    result: |[DP determiner=hisPL |[NP $noun]]
+    result: |[DP determiner=his#PL |[NP $noun]]
+  rule
+    form: |[DP determiner=defSG |[NP $noun |[PP preposition=constr |[DP pronoun=3Sf]]]]
+    result: |[DP determiner=her |[NP $noun]]
+  rule
+    form: |[DP determiner=defPL |[NP $noun |[PP preposition=constr |[DP pronoun=3Sf]]]]
+    result: |[DP determiner=her#PL |[NP $noun]]
 stage
+  verb=שׁאר#niph
+    rule
+      form: |[IP <I $other+?> |[VP $subj verb=שׁאר#niph $obj]]
+      result: |[IP <I mood=be $other+> |[VP $subj |[PP preposition=with $obj] verb=leave ~]]
+stage
+  adjective=שָׁנַיִם: adjective=two
   complementizer=-Q: complementizer=-Q
   conjunction=ו: conjunction=and
-  determiner=PL: determiner=as
-  determiner=def: determiner=the
-  determiner=defPL: determiner=thes
-  noun=אִישׁ: noun=man
+  determiner=SG: determiner=a
+  determiner=PL: determiner=a#PL
+  determiner=defSG: determiner=the
+  determiner=defPL: determiner=the#PL
+  noun=אֱלִימֶלֶךְ: noun=Elimelech
+  noun=אִישׁ: noun=man; noun=husband
   noun=אִשָׁה: noun=wife; noun=woman
   noun=אֶרֶץ: noun=land
-  noun=בֵנ: noun=son
+  noun=בֵן: noun=son
   noun=בַּיִת: noun=house
   noun=יְהוּדָה: noun=Judah
   noun=יֹומ: noun=day
   noun=לֶחֶם: noun=bread
   noun=מוֹאָב: noun=Moab
+  noun=נָעֳמִי: noun=Naomi
   noun=רָעָב: noun=famine
   noun=שְׁתָּיִמ: noun=two
   noun=שָׂדֶה: noun=field
@@ -28,8 +43,10 @@ stage
   preposition=ל: preposition=to
   preposition=מ: preposition=from
   pronoun=3Sm: pronoun=he
+  pronoun=3Sf: pronoun=she
   tense=narrative: tense=past
   verb=גור: verb=dwell
   verb=היה: verb=be
   verb=הלכ: verb=go
   verb=שפט: verb=judge
+  verb=מות#qal: verb=die

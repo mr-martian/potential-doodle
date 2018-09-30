@@ -1,18 +1,22 @@
 -Q (complementizer)
 ו (conjunction)
+SG (determiner)
+  number: sg
+  def: def
 PL (determiner)
   number: pl
   def: indef
-def (determiner)
+defSG (determiner)
   number: sg
   def: def
 defPL (determiner)
   number: pl
   def: def
+שָׁנַיִם (adjective)
 אִישׁ (noun)
 אִשָׁה (noun)
 אֶרֶץ (noun)
-בֵנ (noun)
+בֵן (noun)
 בַּיִת (noun)
 יְהוּדָה (noun)
   proper: true
@@ -23,13 +27,20 @@ defPL (determiner)
 רָעָב (noun)
 שְׁתָּיִמ (noun)
 שָׂדֶה (noun)
+אֱלִימֶלֶךְ (noun)
+  proper: true
+נָעֳמִי (noun)
+  proper: true
 constr (preposition)
 ב (preposition)
 ל (preposition)
 מ (preposition)
 3Sm (pronoun)
+3Sf (pronoun)
 narrative (tense)
 גור (verb)
 היה (verb)
 הלכ (verb)
 שפט (verb)
+מות#qal (verb)
+שׁאר#niph (verb)

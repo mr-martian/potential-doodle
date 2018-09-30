@@ -1494,6 +1494,9 @@ class Sentence:
             return ret
         tr = LangLink.getormake(self.lang, tlang)
         for k in self.trees:
+            if not self.trees[k]:
+                continue
+                #if a sentence doesn't have a tree it will show up as None
             for i, s in enumerate(tr.translate(self.trees[k])):
                 if Globals.partial or s.alllang(tlang):
                     ret.trees[k+'-'+str(i) if k else str(i)] = s

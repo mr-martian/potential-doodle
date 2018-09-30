@@ -128,8 +128,14 @@ imperative-not (mood)
 to (mood)
   conj: inf
   display: to
+be (mood)
+  conj: pstprt
+  searchkey: passive
 
 a (determiner): S
+  rule (10)
+    form: |[?DP determiner=a |[?NP $noun(proper=true)]]
+    result: |[$DP ~ |[$NP $noun]]
   linear-text: an
     1: /^[aeiou]/
 the (determiner): S
@@ -323,6 +329,9 @@ truth (noun)
 understand (verb)
   objects: 1
   object1: NP
+leave (verb)
+  objects: 1
+  object1: NP
 
 also (adverb)
 forever (adverb)
@@ -479,6 +488,7 @@ honor (noun)
 hook (noun)
 house (noun)
 hurricane (noun)
+husband (noun)
 ice (noun)
 information (noun)
 insect (noun)
@@ -690,12 +700,19 @@ writing+system (noun)
 
 
 #PROPER NOUNS
+Elimelech (noun)
+  proper: true
+Naomi (noun)
+  proper: true
 Obadiah (noun)
+  proper: true
 
 
 #Generated from missing_morphemes.txt
 Judah (noun)
+  proper: true
 Moab (noun)
+  proper: true
 famine (noun)
 field (noun)
 land (noun)
@@ -723,6 +740,7 @@ evil (adjective)
 full (adjective)
 new (adjective)
 other (adjective)
+two (adjective)
 greatly (adverb)
 not (adverb)
 now (adverb)
