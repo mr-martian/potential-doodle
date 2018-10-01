@@ -193,6 +193,11 @@ tú (pronoun): S
   rule (10)
     form: |[vP ~ $mod? $verb? |[VP |[?DP pronoun=él] $mod2? ~ $obj?]]
     result: |[vP |[DP proclitic=le] $mod $verb |[VP |[$DP ~] $mod2 ~ $obj]]
+ella (pronoun): S
+  gender: f
+  #rule (10)
+  #  form: |[vP ~ $mod? $verb? |[VP |[?DP pronoun=ella] $mod2? ~ $obj?]]
+  #  result: |[vP |[DP proclitic=la] $mod $verb |[VP |[$DP ~] $mod2 ~ $obj]]
 alguien (pronoun): S
   person: 3
   display: alguien
@@ -404,3 +409,14 @@ muchos (determiner): P
 cuidado (noun): m
 saludar (verb)
 mucho (adverb)
+
+Elimelech (noun): mp
+hombre (noun): m
+Naomi (noun): fp
+morir (verb)
+estar (mood)
+  mood: pstprt
+dos (adjective)
+dejar (verb)
+esposo (noun): m
+dos#m (noun): m

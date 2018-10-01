@@ -69,6 +69,9 @@ stage
   adjective=full: adjective=lleno
   adjective=new: adjective=nuevo
   adjective=other: adjective=otro
+  #adjective=two: adjective=dos
+  adjective=two: noun=dos#m
+  ################# TODO
   adverb=also: adverb=también
   adverb=forever: adverb=para+siempre
   adverb=greatly: adverb=mucho
@@ -104,6 +107,7 @@ stage
   determiner=your#PL: determiner=tus
   determiner=your: determiner=tu
   dup-pro=2S: dup-pro=2S
+  mood=be: mood=estar
   mood=imperative: mood=imperative
   mood=may: mood=subjunctive
     #rule
@@ -121,17 +125,21 @@ stage
   noun=deceiver: noun=mentiroso
   noun=deed: noun=hecho
   noun=elder: noun=anciano
+  noun=Elimelech: noun=Elimelech
   noun=face: noun=cara
   noun=father: noun=padre
   noun=flesh: noun=carne
   noun=grace: noun=gracia
   noun=greeting: noun=saludo
   noun=house: noun=casa
+  noun=husband: noun=esposo
   noun=ink: noun=tinta
   noun=joy: noun=alegría
   noun=lady: noun=mujer
   noun=love: noun=amor
+  noun=man: noun=hombre
   noun=mercy: noun=misericordia
+  noun=Naomi: noun=Naomi
   noun=one: noun=uno
   noun=paper: noun=papel
   noun=peace: noun=paz
@@ -160,6 +168,7 @@ stage
   preposition=with: preposition=con
   pronoun=I: pronoun=yo
   pronoun=anyone: pronoun=alguien
+  pronoun=she: pronoun=ella
   pronoun=him: pronoun=él
   pronoun=it: pronoun=él
   pronoun=this: pronoun=esto
@@ -182,6 +191,7 @@ stage
   verb=come#IP: verb=venir
   verb=command: verb=mandar
   verb=confess: verb=confesar
+  verb=die: verb=morir
   verb=do+so: verb=hacer
   verb=find: verb=encontrar
   verb=give: verb=dar
@@ -191,6 +201,7 @@ stage
   verb=hear: verb=oír
   verb=hope: verb=esperar
   verb=know: verb=saber
+  verb=leave: verb=dejar
   verb=live: verb=vivir
   verb=lose: verb=perder
   verb=love: verb=amar
