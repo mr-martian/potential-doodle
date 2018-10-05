@@ -629,7 +629,10 @@ def applyrules(rules, vrs):
             elif rule[0] == 'set':
                 vrs[' '].props.update(rule[1])
             elif rule[0] == 'setprop':
-                rule[1].place(vrs, rule[2].retrieve(vrs))
+                if isinstance(rule[2], str):
+                    rule[1].place(vrs, rule[2])
+                else:
+                    rule[1].place(vrs, rule[2].retrieve(vrs))
             elif rule[0] == 'rotate':
                 vrs[' '].rotate = True
             elif rule[0] == 'makevar':
@@ -1398,7 +1401,7 @@ def loadtrans(lfrom, lto):
             trans = [ParseLine(-1, 'stage', [], '', trans)]
         for i, stage in enumerate(trans):
             for lex in stage.children:
-                if lex.label == 'rule':
+                if lex.label in ['rule', 'multirule']:
                     readrule(lex, lfrom, lto, 'lex', '', i)
                 else:
                     m = toobj(lex.label, lfrom, lex.num)
@@ -1447,6 +1450,7 @@ def filltrans(lfrom, lto):
     fname = Globals.path + 'langs/%s/translate/%s.txt' % (lfrom, lto)
     have = []
     out = '#Automatically generated from langs/%s/lexicon.txt\n' % lfrom
+    joinby = '\n'
     if isfile(fname):
         pl = ParseLine.fromfile(fname)
         for l in pl:
@@ -1454,15 +1458,20 @@ def filltrans(lfrom, lto):
                 have += [x.label for x in l.children]
             else:
                 have.append(l.label)
-        out = '\n\n'+out
-    for pos in sorted(AllMorphemes[lfrom].keys()):
-        for root in sorted(AllMorphemes[lfrom][pos].keys()):
+        out = '\n\n' + out + 'stage\n  '
+        joinby += '  '
+    morphdict = Morpheme.itermorph(lfrom)
+    foundany = False
+    for pos in sorted(morphdict.keys()):
+        for root in sorted(morphdict[pos].keys()):
             s = pos + '=' + root
             if s not in have:
-                out += s + ': ~\n'
-    f = open(fname, 'a')
-    f.write(out)
-    f.close()
+                out += s + ': ~' + joinby
+                foundany = True
+    if foundany:
+        f = open(fname, 'a')
+        f.write(out)
+        f.close()
 class Sentence:
     def __init__(self, lang, name, trees, gloss):
         self.lang = lang

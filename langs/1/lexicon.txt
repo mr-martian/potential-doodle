@@ -239,6 +239,16 @@ that (pronoun)
   number: SG
   audible: false
   is-rel: false
+there#SG (pronoun)
+  person: 3
+  number: SG
+  is-rel: false
+  display: there
+there#PL (pronoun)
+  person: 3
+  number: PL
+  is-rel: false
+  display: there
 
 and (conjunction)
 but (conjunction)
@@ -332,6 +342,8 @@ understand (verb)
 leave (verb)
   objects: 1
   object1: NP
+  output (tense=pst): left
+  output (tense=pstprt): left
 
 also (adverb)
 forever (adverb)
@@ -868,3 +880,12 @@ exclaim (complementizer)
   rule (20)
     form: |[?CP complementizer=exclaim]
     result: [ex |[$CP ~] punct=excl]
+
+
+#Generated from missing_morphemes.txt
+Bethlehem (noun)
+judge (noun)
+along+with (preposition)
+Kilyon (noun)
+Machlon (noun)
+name (noun)

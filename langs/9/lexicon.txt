@@ -44,3 +44,27 @@ narrative (tense)
 שפט (verb)
 מות#qal (verb)
 שׁאר#niph (verb)
+
+
+#Generated from missing_morphemes.txt
+שְׁנַיִמ (adjective)
+SGm (determiner)
+אִישׁ (noun)
+אֶרֶצ (noun)
+בֵית+לֶחֶם (noun)
+  proper: true
+שֹׁפֵט (noun)
+ו (preposition)
+מִנ (preposition)
+היה#qal (verb)
+הלכ#qal (verb)
+שׁפט (verb)
+יוֹמ (noun)
+אֱ‍לִימֶלֶךְ (noun)
+  proper: true
+שֵׁם (noun)
+אִישָׁה (noun)
+כִלְיוֹן (noun)
+  proper: true
+מַחְלוֹן (noun)
+  proper: true

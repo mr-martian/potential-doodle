@@ -11,11 +11,34 @@ stage
   rule
     form: |[DP determiner=defPL |[NP $noun |[PP preposition=constr |[DP pronoun=3Sf]]]]
     result: |[DP determiner=her#PL |[NP $noun]]
+  rule
+    form: |[VP $subj ~ $obj]
+    result: |[VP $subj verb=be $obj]
 stage
   verb=שׁאר#niph
     rule
       form: |[IP <I $other+?> |[VP $subj verb=שׁאר#niph $obj]]
       result: |[IP <I mood=be $other+> |[VP $subj |[PP preposition=with $obj] verb=leave ~]]
+  verb=היה#qal
+    rule
+      form: |[VP |[?DP $det(number=sg)] verb=היה#qal $obj:PP?]
+      result: |[VP |[DP pronoun=there#SG] $obj verb=be |[$DP $det]]
+    rule
+      form: |[VP |[?DP $det(number=pl)] verb=היה#qal $obj:PP?]
+      result: |[VP |[DP pronoun=there#PL] $obj verb=be |[$DP $det]]
+    rule
+      form: |[VP ~ verb=היה#qal $obj:PP]
+      result: |[VP |[DP pronoun=it] verb=be $obj]
+  rule
+    form: |[DP determiner=defSG |[?NP $noun(proper=true)]]
+    result: |[DP determiner=SG |[$NP $noun]]
+  rule
+    form: |[DP determiner=SG |[?NP $noun(proper=true)]]
+    result: |[DP determiner=SG |[$NP $noun]]
+  preposition=ל
+    rule
+      form: |[PP preposition=ל $verb:VP]
+      result: |[IP [I tense=inf mood=to] $verb]
 stage
   adjective=שָׁנַיִם: adjective=two
   complementizer=-Q: complementizer=-Q
@@ -26,6 +49,7 @@ stage
   determiner=defPL: determiner=the#PL
   noun=אֱלִימֶלֶךְ: noun=Elimelech
   noun=אִישׁ: noun=man; noun=husband
+  noun=אִישׁ: noun=man; noun=husband
   noun=אִשָׁה: noun=wife; noun=woman
   noun=אֶרֶץ: noun=land
   noun=בֵן: noun=son
@@ -36,7 +60,8 @@ stage
   noun=מוֹאָב: noun=Moab
   noun=נָעֳמִי: noun=Naomi
   noun=רָעָב: noun=famine
-  noun=שְׁתָּיִמ: noun=two
+  noun=שְׁתָּיִמ: adjective=two
+  adjective=שְׁנַיִמ: adjective=two
   noun=שָׂדֶה: noun=field
   preposition=constr: preposition=of
   preposition=ב: preposition=in
@@ -50,3 +75,23 @@ stage
   verb=הלכ: verb=go
   verb=שפט: verb=judge
   verb=מות#qal: verb=die
+
+
+
+#Automatically generated from langs/9/lexicon.txt
+stage
+  determiner=SGm: determiner=a
+  noun=אֶרֶצ: noun=land
+  noun=בֵית+לֶחֶם: noun=Bethlehem
+  noun=שֹׁפֵט: noun=judge
+  preposition=ו: preposition=along+with
+  preposition=מִנ: preposition=from
+  verb=הלכ#qal: verb=go
+  verb=שׁפט: verb=judge
+  noun=יוֹמ: noun=day
+  noun=אֱ‍לִימֶלֶךְ: noun=Elimelech
+  noun=שֵׁם: noun=name
+  noun=אִישָׁה: noun=wife; noun=woman
+  noun=כִלְיוֹן: noun=Kilyon
+  noun=מַחְלוֹן: noun=Machlon
+  

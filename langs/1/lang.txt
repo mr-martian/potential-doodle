@@ -213,7 +213,7 @@ transform
     form: |[?NP $det $PP:DP]
     result: |[$NP $det [cm punct=comma $PP punct=comma]]
   rule (0): plural marking
-    form: |[?DP $head |[?NP $noun]]
+    form: |[?DP $head |[?NP $noun:noun]]
     setprop ($noun.number): $head.number
   rule (1): attach genitive suffix
     form: |[DP $spec:DP $mod? $head $comp?]
@@ -222,5 +222,9 @@ transform
     form: [GEN |[?DP $dh? |[?NP $noun ~]] $gen]
     result: |[?DP $dh |[?NP $noun ~]]
     setval ($noun.case): gen
+  rule (5): gerunds
+    form: |[?NP $verb:verb]
+    result: |[$NP $verb]
+    setval ($verb.tense): prsprt
   rotate: Vmod
   rotate: Nmod
