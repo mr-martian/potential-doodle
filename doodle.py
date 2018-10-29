@@ -17,11 +17,15 @@ Globals = SimpleNamespace(path=os.path.abspath(__file__)[:-9], unknown_error=Tru
 #usetreebank: Write to treebank rather than stdout
 
 class PatternElement:
+    #base class for elements of trees (both sentences and rule patterns)
     CheckType = False
+    #by default, items of different subclasses can be equivalent
+    #for pattern-matching purposes
     def __init__(self, ntype, props=None, loc=None):
         self.ntype = ntype
         self.props = props or {}
         self.loc = loc or ''
+        #the file line that generated the object, for debugging
     def __getitem__(self, key):
         return self.props[key]
     def __setitem__(self, key, value):
@@ -35,6 +39,9 @@ class PatternElement:
     def matchcondlist(self, cndls):
         return all(k in self and self[k] == v for k,v in cndls)
     def getvars(self, tree, vrs):
+        #use self as a pattern and check against tree,
+        #storing any variable values in vrs
+        #if tree does not match self, a failure message is stored in vrs[' failed']
         if self.CheckType and type(tree) != type(self):
             vrs[' failed'] = 'type'
             return vrs
@@ -58,28 +65,36 @@ class PatternElement:
                     return vrs
         return vrs
     def putvars(self, vrs):
+        #reinsert variables from vrs into pattern self, inverse of getvars()
         return self
     def check(self, tree):
         return self.getvars(tree, {' failed': False}) == False
 class DataElement(PatternElement):
-    #thing that can occur in a sentence (rather than just a rule)
+    #base class for elements of sentences
     CheckType = True
     def trans(self, tr):
+        #apply a translation tr to self and return the result
+        #extract variables from context and then form, apply operations and reinsert variables
         vrs = tr.context.getvars(self, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], DataElement):
-            #if tr.name == 'test':
-            #    print(self)
-            #    print(vrs[' failed'])
+            if tr.debug:
+                print('Debugging rule failure on context for %s' % tr.name)
+                print('  Tree was: %s' % self)
+                print('  Reason was: %s' % vrs[' failed'])
+                print('  @ was: %s\n\n' % vrs[' '])
             return []
         vrs = tr.form.getvars(vrs[' '], vrs)
         if vrs[' failed']:
-            #if tr.name == 'test':
-            #    print(self)
-            #    print(vrs[' failed'])
+            if tr.debug:
+                print('Debugging rule failure on form for %s' % tr.name)
+                print('  Tree was: %s' % vrs[' '])
+                print('  Reason was: %s\n\n' % vrs[' failed'])
             return []
         applyrules(tr.result, vrs)
         return copy.deepcopy(tr.context).putvars(vrs)
     def transmulti(self, tr):
+        #apply a multirule tr to self and return the result
+        #extract variables at each level and then apply operations in reverse order
         if tr.ntypelist and self.ntype not in tr.ntypelist:
             return []
         vrs = {' failed': False, ' ': self}
@@ -97,6 +112,10 @@ class DataElement(PatternElement):
             applyrules(result, vrs)
         return vrs[' ']
     def transform(self, pats, returnself=True):
+        #given a list of rules pats, apply them to self
+        #if none of the rules produce output, return self if returnself is True
+        #else return []
+        #all returned nodes will either be self or self after 1 rule application
         if len(pats) > 0:
             nodes = []
             retstr = ['[]']
@@ -242,8 +261,6 @@ class Unknown(Variable):
         return True
     def __str__(self):
         return '*'
-class Option(list):
-    pass
 ###DATA STRUCTURES
 class Morpheme(DataElement):
     __AllMorphemes = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
@@ -563,12 +580,13 @@ class UnorderedCollector(PatternElement):
         return '<%s %s>' % (self.ntype, ' '.join(str(x) for x in self.children))
 ###TRANSFORMATIONS
 class Rule:
-    def __init__(self, langs, category='', mode='syntax', stage=0, name=''):
+    def __init__(self, langs, category='', mode='syntax', stage=0, name='', debug=False):
         self.langs = langs
         self.category = category
         self.mode = mode
         self.stage = stage
         self.name = name
+        self.debug = debug
         if self.langs[0] == self.langs[1]:
             l = Language.getormake(self.langs[0])
             if mode == 'linear':
@@ -789,23 +807,25 @@ class LangLink:
             if ntr:
                 tr = ntr
         return tr
-def hfst(tagstrs, lang):
+def run(prog, *args, data=None):
+    proc = Popen([prog] + list(args), stdin=PIPE, stdout=PIPE, universal_newlines=True)
+    if data:
+        return proc.communicate(data)[0]
+def transduce(data, lang, gen=True):
+    #send data to the transducer for lang
+    #gen=True for generation, gen=False for parsing
     mode = Language.getormake(lang).morph_mode
-    if mode == 'hfst':
-        proc = Popen(['hfst-lookup', '-q', '-b', '0', '-i', Globals.path + 'langs/%d/.generated/gen.hfst' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
-        ls = proc.communicate('\n'.join(tagstrs))
-        if ls[0]:
-            ret = [x.split('\t')[1] for x in ls[0].strip().split('\n\n')]
-        else:
-            ret = []
-    elif mode == 'lttoolbox':
-        proc = Popen(['lt-proc', '-g', Globals.path + 'langs/%d/.generated/gen.bin' % lang], stdin=PIPE, stdout=PIPE, universal_newlines=True)
-        ls = proc.communicate('\n'.join(['^%s$' % t for t in tagstrs]))[0]
-        ret = [x[1:] if x[0] == '~' else x for x in ls.split('\n')]
-        #print('\n' + ' '.join(t for t,r in zip(tagstrs, ret) if r[0] == '#'))
-    else:
+    if mode not in ['hfst', 'lttoolbox']:
         raise Exception('Unknown morphology mode %s' % mode)
-    return ret
+    if gen:
+        path = Globals.path + 'langs/%d/.generated/gen.' % lang + ('hfst' if mode == 'hfst' else 'bin')
+        data = '\n'.join(data) if mode == 'hfst' else '^'+('$\n^'.join(data))+'$'
+        if mode == 'hfst':
+            result = run('hfst-lookup', '-q', '-b', '0', '-i', path, data=data)
+            return [x.split('\t')[1] for x in result.strip().split('\n\n')]
+        else:
+            result = run('lt-proc', '-g', path, data=data)
+            return [x[1:] if x[0] == '~' else x for x in result.split('\n')]
 def dolinear(sen, _lang):
     lin = sen.linear(_lang)
     lang = Language.getormake(_lang)
@@ -827,7 +847,7 @@ def dolinear(sen, _lang):
                             lin[i+d]['display'] = r[1]
                         else:
                             lin[i+d] = r
-    lintxt = hfst([x.tagify() for x in lin], _lang)
+    lintxt = transduce([x.tagify() for x in lin], _lang)
     for i, m in enumerate(lin):
         for pat in lang.lineartext[m.root]:
             if isinstance(pat.context, list):
@@ -984,12 +1004,6 @@ def toobj(s, lang, loc):
                 d[p] = rest.pop(0)
             rest.pop(0)
             return d
-        elif cur == '(':
-            l = Option()
-            while rest[0] != ')':
-                l.append(destring())
-            rest.pop(0)
-            return l
         else:
             if rest[0] == '=': #Morpheme
                 pos = cur
@@ -1540,7 +1554,7 @@ def graphtext(infile, outfile):
             gls.append('test/' + fn)
     f.write('</body></html>')
     f.close()
-    proc = Popen(['dot', '-Tsvg', '-O'] + gls, stdin=PIPE, stdout=PIPE, universal_newlines=True)
+    run('dot', '-Tsvg', '-O', *gls)
 def translatefile(infile, outfile, tlang):
     pl = ParseLine.fromfile(infile)
     flang = int(pl[0].firstval('lang'))
