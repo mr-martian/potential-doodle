@@ -17,7 +17,7 @@ Globals = SimpleNamespace(path=os.path.abspath(__file__)[:-9], unknown_error=Tru
 #usetreebank: Write to treebank rather than stdout
 
 class PatternElement:
-    #base class for elements of trees (both sentences and rule patterns)
+    """Base class for elements of trees (both sentences and rule patterns)"""
     CheckType = False
     #by default, items of different subclasses can be equivalent
     #for pattern-matching purposes
@@ -37,11 +37,14 @@ class PatternElement:
     def __repr__(self):
         return self.__str__()
     def matchcondlist(self, cndls):
+        """Given a list of (key, value) pairs, check that they all appear in self.props."""
         return all(k in self and self[k] == v for k,v in cndls)
     def getvars(self, tree, vrs):
-        #use self as a pattern and check against tree,
-        #storing any variable values in vrs
-        #if tree does not match self, a failure message is stored in vrs[' failed']
+        """Use self as a pattern and check against tree,
+        storing any variable values in vrs.
+        If tree does not match self,
+        a failure message is stored in vrs[' failed'].
+        """
         if self.CheckType and type(tree) != type(self):
             vrs[' failed'] = 'type'
             return vrs
@@ -65,16 +68,18 @@ class PatternElement:
                     return vrs
         return vrs
     def putvars(self, vrs):
-        #reinsert variables from vrs into pattern self, inverse of getvars()
+        """Reinsert variables (vrs) into pattern (self), inverse of getvars()."""
         return self
     def check(self, tree):
         return self.getvars(tree, {' failed': False}) == False
 class DataElement(PatternElement):
-    #base class for elements of sentences
+    """Base class for elements of sentences"""
     CheckType = True
     def trans(self, tr):
-        #apply a translation tr to self and return the result
-        #extract variables from context and then form, apply operations and reinsert variables
+        """Apply a translation tr to self and return the result
+        extract variables from context and then from form,
+        apply operations and reinsert variables
+        """
         vrs = tr.context.getvars(self, {' failed': False})
         if vrs[' failed'] or not isinstance(vrs[' '], DataElement):
             if tr.debug:
@@ -93,8 +98,9 @@ class DataElement(PatternElement):
         applyrules(tr.result, vrs)
         return copy.deepcopy(tr.context).putvars(vrs)
     def transmulti(self, tr):
-        #apply a multirule tr to self and return the result
-        #extract variables at each level and then apply operations in reverse order
+        """Apply a multirule (tr) to self and return the result
+        extract variables at each level and then apply operations in reverse order
+        """
         if tr.ntypelist and self.ntype not in tr.ntypelist:
             return []
         vrs = {' failed': False, ' ': self}
@@ -112,10 +118,13 @@ class DataElement(PatternElement):
             applyrules(result, vrs)
         return vrs[' ']
     def transform(self, pats, returnself=True):
-        #given a list of rules pats, apply them to self
-        #if none of the rules produce output, return self if returnself is True
-        #else return []
-        #all returned nodes will either be self or self after 1 rule application
+        """Apply a set of rules to self.
+
+        If none of the rules produce output, return self if returnself is True.
+        Otherwise return [].
+
+        All returned nodes will either be self or self after 1 rule application.
+        """
         if len(pats) > 0:
             nodes = []
             retstr = ['[]']
@@ -137,6 +146,7 @@ class DataElement(PatternElement):
             return []
 ###VARIABLES
 class Variable(PatternElement):
+    """Pattern element for extracting data"""
     pattern = re.compile('^\\$?([^:?!+\\.&]*):?([^:?!+\\.&]*)\\.?([^:?!+\\.&]*)([?!+&]*)$')
     def __init__(self, label, ntype=None, prop=None, opt=False, neg=False, group=False, descend=False, cond=None, loc=None):
         PatternElement.__init__(self, ntype, loc=loc)
@@ -148,6 +158,7 @@ class Variable(PatternElement):
         self.descend = descend
         self.cond = cond
     def fromstring(s):
+        """Convert a string into a into a Variable object."""
         m = Variable.pattern.match(s)
         if m:
             g = m.groups()
@@ -155,6 +166,7 @@ class Variable(PatternElement):
         else:
             print('no match with %s' % s)
     def checkset(self, vrs):
+        """Given a set of variable values, verify that self's conditions are met."""
         if self.label not in vrs:
             return self.neg or self.opt
         if self.group:
@@ -162,6 +174,7 @@ class Variable(PatternElement):
         else:
             return self.check(vrs[self.label])
     def check(self, v):
+        """Check whether an element satisfies self's conditions."""
         if self.neg:
             return v == None
         if v == None:
@@ -172,6 +185,7 @@ class Variable(PatternElement):
             return self.cond.check(v)
         return True
     def retrieve(self, vrs):
+        """Extract property values or children from a set of values."""
         if self.label in vrs:
             node = vrs[self.label]
             if not node:
@@ -206,6 +220,7 @@ class Variable(PatternElement):
             print(self.label)
             raise Exception('Variable %s does not exist.' % self)
     def place(self, vrs, val):
+        """Insert a value into a dictionary."""
         if self.label in vrs and vrs[self.label]:
             if self.group:
                 for v in vrs[self.label]:
@@ -250,6 +265,7 @@ class Variable(PatternElement):
         return self
         #Variables aren't modified, so we don't care about copying them
 class Unknown(Variable):
+    """Variable that will match anything at all"""
     count = 0
     def __init__(self):
         Variable.__init__(self, ' '+str(Unknown.count), opt=True)
@@ -263,6 +279,7 @@ class Unknown(Variable):
         return '*'
 ###DATA STRUCTURES
 class Morpheme(DataElement):
+    """Word, tense, punctuation mark, or other non-structural sentence element"""
     __AllMorphemes = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: None)))
     def __init__(self, lang, ntype, root, props=None, isref=False, loc=None):
         PatternElement.__init__(self, ntype, props, loc)
@@ -292,10 +309,12 @@ class Morpheme(DataElement):
     def __str__(self):
         return self.ntype + '=' + self.root
     def getref(self):
+        """Create a separate Morpheme that points back to self."""
         return Morpheme(self.lang, self.ntype, self.root, isref=True)
     def itermorph(lang):
         return Morpheme.__AllMorphemes[lang]
     def tagify(self, regex=False):
+        """Produce input for a morphological transducer."""
         lang = Language.get(self.lang)
         format = ''
         tagset = []
