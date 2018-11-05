@@ -314,8 +314,10 @@ class Morpheme(DataElement):
     def itermorph(lang):
         return Morpheme.__AllMorphemes[lang]
     def tagify(self, regex=False):
-        """Produce input for a morphological transducer."""
-        lang = Language.get(self.lang)
+        """Produce input for a morphological transducer.
+        If regex is True the output will be a regex to be used in parse()
+        """
+        lang = Language.getormake(self.lang)
         format = ''
         tagset = []
         defaults = {}
@@ -355,6 +357,7 @@ class Morpheme(DataElement):
             ret = '\t' + ret.replace('+', '\\+')
         return ret
     def get(lang, ntype, root, loc):
+        """Retrieve elements from Morpheme.__AllMorphemes."""
         if lang not in Morpheme.__AllMorphemes:
             raise Exception('Error at %s: Language %s not loaded.' % (loc, lang))
         else:
@@ -391,11 +394,13 @@ class Morpheme(DataElement):
     def putvars(self, vrs):
         return self
 class Node(DataElement):
+    """Structural element of a sentence"""
     def __init__(self, ntype, children, props=None, loc=None):
         PatternElement.__init__(self, ntype, props, loc)
         self.children = children
         self.rotate = False
     def swapchildren(self, ls):
+        """Return a Node with the same properties but different children."""
         return Node(self.ntype, ls, self.props.copy())
     def getvars(self, tree, vrs):
         PatternElement.getvars(self, tree, vrs)
@@ -424,6 +429,7 @@ class Node(DataElement):
                 ch.append(c)
         return Node(self.ntype, ch, self.props.copy())
     def transform(self, pats, returnself=True):
+        """Apply DataElement.transform() to children and then to self."""
         chs = []
         for c in self.children:
             if c:
@@ -442,6 +448,7 @@ class Node(DataElement):
             s = str(self.children)
         return '%s%s%s' % (self.ntype, s, str(self.props))
     def debug(self, depth=0):
+        """Convert self to a multi-line indented string."""
         ls = [('  '*depth) + ('%s[' % self.ntype)]
         for c in self.children:
             if isinstance(c, Node):
@@ -451,6 +458,7 @@ class Node(DataElement):
         ls.append('  '*depth + ']' + str(self.props))
         return '\n'.join(ls)
     def writecompile(self):
+        """Convert self to a string that can be parsed back to self."""
         if len(self.children) == 1 and isinstance(self.children[0], str):
             return self.ntype + '=' + self.children[0]
         l = [self.ntype]
@@ -463,6 +471,7 @@ class Node(DataElement):
                 l.append(str(c))
         return '[' + ' '.join(l) + ']'
     def graph(self, name, ishead=False):
+        """Convert self to a dot graph."""
         ret = ''
         if ishead:
             ret += 'digraph {'
@@ -476,7 +485,11 @@ class Node(DataElement):
         if ishead:
             ret += '}'
         return ret
-    def flatten(self): #DESTRUCTIVE
+    def flatten(self):
+        """Flatten X-bar phrases to single nodes (destructive).
+        Converts [XP specifier [Xmod modifier [Xbar head complement]]]
+        to [XP specifier modifier head complement]
+        """
         for c in self.children:
             if isinstance(c, Node):
                 c.flatten()
@@ -492,7 +505,12 @@ class Node(DataElement):
             if b.ntype != n+'bar': return None
             if len(b.children) != 2: return None
             self.children = [self.children[0], m.children[0], b.children[0], b.children[1]]
-    def unflatten(self): #DESTRUCTIVE
+    def unflatten(self):
+        """Transform nodes with 4 children to X-bar phrases (destructive).
+        Inverse of flatten()
+        Converts [XP specifier modifier head complement]
+        to [XP specifier [Xmod modifier [Xbar head complement]]]
+        """
         for c in self.children:
             if isinstance(c, Node):
                 c.unflatten()
@@ -501,8 +519,10 @@ class Node(DataElement):
             n = self.ntype[:-1]
             self.children = [ch[0], Node(n+'mod', [ch[1], Node(n+'bar', [ch[2], ch[3]])])]
     def rotated(self, lang):
-        return self.ntype in Language.get(lang).rotate != self.rotate
+        """Determine whether the children should be reversed for sentence generation."""
+        return self.ntype in Language.getormake(lang).rotate != self.rotate
     def tagify_all(self, lang):
+        """Run Morpheme.tagify() on all Morphemes in a tree."""
         rev = self.rotated(lang)
         ret = []
         for c in self.children:
@@ -518,6 +538,7 @@ class Node(DataElement):
                 ret += a
         return ret
     def linear(self, lang):
+        """Convert a tree to an ordered list of Morphemes."""
         l = []
         for c in self.children:
             if isinstance(c, Node):
@@ -531,6 +552,7 @@ class Node(DataElement):
             r += c
         return r
     def iternest(self):
+        """Iterate over all elements in a tree."""
         yield self
         for ch in self.children:
             if isinstance(ch, Node):
@@ -538,6 +560,7 @@ class Node(DataElement):
             else:
                 yield ch
     def roots(self):
+        """Return the roots of all Morphemes in a tree."""
         ret = []
         for ch in self.children:
             if isinstance(ch, Morpheme):
@@ -546,11 +569,18 @@ class Node(DataElement):
                 ret += ch.roots()
         return ret
     def alllang(self, lang):
+        """Verify that all Morphemes in a tree are in the target language."""
         for n in self.iternest():
             if isinstance(n, Morpheme) and n.lang != lang:
                 return False
         return True
 class UnorderedCollector(PatternElement):
+    """Collection of Variables that matches the children of a Node
+    Matched children are associated with the first matching Variable.
+    Variables with .group and .opt both False will match exactly 1 child,
+    or the match will fail.
+    These are typically used to match [I] Nodes of verbal conjugations.
+    """
     def __init__(self, ntype, children, loc):
         PatternElement.__init__(self, ntype, None, loc)
         self.children = children
@@ -599,6 +629,10 @@ class UnorderedCollector(PatternElement):
         return '<%s %s>' % (self.ntype, ' '.join(str(x) for x in self.children))
 ###TRANSFORMATIONS
 class Rule:
+    """Base class for transformations
+    Rule applications are ordered by stage, starting with 0 and no guarantees
+    are made about ordering within a single stage.
+    """
     def __init__(self, langs, category='', mode='syntax', stage=0, name='', debug=False):
         self.langs = langs
         self.category = category
@@ -623,6 +657,9 @@ class Rule:
             else:
                 l.pats[category].append(self)
 class Translation(Rule):
+    """Transformation consisting of a context, form, and result
+    Applies result to form when form is embedded in context.
+    """
     def __init__(self, form, result, category, langs, context=None, mode='syntax', stage=0, name=''):
         self.form = form
         self.result = result
@@ -642,6 +679,10 @@ class Translation(Rule):
     def __repr__(self):
         return self.__str__()
 class MultiRule(Rule):
+    """Multi-layer transformation
+    Each layer contains 1 or more forms, each of which has an associated
+    result and serves as a context for the next layer.
+    """
     def __init__(self, layers, category, langs, mode='syntax', stage=0, name=''):
         self.layers = layers
         self.roots = [] #roots of all morphemes in form
@@ -654,6 +695,7 @@ class MultiRule(Rule):
             self.ntypelist = [x[0].ntype for x in layers[0]]
         Rule.__init__(self, langs, category, mode, stage, name)
 def applyrules(rules, vrs):
+    """Apply the output of a rule to a set of variables."""
     putback = {}
     for rule in rules:
         if isinstance(rule, DataElement) or isinstance(rule, UnorderedCollector):
@@ -718,6 +760,11 @@ def applyrules(rules, vrs):
     vrs.update(putback)
 ###GENERATION
 class SyntaxPat:
+    """Pattern for syntax tree generation
+    Contains a list of sets of conditions, each with an associated tree output
+    and an associated list of requirements that will stop generation in the
+    parser if unmet (intended to speed up the parser).
+    """
     def __init__(self, name, conds, opts, vrs, require):
         self.name = name
         self.conds = conds
@@ -729,6 +776,7 @@ class SyntaxPat:
     def __repr__(self):
         return self.__str__()
 class Language:
+    """Collection of language-wide per-language settings"""
     __alllangs = {}
     def __init__(self, lang):
         #Metadata
@@ -753,21 +801,23 @@ class Language:
         self.capitalize = False
         Language.__alllangs[lang] = self
     def isloaded(lang):
+        """Check whether a language has been loaded from its data file."""
         return lang in Language.__alllangs
-    def get(lang):
-        return Language.__alllangs[lang]
     def getormake(lang):
+        """Return the associate Language object, loading from file if needed."""
         if lang in Language.__alllangs:
             return Language.__alllangs[lang]
         else:
             return loadlang(lang)
     def getpats(self):
+        """Return a dictionary of patterns for sentence generation."""
         r = {}
         r.update(self.syntax)
         for k, v in Morpheme.itermorph(self.lang).items():
             r[k] = list(v.values())
         return r
     def movefind(self, roots):
+        """Return a list of movement rules, sorted by stage."""
         s = set(roots + [''])
         ret = defaultdict(list)
         for r in s:
@@ -776,6 +826,7 @@ class Language:
                     ret[p.stage].append(p)
         return [ret[k] for k in sorted(ret.keys())]
     def domovement(self, sen):
+        """Retrieve and apply movement rules to a sentence."""
         pats = self.movefind(sen.roots())
         tr = [sen]
         for p in pats:
@@ -785,15 +836,19 @@ class Language:
             tr = ntr or tr
         return tr
     def totext(self, sen):
+        """Generate the default surface form of a sentence."""
         return dolinear(self.domovement(sen)[0], self.lang)
     def allnames():
+        """Return the names of all loaded languages."""
         return [(x, Language.__alllangs[x].name) for x in sorted(Language.__alllangs.keys())]
     def iterlex(self):
+        """Iterate over all Morphemes in this language."""
         dct = Morpheme.itermorph(self.lang)
         for ntype in dct:
             for root in dct[ntype]:
                 yield dct[ntype][root]
 class LangLink:
+    """Container for translations for a language pair in a particular direction"""
     __alllinks = {}
     def __init__(self, fromlang, tolang):
         self.fromlang = fromlang
@@ -802,6 +857,7 @@ class LangLink:
         self.pats = defaultdict(list)
         LangLink.__alllinks['%s-%s' % (fromlang, tolang)] = self
     def find(self, _roots):
+        """Retrieve all rules applicable to a set of roots."""
         roots = _roots + ['']
         s = set(roots)
         ret = defaultdict(list)
@@ -811,12 +867,14 @@ class LangLink:
                     ret[p.stage].append(p)
         return [ret[k] for k in sorted(ret.keys())]
     def getormake(fromlang, tolang):
+        """Retrieve a LangLink, loading from file if needed."""
         s = '%s-%s' % (fromlang, tolang)
         if s in LangLink.__alllinks:
             return LangLink.__alllinks[s]
         else:
             return loadtrans(fromlang, tolang)
     def translate(self, sen):
+        """Translate a sentence."""
         pats = self.find(sen.roots())
         tr = [sen]
         for p in pats:
@@ -827,17 +885,20 @@ class LangLink:
                 tr = ntr
         return tr
 def run(prog, *args, data=None):
+    """Launch an external program, pass data to it and return its output."""
     proc = Popen([prog] + list(args), stdin=PIPE, stdout=PIPE, universal_newlines=True)
     if data:
         return proc.communicate(data)[0]
 def transduce(data, lang, gen=True):
-    #send data to the transducer for lang
-    #gen=True for generation, gen=False for parsing
+    """Pass data to a transducer.
+    gen=True for generation, gen=False for parsing
+    """
     mode = Language.getormake(lang).morph_mode
     if mode not in ['hfst', 'lttoolbox']:
         raise Exception('Unknown morphology mode %s' % mode)
+    path = Globals.path + 'langs/%d/.generated/' % lang
+    path += ('gen' if gen else 'parse') + ('hfst' if mode == 'hfst' else 'bin')
     if gen:
-        path = Globals.path + 'langs/%d/.generated/gen.' % lang + ('hfst' if mode == 'hfst' else 'bin')
         data = '\n'.join(data) if mode == 'hfst' else '^'+('$\n^'.join(data))+'$'
         if mode == 'hfst':
             result = run('hfst-lookup', '-q', '-b', '0', '-i', path, data=data)
@@ -845,7 +906,13 @@ def transduce(data, lang, gen=True):
         else:
             result = run('lt-proc', '-g', path, data=data)
             return [x[1:] if x[0] == '~' else x for x in result.split('\n')]
+    else:
+        if mode == 'hfst':
+            result = run('hfst-proc', '-x', '-w', path, data=data+'\n').split('\n\n')
+            resplus = run('hfst-proc', '-x', '-w', path, data=data.replace(' ', '+')+'\n')
+            return result + [x for x in resplus.split('\n\n') if '+' in x]
 def dolinear(sen, _lang):
+    """Apply rules that manipulate adjacent Morphemes rather than trees."""
     lin = sen.linear(_lang)
     lang = Language.getormake(_lang)
     for i, m in enumerate(lin):
@@ -896,6 +963,7 @@ def dolinear(sen, _lang):
     return ret
 ###PARSING
 def tokenize(s):
+    """Tokenize a string."""
     ret = []
     add = False
     digraph = False
@@ -923,6 +991,7 @@ def tokenize(s):
             add = True
     return ret
 def toobj(s, lang, loc):
+    """Parse a string into language lang from original source loc."""
     assert(isinstance(lang, int))
     Language.getormake(lang)
     rest = tokenize(s)
@@ -1049,6 +1118,7 @@ def toobj(s, lang, loc):
 class ParseError(Exception):
     pass
 class ParseLine:
+    """Line from a data file, has label, arguments, value, and children"""
     def __init__(self, num, label, args=None, val=None, children=None):
         self.num = num
         self.label = label
@@ -1058,10 +1128,13 @@ class ParseLine:
         self.vals = [val] if val else []
         self.children = children or []
     def fromstring(fstr, num):
-        #label (arg1; arg2): value
-        #label: value
-        #label (arg1; arg2)
-        #label
+        """Parse a line (without leading whitespace).
+        Allowed formats:
+        label (arg1; arg2): value
+        label: value
+        label (arg1; arg2)
+        label
+        """
         i = 0
         r = ParseLine(num, '', [], '', [])
         while i < len(fstr) and fstr[i] not in ' :(':
@@ -1094,6 +1167,7 @@ class ParseLine:
         else:
             return r
     def fromfile(fname):
+        """Parse a file and return a list of ParseLines."""
         r = ParseLine(-1, '', [], '', [])
         depth = 0
         with open(fname) as f:
@@ -1110,6 +1184,7 @@ class ParseLine:
                 depth += 1
         return r.children
     def tofilestr(self, indent):
+        """Convert self back to a string."""
         r = '  '*indent + '%s' % self.label
         if self.args:
             r += ' (' + '; '.join(self.args) + ')'
@@ -1120,12 +1195,14 @@ class ParseLine:
             r += c.tofilestr(indent+1)
         return r
     def tofile(self, fname):
+        """Convert self to string and write to a file."""
         f = open(fname, 'w')
         f.write(self.tofilestr(0))
         f.close()
     def __str__(self):
         return '%d  %s (%s): %s\n' % (self.num, self.label, '; '.join(self.args), self.val) + ''.join([str(x) for x in self.children])
     def __getitem__(self, key):
+        """Iterates of children that have label == key."""
         for ch in self.children:
             if ch.label == key:
                 yield ch
@@ -1135,15 +1212,21 @@ class ParseLine:
                 return True
         return False
     def child_vals(self, key):
+        """Iterate over values of self[key]."""
         for ch in self[key]:
             yield ch.val
     def first(self, key):
+        """Return first child with label == key."""
         for ch in self.children:
             if ch.label == key:
                 return ch
     def firstval(self, key):
+        """Return value of first child with label == key."""
         return self.first(key).val
-    def fvo(self, key, lang, default=None): #first val object
+    def fvo(self, key, lang, default=None):
+        """Parse the value of the first child with label == key.
+        Use default if no value is found.
+        """
         f = self.first(key)
         if f:
             return toobj(f.val, lang, f.num)
@@ -1152,6 +1235,9 @@ class ParseLine:
         else:
             raise ParseError('Line %s does not have required child %s.' % (self.num, key))
     def avo(self, key, lang, default=None): #all val objects
+        """Parse the values of all children with label == key.
+        Use default if none are found.
+        """
         c = 0
         for ch in self.children:
             if ch.label == key:
@@ -1162,39 +1248,34 @@ class ParseLine:
                 yield toobj(default, lang, self.num)
             else:
                 raise ParseError('Line %s does not have required child(ren) %s.' % (self.num, key))
-def condlist(ch): #parse ch.arg of the form "(a=b; c=d)" into [['a', 'b'], ['c', 'd']]
+def condlist(ch):
+    """Parse the argument of a ParseLine.
+    Transforms "(a=b; c=d)" into [['a', 'b'], ['c', 'd']].
+    """
     ret = []
     for s in ch.args:
         k,v = s.split('=')
         ret.append([k.strip(), v.strip()])
     return ret
 def readresult(node, lang):
+    """Read the results section of a rule definition."""
     ret = []
+    def mkvar(_s, loc):
+        if '$' in _s or '@' in _s:
+            s = _s.replace('@', ' ')
+        else:
+            s = '$ .'+s
+        r = Variable.fromstring(s)
+        if r == None:
+            raise ParseError('Cannot interpret variable %s on line %s.' % (_s, loc))
+        return r
     for ch in node.children:
         if ch.label == 'result':
             ret.append(toobj(ch.val, lang, ch.num))
         elif ch.label == 'setprop':
-            a = ['setprop']
-            if '$' in ch.arg or '@' in ch.arg:
-                a.append(Variable.fromstring(ch.arg.replace('@', ' ')))
-            else:
-                a.append(Variable.fromstring('$ .'+ch.arg))
-            if a[1] == None:
-                raise ParseError('Cannot interpret variable %s on line %s.' % (v, ch.arg))
-            if '$' in ch.val or '@' in ch.val:
-                a.append(Variable.fromstring(ch.val.replace('@', ' ')))
-            else:
-                a.append(Variable.fromstring('$ .'+ch.val))
-            if a[2] == None:
-                raise ParseError('Cannot interpret variable %s on line %s.' % (v, ch.val))
-            ret.append(a)
+            ret.append(['setprop', mkvar(ch.arg, ch.num), mkvar(ch.val, ch.num)])
         elif ch.label == 'setval':
-            a = ['setprop', None, ch.val]
-            if '$' in ch.arg or '@' in ch.arg:
-                a[1] = Variable.fromstring(ch.arg.replace('@', ' '))
-            else:
-                a[1] = Variable.fromstring('$ .'+ch.arg)
-            ret.append(a)
+            ret.append(['setprop', mkvar(ch.arg, ch.num), ch.val])
         elif ch.label == 'setdisplay':
             ret.append(['setdisplay', ch.val])
         elif ch.label == 'setprops':
@@ -1232,6 +1313,7 @@ def readresult(node, lang):
             ret.append(['replace', ch.arg, ch.val])
     return ret
 def readrule(node, lfrom, _lto, mode, category, _stage):
+    """Read a rule definition."""
     if 'samelang' in node:
         lto = lfrom
     else:
@@ -1275,6 +1357,7 @@ def readrule(node, lfrom, _lto, mode, category, _stage):
     elif node.label == 'linear-text':
         pass
 def loadlexicon(lang):
+    """Read a lexicon file."""
     rootslist = ParseLine.fromfile(Globals.path + 'langs/%s/lexicon.txt' % lang)
     defaults = defaultdict(lambda: defaultdict(dict))
     if rootslist[0].label == 'defaults':
@@ -1327,6 +1410,7 @@ def loadlexicon(lang):
                 p2[l.label] = l.val
             Morpheme(lang, pos.val, m.root, props=p2, isref=False)
 def loadlang(lang):
+    """Read a language file."""
     things = ParseLine.fromfile(Globals.path + 'langs/%s/lang.txt' % lang)
     ret = Language(lang)
     loadlexicon(lang)
@@ -1426,6 +1510,7 @@ def loadlang(lang):
                 ret.tags.append({'format': ch.firstval('format'), 'tags': tags, 'ntype': ch.label, 'conds': condlist(ch), 'defaults': defaults})
     return ret
 def loadtrans(lfrom, lto):
+    """Read a translation file."""
     fname = Globals.path + 'langs/%s/translate/%s.txt' % (lfrom, lto)
     ret = LangLink(lfrom, lto)
     if isfile(fname):
@@ -1446,6 +1531,7 @@ def loadtrans(lfrom, lto):
                         readrule(tr, lfrom, lto, 'lex', m.root, i)
     return ret
 def loadlangset(langs):
+    """Given a set of languages, load them and all associated translation files."""
     loaded = []
     for l in langs:
         if l not in loaded and l != 0:
@@ -1455,6 +1541,9 @@ def loadlangset(langs):
         for lt in loaded:
             loadtrans(lf, lt)
 def addmissing():
+    """Add entries for everything in missing_morphemes.txt to the relevant
+    lexicon files.
+    """
     f = open('missing_morphemes.txt')
     lns = list(set(f.readlines()))
     lns.sort()
@@ -1477,6 +1566,9 @@ def addmissing():
     f.write('\n')
     f.close()
 def filltrans(lfrom, lto):
+    """Generate empty translation rules for any words in source language
+    which do not have translation rules to the target language.
+    """
     Language.getormake(lfrom)
     Language.getormake(lto)
     LangLink.getormake(lfrom, lto)
@@ -1558,11 +1650,13 @@ class Sentence:
             f.close()
             yield '<h3>%s</h3>' % (k or '(default)'), '%s-%s.dot' % (self.name, k)
 def readfile(fname):
+    """Read in a .pdtxt file, return the Language and a list of Sentences."""
     pl = ParseLine.fromfile(fname)
     lang = int(pl[0].firstval('lang'))
     Language.getormake(lang)
     return lang, [Sentence.fromparseline(l, lang) for l in pl[1:]]
 def graphtext(infile, outfile):
+    """Use GraphViz to generate a set of images for the trees of a document."""
     gls = []
     f = open(outfile, 'w')
     f.write('<html><head></head><body>\n')
@@ -1575,6 +1669,7 @@ def graphtext(infile, outfile):
     f.close()
     run('dot', '-Tsvg', '-O', *gls)
 def translatefile(infile, outfile, tlang):
+    """Read in a .pdtxt file, translate it, and write it out to another file."""
     pl = ParseLine.fromfile(infile)
     flang = int(pl[0].firstval('lang'))
     if isinstance(outfile, str):
@@ -1596,6 +1691,7 @@ def translatefile(infile, outfile, tlang):
 class GeneratorError(Exception):
     pass
 def gen(pats, tree, depth, setvars):
+    """Generate a random sentence."""
     if isinstance(tree, Node):
         r = copy.copy(tree)
         rc = []
@@ -1631,9 +1727,11 @@ def gen(pats, tree, depth, setvars):
     else:
         return tree
 def make(lang):
+    """Generate a random sentence. Wrapper for gen()"""
     p = lang.getpats()
     return gen(p, p[lang.syntaxstart], 1, {})
 class LimitList:
+    """List wrapper for tracking which Morphemes in it are in use"""
     def __init__(self, few, many):
         self.few = few
         self.many = many
@@ -1647,6 +1745,7 @@ class LimitList:
     def __str__(self):
         return str(self.few + self.many)
 def makeall(words):
+    """Generate all possible trees containing a particular set of Morphemes."""
     if not words:
         return []
     lang = Language.getormake(words[0].lang)
@@ -1700,15 +1799,9 @@ def makeall(words):
             yield tree
     return genall(pats[lang.syntaxstart], {})
 def parse(lang, num, text):
+    """Attempt to a parse a sentence by generating possible corresponding trees."""
     ret = Sentence(lang, str(num), {}, text)
-    hfst = Globals.path + 'langs/%d/.generated/parse.hfst' % lang
-    pip = subprocess.PIPE
-    tok = subprocess.Popen(['hfst-proc', '-x', '-w', hfst], stdin=pip, stdout=pip, universal_newlines=True)
-    tokplus = subprocess.Popen(['hfst-proc', '-x', '-w', hfst], stdin=pip, stdout=pip, universal_newlines=True)
-    tags = tok.communicate(text+'\n')[0].split('\n\n')
-    for x in tokplus.communicate(text.replace(' ', '+') + '\n')[0].split('\n\n'):
-        if '+' in x:
-            tags.append(x)
+    tags = transduce(text, lang, False)
     w = []
     for m in Target.iterlex():
         r = re.compile(m.tagify(True))
@@ -1723,6 +1816,7 @@ def parse(lang, num, text):
             ret.trees[str(n)] = x
     return ret
 def trans(sen, flang, tlang):
+    """Translate a sentence."""
     tr = LangLink.getormake(flang, tlang).translate(sen)
     ret = []
     for s in tr:
