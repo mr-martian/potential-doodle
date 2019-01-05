@@ -2,9 +2,22 @@
 ;macro: (barnode ntype (:p1 v1 :p2 v2) spec mod head bar)
 ;(morph ntype (:p1 v1 :p2 v2) root)
 ;(var name :p1 v1 :p2 v2)
+;(collect/distribute ntype var1 var2 var3)
+
+; TODO
+; * linear & surface rules
+; * transduce
+; * where to store translation rules?
+; ** retrieve relevant rule set
+; * generation rules
+; * gen/make/parse
+; * interface
 
 (defvar *lang*)
 
+;;;;;;;;;;
+; UTILITIES
+;;;;;;;;;;
 (defun flatten (tree)
   (if (listp tree)
       (mapcan #'flatten tree)
@@ -23,7 +36,14 @@
 (set-macro-character #\] (get-macro-character #\) nil))
 (defmacro let-gen (syms &body body)
   `(let ,(mapcar [list _ `',(gensym (symbol-name _))] syms) ,@body))
+(defmacro mvb-if (var form yes &optional no)
+  (let-gen (ok)
+           `(multiple-value-bind (,var ,ok) ,form
+                                 (if ,ok ,yes ,no))))
 
+;;;;;;;;;;
+; ELEMENTS
+;;;;;;;;;;
 (defmacro node (ntype args &rest children)
   `(list 'node ',ntype ,args ,@children))
 (defmacro morph (ntype args root)
@@ -78,13 +98,29 @@
                                         (:spec :mod :head :bar))
                                       (length parts))
                           parts)))
+(defmacro collect (ntype &rest vars)
+  `(list 'collect ',ntype ,@vars))
+(defmacro distribute (ntype &rest vars)
+  `(append '(node ,ntype ())
+           (apply #'append (mapcar [if (listp _) _ (list _)] ,vars))))
+(defun getroots (tree)
+  (when (listp tree)
+    (if (eq (car tree) 'node)
+        (mapcan #'getroots (cdddr tree))
+      (when (eq (car tree) 'morph)
+        (cdddr tree)))))
 
+;;;;;;;;;;
+; RULES
+;;;;;;;;;;
 (defun lambdify-result (tree)
   (labels ((disvar (tr)
                    (if (listp tr)
                        (if (eq (car tr) 'var)
                            (cadr tr)
-                         (mapcar #'disvar tr))
+                         (if (eq (car tr) 'collect)
+                             (cons 'distribute (mapcar #'disvar (cdr tr)))
+                           (mapcar #'disvar tr)))
                      tr)))
           `(lambda (&key ,@(remove-if [or (not (symbolp _))
                                           (fboundp _)]
@@ -131,6 +167,9 @@
   (setf (getf (caddr dest) (or dprop sprop)) (getf (caddr src) sprop))
   dest)
 
+;;;;;;;;;;
+; RULE APPLICATION
+;;;;;;;;;;
 (defun apply-rules (ruleset sen)
   (labels
    ((product (lists)
@@ -181,11 +220,56 @@
          ; there's probably a better (more efficient) way to do this
          ; and we may eventually need to check globals for morphemes
          ; (though see the definition of morph above for further discussion)
-         ((eq (car tr) (car pt))
+         ((and (eq (car tr) (car pt)) (= (length tr) (length pt)))
           (mapcan #'gv (cdr tr) (cdr pt)))
+         ((and (eq (car pt) 'collect) (eq (car tr) 'node)
+               (eq (cadr pt) (cadr tr)))
+          (let ((track (gensym)) (mode (gensym)) (value (gensym)) vars)
+            (mapcar (lambda (var)
+                      (when (eq (car var) 'var)
+                        (push (cadr var) vars)
+                        (setf (get (cadr var) mode)
+                              (cond
+                               ((getf (cddr var) :opt) :opt)
+                               ((getf (cddr var) :multi) :multi)
+                               (t :normal)))))
+                    (cddr pt))
+            (loop for ch in (cdddr tr) appending
+                  (loop for var in (cddr pt) do
+                        (if (eq (car var) 'var)
+                            (when (or (not (get (cadr var) track))
+                                      (eq (get (cadr var) mode) :multi))
+                              (mvb-if v (getvars ch var)
+                                      (progn
+                                        (setf (get (cadr var) track) t)
+                                        (when (eq (get (cadr var) mode) :multi)
+                                            (push ch (get (cadr var) value))
+                                            (remf v (cadr var)))
+                                        (return v))))
+                          (mvb-if v (getvars ch var) (return v))))
+                  into ret finally
+                  (mapcan (lambda (var)
+                            (case (get var mode)
+                                  (:normal (unless (get var track) (fail)))
+                                  (:opt (unless (get var track)
+                                          (push ret nil)
+                                          (push ret var)))
+                                  (:multi (progn
+                                            (push ret (get var value))
+                                            (push ret var)))))
+                          vars))))
          (t (fail)))))
    (values (gv tree pattern) t)))
 
+;;;;;;;;;;
+; TRANSLATION
+;;;;;;;;;;
+(defun trans-symb (src dest)
+  (symb src '-to- dest))
+
+;;;;;;;;;;
+; DATA INPUT
+;;;;;;;;;;
 (defun language-syntax (language &rest stages)
   (setf (get language 'syntax) stages))
 (defun language-linear (language &rest stages)
