@@ -1,7 +1,7 @@
 ;(node ntype (:p1 v1 :p2 v2) left right)
 ;macro: (barnode ntype (:p1 v1 :p2 v2) spec mod head bar)
 ;(morph ntype (:p1 v1 :p2 v2) root)
-;(var ???)
+;(var name :p1 v1 :p2 v2)
 
 (defvar *lang*)
 
@@ -29,7 +29,7 @@
 (defmacro morph (ntype args root)
   (let-gen
    (res exists2 pos exists1)
-   (let ((err (format nil "Morpheme ~a does not exist in language ~a with part of speech ~a" root *lang* ntype)))
+   (let ((err (format nil "Morpheme ~a does not exist in language ~a with part of speech ~a." root *lang* ntype)))
      `(list 'morph ',ntype
             (multiple-value-bind
              (,pos ,exists1) (gethash ',ntype (get *lang* 'lexicon))
@@ -40,16 +40,57 @@
                       (append (list ,@args) ,res)
                     (error ,err)))
                (error ,err)))))))
+; it might be worth experimenting to see if it would be faster to have
+; getvars do lookups instead of copying the args list into each instance
+(defun register-morph (pos root &rest args)
+  (let ((lex (get *lang* 'lexicon)))
+    (unless lex
+      (setf (get *lang* 'lexicon) (make-hash-table :test #'eq)))
+    (multiple-value-bind
+     (posdct p?) (gethash pos lex)
+     (unless p?
+       (setf (gethash pos lex) (make-hash-table :test #'eq)))
+     (multiple-value-bind
+      (rootdct r?) (gethash root posdct)
+      (if r?
+          (error (format nil "Attempting to re-register root ~a with part of speech ~a in langauge ~a." root pos *lang*))
+        (setf (gethash root posdct) args))))))
+(defun register-many-morphs (pos args roots)
+  (mapcar (lambda (r)
+            (if (listp r)
+                (register-morph pos (car r) :display (cadr r) . args)
+              (register-morph pos r :display (string-downcase (symbol-name r))
+                              . args)))
+          roots))
 (defmacro var (name &rest reqs)
   `(list 'var ,(intern (symbol-name name) 'keyword) ,@reqs))
                                         ; todo: error checking?
+(defmacro barnode-key (ntype args &key spec mod head bar)
+  (let* ((name (symbol-name ntype))
+         (base (subseq name 0 (1- (length name)))))
+    `(node ,(symb base 'P) ,args ,spec
+           (node ,(symb base 'mod) nil ,mod
+                 (node ,(symb base 'bar) nil ,head ,bar)))))
+(defmacro barnode (ntype args &rest parts)
+  `(barnode-key ,ntype ,args
+                ,@(mapcan #'list (elt '(() (:head) (:head :bar)
+                                        (:spec :head :bar)
+                                        (:spec :mod :head :bar))
+                                      (length parts))
+                          parts)))
 
 (defun lambdify-result (tree)
-  `(lambda (&key ,@(remove-if [or (not (symbolp _))
-                                  (fboundp _)]
-                              (remove-duplicates (flatten tree)))
-                 &allow-other-keys)
-     ,tree))
+  (labels ((disvar (tr)
+                   (if (listp tr)
+                       (if (eq (car tr) 'var)
+                           (cadr tr)
+                         (mapcar #'disvar tr))
+                     tr)))
+          `(lambda (&key ,@(remove-if [or (not (symbolp _))
+                                          (fboundp _)]
+                                      (remove-duplicates (flatten tree)))
+                         &allow-other-keys)
+             ,(disvar tree))))
 (defmacro basic-rule (form result)
   (let ((sen (gensym)) (vars (gensym)) (match (gensym)))
     `(lambda (,sen)
@@ -111,29 +152,20 @@
    (reduce (lambda (s r)
              (mapcan [stage _ r] s))
            (cons (list sen) ruleset))))
-
-(defmacro barnode-key (ntype args &key spec mod head bar)
-  (let* ((name (symbol-name ntype))
-         (base (subseq name 0 (1- (length name)))))
-    `(node ,(symb base 'P) ,args ,spec
-           (node ,(symb base 'mod) nil ,mod
-                 (node ,(symb base 'bar) nil ,head ,bar)))))
-(defmacro barnode (ntype args &rest parts)
-  `(barnode-key ,ntype ,args
-                ,@(mapcan #'list (elt '(() (:head) (:head :bar)
-                                        (:spec :head :bar)
-                                        (:spec :mod :head :bar))
-                                      (length parts))
-                          parts)))
-
 (defun getvars (tree pattern)
   (labels
    ((fail ()
           (return-from getvars (values nil nil)))
     (gv (tr pt)
         (cond
-         ((and (listp pt) (eq (car pt) 'var))
-          (list (cadr pt) tr)) ; variable
+         ((and (listp pt) (eq (car pt) 'var)) ; variable
+          (if (and (null tr) (not (getf pt :opt)))
+              (fail)
+            (append (list (cadr pt) tr)
+                    (loop for (key arg) on (cddr pt) by #'cddr appending
+                          (case key
+                                (:ntype (unless (eq arg (cadr tr)) (fail)))
+                                )))))
           ; todo: check variable conditions
          ((or (not (listp tr)) (not (listp pt)))
           (unless (equalp tr pt) (fail)))
@@ -147,7 +179,8 @@
                               (gv (getf tr prop) val)
                             (fail))))
          ; there's probably a better (more efficient) way to do this
-         ; and we'll eventually need to check globals for morphemes (probably)
+         ; and we may eventually need to check globals for morphemes
+         ; (though see the definition of morph above for further discussion)
          ((eq (car tr) (car pt))
           (mapcan #'gv (cdr tr) (cdr pt)))
          (t (fail)))))
