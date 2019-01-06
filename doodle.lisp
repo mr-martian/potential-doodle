@@ -13,7 +13,9 @@
 ; * gen/make/parse
 ; * interface
 
-(defvar *lang*)
+(defvar *lang* nil)
+(defvar *srclang* nil)
+(defvar *destlang* nil)
 
 ;;;;;;;;;;
 ; UTILITIES
@@ -40,36 +42,57 @@
   (let-gen (ok)
            `(multiple-value-bind (,var ,ok) ,form
                                  (if ,ok ,yes ,no))))
+(defvar *log-indent* 0)
+(defmacro defun-log (name args &body body)
+  (let-gen
+   (res fn)
+   `(defun ,name ,args
+      (let ((*log-indent* (1+ *log-indent*)))
+        (format t "~vtEntering function ~a with arguments ~a~%"
+                *log-indent* ',name (list ,@args))
+        (let ((,res (progn ,@body)))
+          (format t "~vtReturning ~a from function ~a~%"
+                  *log-indent* ,res ',name)
+          ,res)))))
+(defun to-keyword (s)
+  (intern (symbol-name s) 'keyword))
 
 ;;;;;;;;;;
 ; ELEMENTS
 ;;;;;;;;;;
+(defvar *location* :form)
 (defmacro node (ntype args &rest children)
   `(list 'node ',ntype ,args ,@children))
 (defmacro morph (ntype args root)
   (let-gen
-   (res exists2 pos exists1)
+   (res exists2 pos exists1 table)
    (let ((err (format nil "Morpheme ~a does not exist in language ~a with part of speech ~a." root *lang* ntype)))
      `(list 'morph ',ntype
-            (multiple-value-bind
-             (,pos ,exists1) (gethash ',ntype (get *lang* 'lexicon))
-             (if ,exists1
-                 (multiple-value-bind
-                  (,res ,exists2) (gethash ',root ,pos)
-                  (if ,exists2
-                      (append (list ,@args) ,res)
-                    (error ,err)))
-               (error ,err)))))))
+            (let ((,table (get *lang* 'lexicon)))
+              (if ,table
+                  (multiple-value-bind
+                   (,pos ,exists1) (gethash ',ntype ,table)
+                   (if ,exists1
+                       (multiple-value-bind
+                        (,res ,exists2) (gethash ',root ,pos)
+                        (if ,exists2
+                            (append (list ,@args :lang ',*lang*) ,res)
+                          (error ,err)))
+                     (error ,err)))
+                (error (format nil "Language ~a has no lexicon." *lang*))))
+            ',root))))
 ; it might be worth experimenting to see if it would be faster to have
 ; getvars do lookups instead of copying the args list into each instance
 (defun register-morph (pos root &rest args)
   (let ((lex (get *lang* 'lexicon)))
     (unless lex
-      (setf (get *lang* 'lexicon) (make-hash-table :test #'eq)))
+      (setf (get *lang* 'lexicon) (make-hash-table :test #'eq)
+            lex (get *lang* 'lexicon)))
     (multiple-value-bind
      (posdct p?) (gethash pos lex)
      (unless p?
-       (setf (gethash pos lex) (make-hash-table :test #'eq)))
+       (setf (gethash pos lex) (make-hash-table :test #'eq)
+             posdct (gethash pos lex)))
      (multiple-value-bind
       (rootdct r?) (gethash root posdct)
       (if r?
@@ -77,14 +100,16 @@
         (setf (gethash root posdct) args))))))
 (defun register-many-morphs (pos args roots)
   (mapcar (lambda (r)
-            (if (listp r)
-                (register-morph pos (car r) :display (cadr r) . args)
-              (register-morph pos r :display (string-downcase (symbol-name r))
-                              . args)))
+            (apply #'register-morph
+                   (if (listp r)
+                       `(,pos ,(car r) :display ,(cadr r) ,@args)
+                     `(,pos ,r :display ,(string-downcase (symbol-name r))
+                            ,@args))))
           roots))
 (defmacro var (name &rest reqs)
-  `(list 'var ,(intern (symbol-name name) 'keyword) ,@reqs))
-                                        ; todo: error checking?
+  `(if (eq *location* :form)
+       (list 'var ,(to-keyword name) ,@reqs)
+     ,name))
 (defmacro barnode-key (ntype args &key spec mod head bar)
   (let* ((name (symbol-name ntype))
          (base (subseq name 0 (1- (length name)))))
@@ -98,11 +123,18 @@
                                         (:spec :mod :head :bar))
                                       (length parts))
                           parts)))
+(defmacro barnode-var (ntype prefix &key spec mod head bar)
+  `(barnode-key ,ntype ()
+                :spec ,(or spec `(var ,(symb prefix 'spec) :opt t))
+                :mod ,(or mod `(var ,(symb prefix 'mod) :opt t))
+                :head ,(or head `(var ,(symb prefix 'head) :opt t))
+                :bar ,(or bar `(var ,(symb prefix 'bar) :opt t))))
 (defmacro collect (ntype &rest vars)
   `(list 'collect ',ntype ,@vars))
 (defmacro distribute (ntype &rest vars)
   `(append '(node ,ntype ())
-           (apply #'append (mapcar [if (listp _) _ (list _)] ,vars))))
+           (mapcan [if (and (listp _) (listp (car _))) _ (list _)]
+                   (list ,@vars))))
 (defun getroots (tree)
   (when (listp tree)
     (if (eq (car tree) 'node)
@@ -114,57 +146,82 @@
 ; RULES
 ;;;;;;;;;;
 (defun lambdify-result (tree)
-  (labels ((disvar (tr)
-                   (if (listp tr)
-                       (if (eq (car tr) 'var)
-                           (cadr tr)
-                         (if (eq (car tr) 'collect)
-                             (cons 'distribute (mapcar #'disvar (cdr tr)))
-                           (mapcar #'disvar tr)))
-                     tr)))
-          `(lambda (&key ,@(remove-if [or (not (symbolp _))
-                                          (fboundp _)]
-                                      (remove-duplicates (flatten tree)))
-                         &allow-other-keys)
-             ,(disvar tree))))
-(defmacro basic-rule (form result)
+  (let ((varls (append (remove-if [or (not (symbolp _))
+                                      (fboundp _)
+                                      (keywordp _)]
+                                  (remove-duplicates (flatten tree)))
+                       (loop for (a b c) on (flatten tree) appending
+                             (mapcar [symb c _] '(spec mod head bar))))))
+    (labels ((disvar (tr)
+                     (if (listp tr)
+                         (if (eq (car tr) 'var)
+                             (cadr tr)
+                           (if (eq (car tr) 'collect)
+                               (cons 'distribute (mapcar #'disvar (cdr tr)))
+                             (mapcar #'disvar tr)))
+                       tr)))
+            `(lambda (&key ,@varls &allow-other-keys)
+               (let ((*location* :result))
+                 ,(disvar tree))))))
+(defmacro basic-rule (form result &key src dest)
   (let ((sen (gensym)) (vars (gensym)) (match (gensym)))
     `(lambda (,sen)
-       (multiple-value-bind
-        (,vars ,match) (getvars ,sen ,form)
-        (when ,match
-          (apply ,(lambdify-result result) ,vars))))))
+       (let ((*lang* ',(or src *srclang* *lang*)))
+         (multiple-value-bind
+          (,vars ,match) (getvars ,sen ,form)
+          (when ,match
+            (let ((*lang* ',(or dest *destlang* *lang*)))
+              (apply ,(lambdify-result result) ,vars))))))))
+(defmacro context-rule (context form result &key src dest)
+  (let-gen
+   (sen cvars fvars vars insert)
+   `(lambda (,sen)
+      (let ((*lang* ',(or src *srclang* *lang*)))
+        (mvb-if
+         ,cvars (getvars ,sen ,context)
+         (mvb-if
+          ,fvars (getvars (getf ,cvars :@) ,form)
+          (let* ((*lang* ',(or dest *destlang* *lang*))
+                 (,vars (append ,fvars ,cvars))
+                 (,insert (apply ,(lambdify-result result) ,vars)))
+            (apply ,(lambdify-result context) ,vars))))))))
 (defmacro multi-rule (&rest layers)
   (let-gen
-   (blk fn sen s all-rules rules f r vars parent-vars)
+   (blk fn sen s all-rules rules f r vars all-vars)
    `(lambda (,sen)
       (let ((,all-rules
-             ',(mapcar [mapcar [list (car _2)
-                                     (lambdify-result (or (cadr _2) (car _2)))]
-                               _]
-                       layers)))
+             ,(cons 'list (mapcar
+                           [cons 'list
+                                 (mapcar [list 'list (car _2)
+                                               (lambdify-result
+                                                (or (cadr _2) (car _2)))]
+                                         _)]
+                           layers)))
+            ,all-vars)
         (block ,blk
                (labels
-                ((,fn (,s ,rules ,parent-vars)
+                ((,fn (,s ,rules)
                       (if ,rules
                           (loop for (,f ,r) in (car ,rules)
-                                if (getvars ,s ,f)
-                                return
-                                (let ((,vars it))
-                                  (setf (getf ,vars :@)
-                                        (,fn (getf ,vars :@)
-                                             (cdr ,rules)))
-                                  (apply ,r (append ,vars ,parent-vars)))
+                                do (mvb-if
+                                    ,vars (getvars ,s ,f)
+                                    (progn
+                                      (setf ,all-vars (append ,vars ,all-vars))
+                                      (setf (getf ,all-vars :@)
+                                            (,fn (getf ,all-vars :@)
+                                                 (cdr ,rules)))
+                                      (return-from ,fn (apply ,r ,all-vars))))
                                 finally (return-from ,blk nil))
                         ,s)))
-                (,fn ,sen ,all-rules nil)))))))
+                (,fn ,sen ,all-rules)))))))
 (defun setprop (node prop val)
-  (setf (getf (caddr node) prop) val)
+  (setf (getf (caddr node) (to-keyword prop)) val)
   node)
 ; it's possible that this will have unintended side-effects
 ; if so, add a copy operation
 (defun copyprop (src sprop dest &optional dprop)
-  (setf (getf (caddr dest) (or dprop sprop)) (getf (caddr src) sprop))
+  (setf (getf (caddr dest) (to-keyword (or sprop dprop)))
+        (getf (caddr src) (to-keyword sprop)))
   dest)
 
 ;;;;;;;;;;
@@ -208,11 +265,8 @@
           ; todo: check variable conditions
          ((or (not (listp tr)) (not (listp pt)))
           (unless (equalp tr pt) (fail)))
-         ((and (eq (type-of (car tr)) 'keyword)
-               (not pt))) ; empty list matching arguments
-         ((and (eq (type-of (car tr)) 'keyword)
-               (eq (type-of (car pt)) 'keyword))
-           ; arglists
+         ((and (keywordp (car tr)) (not pt))) ; empty list matching arguments
+         ((and (keywordp (car tr)) (keywordp (car pt))) ; arglists
           (loop for (prop val) on pt by #'cddr
                 appending (if (member prop tr)
                               (gv (getf tr prop) val)
@@ -248,16 +302,17 @@
                                         (return v))))
                           (mvb-if v (getvars ch var) (return v))))
                   into ret finally
-                  (mapcan (lambda (var)
-                            (case (get var mode)
-                                  (:normal (unless (get var track) (fail)))
-                                  (:opt (unless (get var track)
-                                          (push ret nil)
-                                          (push ret var)))
-                                  (:multi (progn
-                                            (push ret (get var value))
-                                            (push ret var)))))
-                          vars))))
+                  (progn
+                    (dolist (var vars)
+                      (case (get var mode)
+                            (:normal (unless (get var track) (fail)))
+                            (:opt (unless (get var track)
+                                    (push ret nil)
+                                    (push ret var)))
+                            (:multi (progn
+                                      (push ret (get var value))
+                                      (push ret var)))))
+                    (return ret)))))
          (t (fail)))))
    (values (gv tree pattern) t)))
 
@@ -266,6 +321,8 @@
 ;;;;;;;;;;
 (defun trans-symb (src dest)
   (symb src '-to- dest))
+(defun trans-get (src dest prop)
+  (get (sym src '-to- dest) prop))
 
 ;;;;;;;;;;
 ; DATA INPUT
