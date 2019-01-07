@@ -42,20 +42,12 @@
   (let-gen (ok)
            `(multiple-value-bind (,var ,ok) ,form
                                  (if ,ok ,yes ,no))))
-(defvar *log-indent* 0)
-(defmacro defun-log (name args &body body)
-  (let-gen
-   (res fn)
-   `(defun ,name ,args
-      (let ((*log-indent* (1+ *log-indent*)))
-        (format t "~vtEntering function ~a with arguments ~a~%"
-                *log-indent* ',name (list ,@args))
-        (let ((,res (progn ,@body)))
-          (format t "~vtReturning ~a from function ~a~%"
-                  *log-indent* ,res ',name)
-          ,res)))))
 (defun to-keyword (s)
   (intern (symbol-name s) 'keyword))
+(defmacro let-if (var form yes &optional no)
+  `(let ((,var ,form)) (if ,var ,yes ,no)))
+(defun ensure-list (l)
+  (if (listp l) l (list l)))
 
 ;;;;;;;;;;
 ; ELEMENTS
@@ -65,21 +57,16 @@
   `(list 'node ',ntype ,args ,@children))
 (defmacro morph (ntype args root)
   (let-gen
-   (res exists2 pos exists1 table)
+   (res pos table)
    (let ((err (format nil "Morpheme ~a does not exist in language ~a with part of speech ~a." root *lang* ntype)))
      `(list 'morph ',ntype
-            (let ((,table (get *lang* 'lexicon)))
-              (if ,table
-                  (multiple-value-bind
-                   (,pos ,exists1) (gethash ',ntype ,table)
-                   (if ,exists1
-                       (multiple-value-bind
-                        (,res ,exists2) (gethash ',root ,pos)
-                        (if ,exists2
-                            (append (list ,@args :lang ',*lang*) ,res)
-                          (error ,err)))
-                     (error ,err)))
-                (error (format nil "Language ~a has no lexicon." *lang*))))
+            (let-if ,table (get *lang* 'lexicon)
+                    (mvb-if ,pos (gethash ',ntype ,table)
+                            (mvb-if ,res (gethash ',root ,pos)
+                                    (append (list ,@args :lang ',*lang*) ,res)
+                                    (error ,err))
+                            (error ,err))
+                    (error (format nil "Language ~a has no lexicon." *lang*)))
             ',root))))
 ; it might be worth experimenting to see if it would be faster to have
 ; getvars do lookups instead of copying the args list into each instance
@@ -93,11 +80,9 @@
      (unless p?
        (setf (gethash pos lex) (make-hash-table :test #'eq)
              posdct (gethash pos lex)))
-     (multiple-value-bind
-      (rootdct r?) (gethash root posdct)
-      (if r?
-          (error (format nil "Attempting to re-register root ~a with part of speech ~a in langauge ~a." root pos *lang*))
-        (setf (gethash root posdct) args))))))
+     (mvb-if rootdct (gethash root posdct)
+             (error (format nil "Attempting to re-register root ~a with part of speech ~a in langauge ~a." root pos *lang*))
+             (setf (gethash root posdct) args)))))
 (defun register-many-morphs (pos args roots)
   (mapcar (lambda (r)
             (apply #'register-morph
@@ -129,8 +114,12 @@
                 :mod ,(or mod `(var ,(symb prefix 'mod) :opt t))
                 :head ,(or head `(var ,(symb prefix 'head) :opt t))
                 :bar ,(or bar `(var ,(symb prefix 'bar) :opt t))))
+;(defmacro collect (ntype &rest vars)
+;  `(list 'collect ',ntype ,@vars))
 (defmacro collect (ntype &rest vars)
-  `(list 'collect ',ntype ,@vars))
+  `(if (eq *location* :form)
+       (list 'collect ',ntype ,@vars)
+     (distribute ,ntype ,@vars)))
 (defmacro distribute (ntype &rest vars)
   `(append '(node ,ntype ())
            (mapcan [if (and (listp _) (listp (car _))) _ (list _)]
@@ -140,7 +129,7 @@
     (if (eq (car tree) 'node)
         (mapcan #'getroots (cdddr tree))
       (when (eq (car tree) 'morph)
-        (cdddr tree)))))
+        (list tree)))))
 
 ;;;;;;;;;;
 ; RULES
@@ -152,26 +141,16 @@
                                   (remove-duplicates (flatten tree)))
                        (loop for (a b c) on (flatten tree) appending
                              (mapcar [symb c _] '(spec mod head bar))))))
-    (labels ((disvar (tr)
-                     (if (listp tr)
-                         (if (eq (car tr) 'var)
-                             (cadr tr)
-                           (if (eq (car tr) 'collect)
-                               (cons 'distribute (mapcar #'disvar (cdr tr)))
-                             (mapcar #'disvar tr)))
-                       tr)))
-            `(lambda (&key ,@varls &allow-other-keys)
-               (let ((*location* :result))
-                 ,(disvar tree))))))
+    `(lambda (&key ,@varls &allow-other-keys)
+       (let ((*location* :result))
+         ,tree))))
 (defmacro basic-rule (form result &key src dest)
-  (let ((sen (gensym)) (vars (gensym)) (match (gensym)))
+  (let ((sen (gensym)) (vars (gensym)))
     `(lambda (,sen)
        (let ((*lang* ',(or src *srclang* *lang*)))
-         (multiple-value-bind
-          (,vars ,match) (getvars ,sen ,form)
-          (when ,match
-            (let ((*lang* ',(or dest *destlang* *lang*)))
-              (apply ,(lambdify-result result) ,vars))))))))
+         (mvb-if ,vars (getvars ,sen ,form)
+                 (let ((*lang* ',(or dest *destlang* *lang*)))
+                   (apply ,(lambdify-result result) ,vars)))))))
 (defmacro context-rule (context form result &key src dest)
   (let-gen
    (sen cvars fvars vars insert)
@@ -197,6 +176,7 @@
                                                 (or (cadr _2) (car _2)))]
                                          _)]
                            layers)))
+
             ,all-vars)
         (block ,blk
                (labels
