@@ -68,4 +68,6 @@
           (comp t1 t2)))
 (let ((res (car (apply-rules (get 'english 'syntax) sen))))
   (format t "~a~%" res)
-  (format t "Test ~a~%" (if (compare res expected) 'passed 'failed)))
+  (format t "Test ~a~%" (if (compare res expected) 'passed 'failed))
+  (format t "Linear form: ~a~%" (linearize res)))
+(print (process sen))
