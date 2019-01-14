@@ -69,13 +69,25 @@
                                            (push (car ,var) ,lname))
                                        (go ,loop-continue)))
                             check `(null ,lname)))
+                     ('from
+                      (let ((temp1 (gensym)) (temp2 (gensym)))
+                        (setf let-vars `(,temp1))
+                        (if (listp var)
+                            (setf body `(destructuring-bind ,var ,temp1 ,body))
+                          (setf body `(let ((,var ,temp1)) ,body)))
+                        (if (member 'multi opts)
+                            (setf update `((mvb-if ,temp2 ,ls
+                                                   (setf ,temp1 ,temp2)
+                                                   (go ,loop-end))))
+                          (setf update `((setf ,temp1 ,ls)
+                                         (unless ,temp1 (go ,loop-end)))))))
                      )
               (let-if where (getf (remove 'unique opts) 'where)
                       (setf update
                             (append update
                                     `((unless ,where (go ,loop-continue))))))
               `(let* ,(append let-vars sub-vars)
-                 (macrolet ((continue () (list 'go ',loop-continue))
+                 (macrolet ((continue- () (list 'go ',loop-continue))
                             (break-for () (list 'go ',loop-end)))
                            (tagbody
                             ,loop-start
@@ -92,20 +104,23 @@
                      ((collect (x) (push x ,newls)))
                      ,(build-iter rest))
                     (collect (nreverse ,newls)))))
-       ((eq (car cur) 'seek)
+       ((member (car cur) '(seek seek1))
         (let* ((form (cadr cur)) (multi (member 'multi cur))
                (cur (remove 'multi cur))
                (var (or (getf cur 'as) (gensym)))
-               (fail (getf cur 'fail)) (found (gensym)) (check (gensym)))
+               (fail (getf cur 'fail)) (found (gensym)) (check (gensym))
+               (next (build-iter rest)))
+          (when (eq (car cur) 'seek1)
+            (setf next `(progn ,next (break-for))))
           (values
            (if multi
                `(multiple-value-bind
                  (,var ,check) ,form
-                 (if ,check (setf ,found t) (continue))
-                 ,(build-iter rest))
+                 (if ,check (setf ,found t) (continue-))
+                 ,next)
              `(let ((,var ,form))
-                (if ,var (setf ,found t) (continue))
-                ,(build-iter rest)))
+                (if ,var (setf ,found t) (continue-))
+                ,next))
            `(,found) `(unless ,found ,fail))))
        (t `(progn ,cur ,(build-iter rest)))))))
 (defmacro iter (&rest forms)

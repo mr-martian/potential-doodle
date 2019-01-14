@@ -20,7 +20,9 @@
 ;;;;;;;;;;
 ; UTILITIES
 ;;;;;;;;;;
+#-clisp (require :uiop)
 (load "util.lisp")
+(ql:quickload :cl-ppcre)
 
 ;;;;;;;;;;
 ; ELEMENTS
@@ -272,6 +274,35 @@
         (list tree))))
 (defun apply-linear (ruleset sen)
   (list sen))
+(defmacro basic-tag (ntype const-tags &optional var-tags)
+  (let ((word (gensym "word")))
+    `(lambda (,word)
+       (when ,(if (listp ntype)
+                  `(member (cadr ,word) ',ntype)
+                `(eq (cadr ,word) ',ntype))
+         (apply (lambda (root &key ,@var-tags &allow-other-keys)
+                  (format nil
+                          ,(format nil "~~a~{<~a>~}~{<~~a~*>~}"
+                                   (ensure-list const-tags) var-tags)
+                          root ,@(iter (for tg in var-tags)
+                                       (collect (if (listp tg) (car tg) tg)))))
+                (cons (or (getf (caddr ,word) :display)
+                          (string-downcase (symbol-name (cadddr ,word))))
+                      (caddr ,word)))))))
+(defun tagify (morphs)
+  (iter (for m in morphs)
+        (for rl in (get *lang* 'tag-rules))
+        (seek1 (funcall rl m) as form)
+        (collect form)))
+#-clisp
+(defun transduce (morphs)
+  (iter (for line in (cl-ppcre:split
+                      "\\n+" (uiop:run-program
+                              (get *lang* 'transducer)
+                              :output :string :input
+                              (make-string-input-stream
+                               (format nil "~{~a~%~}" (tagify morphs))))))
+        (collect (cadr (cl-ppcre:split "\\t" line)))))
 (defun apply-surface (ruleset sen)
   (list sen))
 (defun find-rules (sen)
@@ -289,8 +320,8 @@
 (defun process (sen)
   (let ((rules (find-rules sen)))
     (iter (for tree in (apply-rules (second rules) sen))
-          (for line in (apply-linear (fourth rules) tree))
-          (for string in (apply-surface (sixth rules) line))
+          (for line in (apply-linear (fourth rules) (linearize tree)))
+          (for string in (apply-surface (sixth rules) (transduce line)))
           (collect string))))
 
 ;;;;;;;;;;
@@ -310,3 +341,5 @@
   (setf (get language 'linear) stages))
 (defun language-surface (language &rest stages)
   (setf (get language 'surface) stages))
+(defun language-taggers (language &rest taggers)
+  (setf (get language 'tag-rules) taggers))

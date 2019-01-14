@@ -12,3 +12,12 @@ An outline of the repository's structure can be found at [Map.md](Map.md) and th
 - Download https://github.com/apertium/apertium-spa/blob/master/apertium-spa.spa.dix as langs/7/lang.dix
 - run ```./maketransducer.sh 1``` and ```./maketransducer-lt.sh 7```
 - run ```./doodle.py -d texts/2john.pdtxt 2john_eng.txt -t texts/2john.pdtxt 7 2john_esp.pdtxt -d 2john_esp.pdtxt 2john_esp.txt```
+
+## Dependencies
+
+- [HFST](http://hfst.github.io)
+  - The Python version also interfaces with Lttoolbox, which is part of [Apertium](http://www.apertium.org).
+- Lisp Libraries
+  - [Quicklisp](https://www.quicklisp.org/beta/)
+  - [CL-PPCRE](https://edicl.github.io/cl-ppcre/)
+  - [UIOP](https://gitlab.common-lisp.net/asdf/asdf/blob/master/uiop/README.md)
