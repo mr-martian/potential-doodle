@@ -6,9 +6,6 @@
 
 ; TODO
 ; * linear & surface rules
-; * transduce
-; * where to store translation rules?
-; ** retrieve relevant rule set
 ; * generation rules
 ; * gen/make/parse
 ; * interface
@@ -167,15 +164,28 @@
                                 (return-from ,fn (apply ,r ,all-vars)))
                         ,s)))
                 (,fn ,sen ,all-rules)))))))
+(defun getprop (node prop)
+  (getf (caddr node) (to-keyword prop)))
+(defsetf getprop (node prop) (val)
+  `(setf (getf (caddr ,node) (to-keyword ,prop)) ,val))
 (defun setprop (node prop val)
-  (setf (getf (caddr node) (to-keyword prop)) val)
+  (setf (getprop node prop) val)
   node)
 ; it's possible that this will have unintended side-effects
 ; if so, add a copy operation
 (defun copyprop (src sprop dest &optional dprop)
-  (setf (getf (caddr dest) (to-keyword (or sprop dprop)))
-        (getf (caddr src) (to-keyword sprop)))
+  (setf (getprop dest (or dprop sprop)) (getprop src sprop))
   dest)
+(defun copyprops (src dest props)
+  (iter (for p in props)
+        (setf (getprop dest p) (getprop src p)))
+  dest)
+(defun spreadprops (nodes props)
+  (let (prev)
+    (iter (for n in nodes) (seek n)
+          ((for p in props) (seek prev)
+           (setf (getprop n (car (last p))) (getprop prev (car p))))
+          (setf prev n))))
 
 ;;;;;;;;;;
 ; RULE APPLICATION
@@ -259,11 +269,11 @@
                       (case (get var mode)
                             (:normal (unless (get var track) (fail)))
                             (:opt (unless (get var track)
-                                    (push ret nil)
-                                    (push ret var)))
+                                    (push nil ret)
+                                    (push var ret)))
                             (:multi (progn
-                                      (push ret (get var value))
-                                      (push ret var)))))
+                                      (push (get var value) ret)
+                                      (push var ret)))))
                     (return ret)))))
          (t (fail)))))
    (values (gv tree pattern) t)))

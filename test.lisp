@@ -61,7 +61,7 @@
                               (if (comp x y)
                                   t
                                 (progn
-                                  (format t "~a does not match ~a~%" a b)
+                                  (format t "~a does not match ~a~%Issue: ~w ~w" a b x y)
                                   (return-from compare nil))))
                             a b)
                    (equal a b))))
