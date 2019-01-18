@@ -71,3 +71,6 @@
   (format t "Test ~a~%" (if (compare res expected) 'passed 'failed))
   (format t "Linear form: ~a~%" (linearize res)))
 (print (process sen))
+
+(load "2john.lisp")
+(print (mapcar #'process 2john))

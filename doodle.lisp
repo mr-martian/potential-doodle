@@ -9,6 +9,7 @@
 ; * generation rules
 ; * gen/make/parse
 ; * interface
+; * transducer generation
 
 (defvar *lang* nil)
 (defvar *srclang* nil)
@@ -17,7 +18,7 @@
 ;;;;;;;;;;
 ; UTILITIES
 ;;;;;;;;;;
-#-clisp (require :uiop)
+(require :uiop)
 (load "util.lisp")
 (ql:quickload :cl-ppcre)
 
@@ -55,14 +56,16 @@
      (mvb-if rootdct (gethash root posdct)
              (error (format nil "Attempting to re-register root ~a with part of speech ~a in langauge ~a." root pos *lang*))
              (setf (gethash root posdct) args)))))
-(defun register-many-morphs (pos args roots)
-  (mapcar (lambda (r)
-            (apply #'register-morph
-                   (if (listp r)
-                       `(,pos ,(car r) :display ,(cadr r) ,@args)
-                     `(,pos ,r :display ,(string-downcase (symbol-name r))
-                            ,@args))))
-          roots))
+(defun register-many-morphs (format args roots)
+  (let ((keys (uiop:ensure-list format)))
+    (unless (member :display format)
+      (push :display (cdr keys)))
+    (dolist (r roots)
+      (setf r (uiop:ensure-list r))
+      (unless (stringp (cadr r))
+        (push (string-downcase (symbol-name (car r))) (cdr r)))
+      (apply #'register-morph
+             (append (mapcan #'list keys r) args)))))
 (defmacro var (name &rest reqs)
   `(if (eq *location* :form)
        (list 'var ,(to-keyword name) ,@reqs)
@@ -216,6 +219,7 @@
           (return-from getvars (values nil nil)))
     (gv (tr pt)
         (cond
+         ((eq pt :*) nil) ; wildcard
          ((is-a pt 'var) ; variable
           (if (and (null tr) (not (getf pt :opt)))
               (fail)
@@ -304,7 +308,6 @@
         (for rl in (get *lang* 'tag-rules))
         (seek1 (funcall rl m) as form)
         (collect form)))
-#-clisp
 (defun transduce (morphs)
   (iter (for line in (cl-ppcre:split
                       "\\n+" (uiop:run-program

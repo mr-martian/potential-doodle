@@ -3,17 +3,7 @@
       '("hfst-lookup" "-q" "-b" "0" "-i" "langs/1/.generated/gen.hfst")
       (get *lang* 'parser)
       '("hfst-lookup" "-x" "-w" "langs/1/.generated/parse.hfst"))
-(register-morph 'tense 'nonpast :audible nil :tense 'pst :conj 'pst)
-(register-morph 'determiner 'the :person 3 :number 'SG :is-rel nil :hasspec nil)
-(register-morph 'noun 'child)
-(register-morph 'preposition 'of)
-(register-morph 'determiner 'your :person 3 :number 'SG :is-rel nil :hasspec nil)
-(register-morph 'adjective 'elect)
-(register-morph 'noun 'sister)
-(register-morph 'verb 'greet)
-(register-morph 'pronoun 'you :number 'SG :person 2 :is-rel nil)
-(register-morph 'aux 'do :conj 'inf)
-(register-morph 'complementizer '+Q)
+(load "english_lexicon.lisp")
 (language-syntax
  'english
  (list
