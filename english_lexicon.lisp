@@ -31,7 +31,7 @@
                       '(command confess do+so find give greet hear hope live lose receive rejoice remain share speak visit walk want watch work write))
 
 (register-many-morphs 'verb '(:objects (NP))
-                      '(borrow bring copy imitate judge kill know leave love measure see understand))
+                      '(borrow bring copy have imitate judge kill know leave love measure see understand))
 
 (register-many-morphs 'verb '(:objects (CP))
                       '(ask))
@@ -75,22 +75,84 @@
 
 (register-many-morphs 'punct ()
                       '((comma "-,") (lpar "(-") (rpar "-)") (colon "-:")
-                        (period "-.") (excl "-!")))
+                        (period "-.") (excl "-!") (question "-?")))
+
+(register-morph 'aux 'do :conj 'inf)
+(register-morph 'negative 'not :display "not")
 
 (register-many-morphs '(tense :conj :person :number) '(:audible nil)
                       '((past pst) (nonpast nonpst)
                         (object prsprt 3 SG) (gerund prsprt 3 SG)
                         (inf inf 3 SG)))
 
+(register-morph 'perfect 'have :conj 'pstprt :display "have")
+(register-morph 'continuous 'be :conj 'prsprt :display "be")
 
+(register-many-morphs '(mood :altpast) '(:conj inf)
+                      '(be (can could) could do (may might) might must (shall should) should to will))
+                                        ; may, to, will don't change form
+                                        ; in 3 SG PRS
+                                        ; add rule for e.g. can -> could
+                                        ; in past tense
+                                        ; uncertain of shall -> should
+(register-morph 'mood 'imperative :conj 'inf :audible nil)
+                                        ; switch to :display "do"
+                                        ; next to negative
+(register-morph 'mood 'were :conj 'prsprt)
+                                        ; subjunctive, only in hypotheticals
+                                        ; (which look like questions)?
+
+(register-many-morphs '(quantifier :number) ()
+                      '((all PL) (any SG) (many PL) (not SG) (some PL)))
+                                        ; uncertain about "not" as SG
+                                        ; and as quantifier, for that matter
+
+(register-morph 'determiner '_ :audible nil
+                :person 3 :number 'SG :is-rel nil :hasspec nil)
+(register-many-morphs '(determiner :number) '(:is-rel nil :hasspec nil :person 3)
+                      '((a SG) (the SG) (her SG) (his SG) (that SG) (those PL) (your SG) (many PL) (our SG) (this SG)))
+                                        ; should "many" be a quantifier?
+(register-morph 'determiner 'vocative :audible nil
+                :person 3 :number 'SG :is-rel nil :hasspec nil)
+(register-morph 'determiner '-s :display "-'s"
+                :person 3 :number 'SG :is-rel nil :hasspec t)
+
+(add-rule 'determiner 'a :syntax 20
+          (context-rule
+           (barnode-var DP D :head (var @)
+                        :bar (barnode-var NP N (var noun :proper t)))
+           (morph determiner () a)
+           (morph determiner () _)))
+                                        ; also a -> an
+                                        ; :surface (1 /^[aeiou]/)
+
+(register-many-morphs 'pre-conj ()
+                      '(then if though both))
+(register-many-morphs '(conjunction :preconj) ()
+                      '(for and nor but or yet so
+                            thus because then and+then so+that
+                            (both-and "and" both)
+                            (if-then "then" if)))
+(register-morph 'conjunction 'though-null :audible nil :preconj 'though)
+                                        ; add rule for
+                                        ; |[conjP $a ~ @ $b]
+                                        ; -> |[conjP :preconj $a @ $b]
+(register-morph 'conjunction 'paren :audible nil)
+(add-rule 'conjunction 'paren :syntax 20
+          (context-rule
+           (barnode-var conjP C :head (morph conjunction () paren) :bar (var @))
+           (var x)
+           (node par () (morph punct () lpar) x (morph () rpar))))
 
 (register-many-morphs 'noun ()
                       '(child mouse))
 
-
-
-(register-morph 'determiner 'the :person 3 :number 'SG :is-rel nil :hasspec nil)
-(register-morph 'determiner 'your :person 3 :number 'SG :is-rel nil :hasspec nil)
-(register-morph 'aux 'do :conj 'inf)
-(register-morph 'complementizer '+Q :audible nil)
-(register-morph 'complementizer 'that :display "that")
+(register-many-morphs '(complementizer :punct :subclause :audible) ()
+                      '((-Q period nil nil) (+Q question t nil) (that nil period)
+                        (imp excl nil)  ; I don't remember what this is
+                                        ; so I'm guessing
+                        (exclaim excl t nil)))
+                                        ; add rule for
+                                        ; |[CP @] -> [punct |[CP @] punct]
+                                        ; inside [SEN @]
+                                        ; or not, depending on :subclause
